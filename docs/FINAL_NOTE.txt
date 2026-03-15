@@ -1,0 +1,6 @@
+This bundle is the most complete unified package produced in the conversation.
+It merges:
+- mask_studio_complete_pack
+- mask_studio_final_integration (app shell/router integration)
+- mask_studio_advanced_pack_real
+It has not been build-tested in the user's exact project environment.

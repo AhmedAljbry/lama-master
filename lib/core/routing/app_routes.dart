@@ -1,0 +1,13 @@
+class AppRoutes {
+  const AppRoutes._();
+
+  static const home = '/';
+  static const magicEraser = '/magic_eraser';
+  static const lumaEditor = '/luma_editor';
+  static const aiStudio = '/ai_studio';
+  static const proStudio = '/pro_studio';
+  static const imageIntel = '/image_intel';
+  static const editor = '/editor';
+  static const processing = '/processing';
+  static const result = '/result';
+}

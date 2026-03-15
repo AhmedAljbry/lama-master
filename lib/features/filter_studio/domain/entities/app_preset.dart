@@ -1,0 +1,17 @@
+enum AppPreset {
+  original,
+  cinematic,
+  dreamy,
+  motion,
+  vintage,
+  noir,
+  neon,
+  cyber,
+  warm,
+  editorial,
+  vaporwave,
+  chrome,
+  halo,
+  monoPop,
+  street,
+}
