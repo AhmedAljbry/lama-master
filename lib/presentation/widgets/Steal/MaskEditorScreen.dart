@@ -298,12 +298,12 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: AppTokens.s12),
+            padding: EdgeInsets.only(right: AppTokens.s12),
             child: InkWell(
               onTap: canSave ? _save : null,
               borderRadius: BorderRadius.circular(AppTokens.rFull),
               child: Ink(
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
                 ),
@@ -438,7 +438,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                   filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(AppTokens.s14),
+                    padding: EdgeInsets.all(AppTokens.s14),
                     decoration: BoxDecoration(
                       color: AppTokens.surface.withOpacity(0.88),
                       borderRadius: BorderRadius.circular(AppTokens.r24),
@@ -458,7 +458,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                                   : AppTokens.primary,
                               size: 18,
                             ),
-                            const SizedBox(width: AppTokens.s8),
+                            SizedBox(width: AppTokens.s8),
                             Expanded(
                               child: Text(
                                 _painterUnlocked
@@ -472,10 +472,10 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppTokens.s10),
+                        SizedBox(height: AppTokens.s10),
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.circle,
                               color: AppTokens.text2,
                               size: 10,
@@ -489,14 +489,14 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                                     setState(() => _strokeWidth = value),
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.circle,
                               color: AppTokens.text2,
                               size: 22,
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppTokens.s8),
+                        SizedBox(height: AppTokens.s8),
                         Wrap(
                           alignment: WrapAlignment.center,
                           spacing: AppTokens.s8,
@@ -506,7 +506,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                               icon: Icons.auto_fix_high_rounded,
                               color: AppTokens.primary,
                               active: _hasActivatedAi || _isProcessingAI,
-                              tooltip: 'AI Auto',
+                              tooltip: l10n.get('auto_ai'),
                               onTap: () => _runAI(),
                             ),
                             _ToolBtn(
@@ -527,7 +527,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                               icon: Icons.brush_rounded,
                               color: AppTokens.warning,
                               active: !_isEraser && !_isPan && _painterUnlocked,
-                              tooltip: 'Brush',
+                              tooltip: l10n.get('brush'),
                               onTap: _painterUnlocked
                                   ? () => setState(() {
                                         _isEraser = false;
@@ -542,7 +542,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                               icon: Icons.cleaning_services_rounded,
                               color: AppTokens.danger,
                               active: _isEraser && !_isPan && _painterUnlocked,
-                              tooltip: 'Eraser',
+                              tooltip: l10n.get('eraser'),
                               onTap: _painterUnlocked
                                   ? () => setState(() {
                                         _isEraser = true;
@@ -557,14 +557,14 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                               icon: Icons.pan_tool_rounded,
                               color: AppTokens.info,
                               active: _isPan,
-                              tooltip: 'Pan',
+                              tooltip: l10n.get('pan'),
                               onTap: () => setState(() => _isPan = !_isPan),
                             ),
                             _ToolBtn(
                               icon: Icons.delete_sweep_rounded,
                               color: AppTokens.danger,
                               active: false,
-                              tooltip: 'Clear',
+                              tooltip: l10n.get('clear'),
                               onTap: _clearAll,
                             ),
                           ],
@@ -604,7 +604,7 @@ class _GuideCard extends StatelessWidget {
             : AppTokens.text2;
 
     return Container(
-      padding: const EdgeInsets.all(AppTokens.s12),
+      padding: EdgeInsets.all(AppTokens.s12),
       decoration: BoxDecoration(
         color: AppTokens.surface.withOpacity(0.92),
         borderRadius: BorderRadius.circular(AppTokens.r20),
@@ -625,7 +625,7 @@ class _GuideCard extends StatelessWidget {
               size: 20,
             ),
           ),
-          const SizedBox(width: AppTokens.s10),
+          SizedBox(width: AppTokens.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,7 +637,7 @@ class _GuideCard extends StatelessWidget {
                     fontSize: 13,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   subtitle,
                   style: AppTokens.caption.copyWith(

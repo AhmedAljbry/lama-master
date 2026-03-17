@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lama/core/i18n/t.dart';
+import 'package:lama/core/ui/AppL10n.dart';
+import 'package:lama/core/i18n/locale_controller.dart';
 import 'package:lama/core/ui/tokens.dart';
 import 'package:lama/features/luma_editor/domain/entities/ai_filter_insight.dart';
 import 'package:lama/features/luma_editor/domain/entities/filter_item.dart';
@@ -13,6 +15,9 @@ import 'package:lama/features/luma_editor/presentation/bloc/editor_event.dart';
 import 'package:lama/features/luma_editor/presentation/bloc/editor_state.dart';
 import 'package:lama/features/luma_editor/presentation/pages/luma_editor_scope.dart';
 import 'package:lama/features/luma_editor/presentation/services/luma_editor_toolkit.dart';
+
+import 'package:lama/core/services/task_persistence_service.dart';
+import 'package:lama/core/services/notification_service.dart';
 
 import 'package:lama/presentation/widgets/LumaUltimateEditorWidgets/ai_creative_panel.dart';
 import 'package:lama/presentation/widgets/LumaUltimateEditorWidgets/ai_tool_button.dart';
@@ -49,9 +54,8 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
   final _picker = ImagePicker();
   final _search = TextEditingController();
   late final AnimationController _ambientController;
-  var _lang = Lang.en;
   var _seededLang = false;
-  var _tab = LumaPanelTab.ai;
+  var _tab = LumaPanelTab.adjust;   // default to Adjust instead of AI
   var _scope = LumaFilterScope.all;
   var _query = '';
   var _holdCompare = false;
@@ -81,9 +85,6 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
     super.didChangeDependencies();
     if (_seededLang) return;
     _seededLang = true;
-    _lang = Localizations.localeOf(context).languageCode == 'ar'
-        ? Lang.ar
-        : Lang.en;
   }
 
   @override
@@ -93,7 +94,7 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
     super.dispose();
   }
 
-  T get _t => T(_lang);
+  AppL10n get _l10n => AppL10n.of(context);
   LumaEditorToolkit _toolkit(BuildContext c) => c.read<LumaEditorToolkit>();
   FilterItem _selected(EditorState s) =>
       s.filters.firstWhere((f) => f.id == s.snapshot.selectedId,
@@ -115,7 +116,7 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
   }
 
   Future<void> _toggleLang(EditorState s) async {
-    setState(() => _lang = _lang == Lang.ar ? Lang.en : Lang.ar);
+    context.read<LocaleController>().toggleLocale();
     if (s.imageBytes != null) await _generateInsight(s.imageBytes!, s.filters);
   }
 
@@ -131,7 +132,7 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
           .read<EditorBloc>()
           .add(ImageLoaded(path: payload.path, bytes: payload.bytes));
       setState(() {
-        _tab = LumaPanelTab.ai;
+        _tab = LumaPanelTab.adjust;   // jump to Adjust after picking
         _scope = LumaFilterScope.all;
         _query = '';
         _insight = null;
@@ -162,21 +163,21 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
                   const BorderRadius.vertical(top: Radius.circular(24))),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             ListTile(
-                leading: const Icon(Icons.photo_library_outlined,
+                leading: Icon(Icons.photo_library_outlined,
                     color: AppTokens.primary),
-                title: Text(_t.of('pick_gallery'),
+                title: Text(_l10n.get('pick_gallery'),
                     style: const TextStyle(color: AppTokens.text)),
                 onTap: () => Navigator.pop(c, _ImageAction.gallery)),
             ListTile(
-                leading: const Icon(Icons.photo_camera_outlined,
+                leading: Icon(Icons.photo_camera_outlined,
                     color: AppTokens.primary),
-                title: Text(_t.of('pick_camera'),
+                title: Text(_l10n.get('pick_camera'),
                     style: const TextStyle(color: AppTokens.text)),
                 onTap: () => Navigator.pop(c, _ImageAction.camera)),
             ListTile(
-                leading: const Icon(Icons.folder_open_rounded,
+                leading: Icon(Icons.folder_open_rounded,
                     color: AppTokens.primary),
-                title: Text(_t.of('tap_to_open'),
+                title: Text(_l10n.get('tap_to_open'),
                     style: const TextStyle(color: AppTokens.text)),
                 onTap: () => Navigator.pop(c, _ImageAction.files)),
             const SizedBox(height: 12),
@@ -210,13 +211,15 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
       Uint8List bytes, List<FilterItem> filters) async {
     final id = ++_session;
     setState(() => _aiLoading = true);
+    TaskPersistenceService().registerRunningTask('insight_$id', 'Creative AI Filter Generation');
     try {
       final insight = await _toolkit(context)
-          .generateCreativeInsight(bytes, filters, _lang.name);
+          .generateCreativeInsight(bytes, filters, _l10n.locale.languageCode);
       if (mounted && id == _session) setState(() => _insight = insight);
     } catch (_) {
       if (mounted && id == _session) setState(() => _insight = null);
     } finally {
+      TaskPersistenceService().completeTask('insight_$id');
       if (mounted && id == _session) setState(() => _aiLoading = false);
     }
   }
@@ -235,6 +238,7 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
   Future<void> _autoEnhance(EditorState s) async {
     if (s.imageBytes == null || _enhancing) return;
     setState(() => _enhancing = true);
+    TaskPersistenceService().registerRunningTask('auto_enhance', 'AI Image Enhancement');
     try {
       final p = await _toolkit(context).analyze(s.imageBytes!);
       if (!mounted) return;
@@ -245,6 +249,7 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
           warmth: p.warmth,
           fade: p.fade));
     } finally {
+      TaskPersistenceService().completeTask('auto_enhance');
       if (mounted) setState(() => _enhancing = false);
     }
   }
@@ -282,9 +287,9 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
   Future<void> _saveStyle(EditorState s) async {
     if (!s.hasImage) return;
     final name = await showStyleNameDialog(context,
-        t: _t,
-        title: _t.of('create_filter'),
-        actionLabel: _t.of('save_style'),
+        l10n: _l10n,
+        title: _l10n.get('create_filter'),
+        actionLabel: _l10n.get('save_style'),
         initialValue: _insight?.suggestedName ?? '');
     if (!mounted || name == null) return;
     final selected = _selected(s);
@@ -301,13 +306,13 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
   Future<void> _renameCustomStyle(FilterItem filter) async {
     if (!filter.isCustom) return;
     final name = await showStyleNameDialog(context,
-        t: _t,
-        title: _t.of('rename_style'),
-        actionLabel: _t.of('save'),
+        l10n: _l10n,
+        title: _l10n.get('rename_style'),
+        actionLabel: _l10n.get('save'),
         initialValue: filter.name);
     if (!mounted || name == null || name == filter.name) return;
     context.read<EditorBloc>().add(RenameCustomFilter(filter.id, name));
-    _showFeedback(_t.of('style_renamed'), color: AppTokens.info);
+    _showFeedback(_l10n.get('style_renamed'), color: AppTokens.info);
   }
 
   Future<void> _deleteCustomStyle(FilterItem filter) async {
@@ -316,9 +321,10 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppTokens.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24)),
         title: Text(
-          _t.of('delete_style'),
+          _l10n.get('delete_style'),
           style: const TextStyle(
             color: AppTokens.text,
             fontSize: 16,
@@ -326,7 +332,7 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
           ),
         ),
         content: Text(
-          _t.of('delete_style_desc'),
+          _l10n.get('delete_style_desc'),
           style: const TextStyle(
             color: AppTokens.text2,
             fontSize: 13,
@@ -337,7 +343,7 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
-              _t.of('cancel'),
+              _l10n.get('cancel'),
               style: const TextStyle(color: AppTokens.text2),
             ),
           ),
@@ -347,14 +353,14 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
               backgroundColor: AppTokens.danger,
               foregroundColor: Colors.white,
             ),
-            child: Text(_t.of('delete')),
+            child: Text(_l10n.get('delete')),
           ),
         ],
       ),
     );
     if (!mounted || confirmed != true) return;
     context.read<EditorBloc>().add(DeleteCustomFilter(filter.id));
-    _showFeedback(_t.of('style_deleted'), color: AppTokens.danger);
+    _showFeedback(_l10n.get('style_deleted'), color: AppTokens.danger);
   }
 
   void _showFeedback(String message, {required Color color}) {
@@ -365,7 +371,8 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
         backgroundColor: color,
         content: Text(
           message,
-          style: TextStyle(color: foreground, fontWeight: FontWeight.w800),
+          style:
+              TextStyle(color: foreground, fontWeight: FontWeight.w800),
         ),
       ),
     );
@@ -374,23 +381,37 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
   Future<void> _saveResult(EditorState s) async {
     if (!s.hasImage || _saving) return;
     setState(() => _saving = true);
+    TaskPersistenceService().registerRunningTask('save_image', 'Saving Image');
     try {
       final ok = await _toolkit(context).saveRenderedResult(_repaintKey);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           backgroundColor: ok ? AppTokens.primary : AppTokens.danger,
-          content: Text(ok ? _t.of('saved_ok') : _t.of('save_failed'),
+          content: Text(ok ? _l10n.get('saved_ok') : _l10n.get('save_failed'),
               style: const TextStyle(
-                  color: Colors.black, fontWeight: FontWeight.w800))));
+                  color: Colors.black,
+                  fontWeight: FontWeight.w800))));
+      if (ok) {
+        NotificationService().showNotification(
+          id: 300,
+          title: 'Image Saved',
+          body: 'Your edited image has been saved successfully.',
+        );
+      }
     } finally {
+      TaskPersistenceService().completeTask('save_image');
       if (mounted) setState(() => _saving = false);
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // BUILD
+  // ─────────────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: _t.isRTL ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: _l10n.isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: AppTokens.bg,
         body: BlocBuilder<EditorBloc, EditorState>(
@@ -400,7 +421,9 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
             final filters = _visibleFilters(s);
             final accent =
                 _insight == null ? selected.indicatorColor : AppTokens.primary;
+
             return Stack(children: [
+              // ── Ambient glow background ───────────────────────────────
               AnimatedBuilder(
                 animation: _ambientController,
                 builder: (context, child) => _LumaGlowBackgroundWrapper(
@@ -408,68 +431,59 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
                   accent: accent,
                 ),
               ),
+
+              // ── Main layout ───────────────────────────────────────────
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  padding:
+                      const EdgeInsets.fromLTRB(14, 8, 14, 12),
                   child: LayoutBuilder(
                     builder: (context, c) {
                       final wide = c.maxWidth >= 1080;
-                      final preview = LumaPreviewPanel(
-                        repaintKey: _repaintKey,
-                        bytes: s.imageBytes,
-                        matrix: matrix,
-                        selected: selected,
-                        insight: _insight,
-                        aiLoading: _aiLoading,
-                        accentColor: accent,
-                        t: _t,
-                        showOriginal: _holdCompare || s.compareMode,
-                        onHoldStart: () => setState(() => _holdCompare = true),
-                        onHoldEnd: () => setState(() => _holdCompare = false),
-                        onToggleCompare: s.hasImage
-                            ? () =>
-                                context.read<EditorBloc>().add(ToggleCompare())
-                            : null,
-                        onToggleFavorite: s.hasImage
+
+                      // ── Slim App Bar ──────────────────────────────────
+                      final appBar = LumaColorAppBar(
+                        l10n: _l10n,
+                        hasImage: s.hasImage,
+                        saving: _saving,
+                        currentFilter:
+                            s.hasImage ? selected.name : null,
+                        onPick: () => _pickImage(s),
+                        onReset: s.hasImage
                             ? () => context
                                 .read<EditorBloc>()
-                                .add(ToggleFavorite(selected))
+                                .add(ResetAll())
                             : null,
-                        onPick: () => _pickImage(s),
-                        onRunAi: s.hasImage ? () => _runAi(s) : null,
-                        onApplyAi:
-                            _insight == null ? null : () => _applyInsight(s),
+                        onSave: s.hasImage
+                            ? () => _saveResult(s)
+                            : null,
                       );
-                      
-                      final panel = _buildPanel(s, filters);
-                      
+
+                      // ── Preview (with horizontal filter strip) ────────
+                      final preview = _buildPreview(s, selected, matrix, accent, filters);
+
+                      // ── Side / bottom panel ───────────────────────────
+                      final panel = _buildPanel(s, filters, accent, selected);
+
                       return Column(children: [
-                        LumaAppBar(
-                          t: _t,
-                          hasImage: s.hasImage,
-                          saving: _saving,
-                          aiLoading: _aiLoading,
-                          autoAi: _autoAi,
-                          hasInsight: _insight != null,
-                          currentLook: s.hasImage ? selected.name : null,
-                          onToggleLang: () => _toggleLang(s),
-                          onToggleAutoAi: _toggleAutoAi,
-                          onPick: () => _pickImage(s),
-                          onRunAi: s.hasImage ? () => _runAi(s) : null,
-                          onSave: s.hasImage ? () => _saveResult(s) : null,
-                        ),
-                        const SizedBox(height: 16),
+                        appBar,
+                        const SizedBox(height: 10),
                         if (wide)
                           Expanded(
                               child: Row(children: [
                             Expanded(flex: 12, child: preview),
-                            const SizedBox(width: 18),
-                            SizedBox(width: 430, child: panel)
+                            const SizedBox(width: 16),
+                            SizedBox(width: 420, child: panel),
                           ]))
                         else ...[
                           Expanded(child: preview),
-                          const SizedBox(height: 16),
-                          SizedBox(height: 430, child: panel)
+                          const SizedBox(height: 12),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: c.maxHeight * 0.44,
+                            ),
+                            child: panel,
+                          ),
                         ],
                       ]);
                     },
@@ -483,9 +497,482 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
     );
   }
 
-  Widget _buildPanel(EditorState s, List<FilterItem> filters) {
+  // ─────────────────────────────────────────────────────────────────────────
+  // Preview area: canvas + horizontal filter strip overlay
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Widget _buildPreview(
+    EditorState s,
+    FilterItem selected,
+    List<double> matrix,
+    Color accent,
+    List<FilterItem> allFilters,
+  ) {
+    final preview = LumaPreviewPanel(
+      repaintKey: _repaintKey,
+      bytes: s.imageBytes,
+      matrix: matrix,
+      selected: selected,
+      insight: _insight,
+      aiLoading: _aiLoading,
+      accentColor: accent,
+      l10n: _l10n,
+      showOriginal: _holdCompare || s.compareMode,
+      onHoldStart: () => setState(() => _holdCompare = true),
+      onHoldEnd: () => setState(() => _holdCompare = false),
+      onToggleCompare: s.hasImage
+          ? () => context.read<EditorBloc>().add(ToggleCompare())
+          : null,
+      onToggleFavorite: s.hasImage
+          ? () => context
+              .read<EditorBloc>()
+              .add(ToggleFavorite(selected))
+          : null,
+      onPick: () => _pickImage(s),
+      onRunAi: s.hasImage ? () => _runAi(s) : null,
+      onApplyAi: _insight == null ? null : () => _applyInsight(s),
+    );
+
+    if (!s.hasImage) return preview;
+
+    // Overlay the horizontal filter strip at the bottom of the canvas
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        Positioned.fill(child: preview),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(25)),
+            child: LumaHorizontalFilterStrip(
+              filters: s.filtersSorted,
+              bytes: s.imageBytes!,
+              selectedId: s.snapshot.selectedId,
+              insight: _insight,
+              onSelect: (id) =>
+                  context.read<EditorBloc>().add(SelectFilter(id)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Bottom / side panel
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Widget _buildPanel(
+    EditorState s,
+    List<FilterItem> filters,
+    Color accent,
+    FilterItem selected,
+  ) {
     if (!s.hasImage) {
-      return Container(
+      return _NoImagePanel(l10n: _l10n, onPick: () => _pickImage(s));
+    }
+
+    final favoriteCount = s.filters.where((f) => f.isFavorite).length;
+    final recommendedCount = _insight?.recommendedFilterIds.length ?? 0;
+
+    // Compact info row (replaces tall hero)
+    final infoRow = LumaEditorHero(
+      l10n: _l10n,
+      accentColor: accent,
+      aiLoading: _aiLoading,
+      autoAi: _autoAi,
+      currentLook: selected.name,
+      insight: _insight,
+      onRunAi: () => _runAi(s),
+      onApplyAi: _insight == null ? null : () => _applyInsight(s),
+      onToggleAutoAi: _toggleAutoAi,
+    );
+
+    // Tab bar
+    final tabBar = LumaPanelTabs(
+      l10n: _l10n,
+      activeTab: _tab,
+      accentColor: accent,
+      hasInsight: _insight != null,
+      onSelect: (tab) => setState(() => _tab = tab),
+    );
+
+    // Tab body
+    Widget body = switch (_tab) {
+      // ── Adjust ──────────────────────────────────────────────────────
+      LumaPanelTab.adjust => LumaAdjustmentPanel(
+          s: s,
+          l10n: _l10n,
+          enhancing: _enhancing,
+          onAutoEnhance: () => _autoEnhance(s),
+        ),
+
+      // ── Presets / Filters ────────────────────────────────────────────
+      LumaPanelTab.filters =>
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          LumaSelectedLookCard(
+            l10n: _l10n,
+            filter: selected,
+            bytes: s.imageBytes!,
+            insight: _insight,
+            onToggleFavorite: () =>
+                context.read<EditorBloc>().add(ToggleFavorite(selected)),
+          ),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+              child: LumaOverviewStat(
+                icon: Icons.grid_view_rounded,
+                value: '${filters.length}',
+                label: _l10n.get('all_filters'),
+                color: AppTokens.info,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: LumaOverviewStat(
+                icon: Icons.star_rounded,
+                value: '$favoriteCount',
+                label: _l10n.get('favorites'),
+                color: AppTokens.warning,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: LumaOverviewStat(
+                icon: Icons.auto_awesome_rounded,
+                value: '$recommendedCount',
+                label: _l10n.get('ai_match'),
+                color: AppTokens.primary,
+              ),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          LumaSearchBox(controller: _search, hint: _l10n.get('search')),
+          const SizedBox(height: 8),
+          // Scope chips
+          SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: [
+                for (final item in [
+                  (LumaFilterScope.all, _l10n.get('all_filters')),
+                  (LumaFilterScope.favorites, _l10n.get('favorites')),
+                  (LumaFilterScope.cinema, _l10n.get('cinema')),
+                  (LumaFilterScope.retro, _l10n.get('retro')),
+                  (LumaFilterScope.pro, _l10n.get('pro_pack')),
+                  (LumaFilterScope.custom, _l10n.get('my_styles')),
+                ])
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 8),
+                    child: ChoiceChip(
+                      label: Text(item.$2,
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800)),
+                      selected: _scope == item.$1,
+                      onSelected: (_) =>
+                          setState(() => _scope = item.$1),
+                      selectedColor:
+                          AppTokens.primary.withValues(alpha: 0.16),
+                      labelStyle: TextStyle(
+                          color: _scope == item.$1
+                              ? AppTokens.primary
+                              : AppTokens.text2),
+                      side: BorderSide(
+                          color: _scope == item.$1
+                              ? AppTokens.primary
+                              : Colors.white12),
+                      backgroundColor: Colors.white10,
+                    ),
+                  ),
+              ])),
+          const SizedBox(height: 8),
+          // Filter grid
+          Expanded(
+              child: filters.isEmpty
+                  ? Center(
+                      child: Text(_l10n.get('no_styles'),
+                          style: const TextStyle(
+                              color: AppTokens.text2)))
+                  : GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 10,
+                              crossAxisSpacing: 10,
+                              childAspectRatio: .86),
+                      itemCount: filters.length,
+                      itemBuilder: (_, i) => LumaFilterTile(
+                          filter: filters[i],
+                          bytes: s.imageBytes!,
+                          l10n: _l10n,
+                          active:
+                              filters[i].id == s.snapshot.selectedId,
+                          onTap: () => context
+                              .read<EditorBloc>()
+                              .add(SelectFilter(filters[i].id)),
+                          onStar: () => context
+                              .read<EditorBloc>()
+                              .add(ToggleFavorite(filters[i])),
+                          onRename: filters[i].isCustom
+                              ? () => _renameCustomStyle(filters[i])
+                              : null,
+                          onDelete: filters[i].isCustom
+                              ? () => _deleteCustomStyle(filters[i])
+                              : null),
+                    )),
+        ]),
+
+      // ── Tools ────────────────────────────────────────────────────────
+      LumaPanelTab.tools => SingleChildScrollView(
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+          // Undo / Redo / Clipboard stats
+          Row(children: [
+            Expanded(
+              child: LumaOverviewStat(
+                icon: Icons.undo_rounded,
+                value: '${s.undo.length}',
+                label: _l10n.get('undo'),
+                color: AppTokens.warning,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: LumaOverviewStat(
+                icon: Icons.redo_rounded,
+                value: '${s.redo.length}',
+                label: _l10n.get('redo'),
+                color: AppTokens.info,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: LumaOverviewStat(
+                icon: s.clipboard == null
+                    ? Icons.content_paste_off_rounded
+                    : Icons.content_paste_go_rounded,
+                value: s.clipboard == null
+                    ? _l10n.get('none')
+                    : _l10n.get('ai_ready_short'),
+                label: _l10n.get('paste'),
+                color: s.clipboard == null
+                    ? AppTokens.text2
+                    : AppTokens.primary,
+              ),
+            ),
+          ]),
+          const SizedBox(height: 12),
+          LumaActionDeck(actions: [
+            LumaToolAction(
+              icon: Icons.auto_fix_high_rounded,
+              label: _enhancing
+                  ? _l10n.get('loading')
+                  : _l10n.get('enhance'),
+              color: AppTokens.primary,
+              onTap: _enhancing ? null : () => _autoEnhance(s),
+            ),
+            LumaToolAction(
+              icon: Icons.casino_rounded,
+              label: _l10n.get('random'),
+              color: AppTokens.info,
+              onTap: () => _randomize(s),
+            ),
+            LumaToolAction(
+              icon: Icons.bookmark_add_outlined,
+              label: _l10n.get('save_style'),
+              color: AppTokens.warning,
+              onTap: () => _saveStyle(s),
+            ),
+            LumaToolAction(
+              icon: s.compareMode
+                  ? Icons.visibility_rounded
+                  : Icons.compare_rounded,
+              label: _l10n.get('compare'),
+              color: selected.indicatorColor,
+              onTap: () =>
+                  context.read<EditorBloc>().add(ToggleCompare()),
+            ),
+            LumaToolAction(
+              icon: Icons.content_copy_rounded,
+              label: _l10n.get('copy'),
+              color: AppTokens.info,
+              onTap: () =>
+                  context.read<EditorBloc>().add(CopySettings()),
+            ),
+            LumaToolAction(
+              icon: Icons.content_paste_go_rounded,
+              label: _l10n.get('paste'),
+              color: AppTokens.info,
+              onTap: s.clipboard == null
+                  ? null
+                  : () => context
+                      .read<EditorBloc>()
+                      .add(PasteSettings()),
+            ),
+            LumaToolAction(
+              icon: Icons.undo_rounded,
+              label: _l10n.get('undo'),
+              color: AppTokens.warning,
+              onTap: s.undo.isEmpty
+                  ? null
+                  : () =>
+                      context.read<EditorBloc>().add(Undo()),
+            ),
+            LumaToolAction(
+              icon: Icons.redo_rounded,
+              label: _l10n.get('redo'),
+              color: AppTokens.warning,
+              onTap: s.redo.isEmpty
+                  ? null
+                  : () =>
+                      context.read<EditorBloc>().add(Redo()),
+            ),
+            LumaToolAction(
+              icon: Icons.restart_alt_rounded,
+              label: _l10n.get('reset_all'),
+              color: AppTokens.danger,
+              onTap: () =>
+                  context.read<EditorBloc>().add(ResetAll()),
+            ),
+            // Language toggle
+            LumaToolAction(
+              icon: Icons.translate_rounded,
+              label: _l10n.get('lang_switch'),
+              color: AppTokens.text2,
+              onTap: () => _toggleLang(s),
+            ),
+            // AutoAI toggle
+            LumaToolAction(
+              icon: _autoAi
+                  ? Icons.bolt_rounded
+                  : Icons.bolt_outlined,
+              label: _l10n.get('auto_ai'),
+              color: _autoAi ? AppTokens.primary : AppTokens.text2,
+              onTap: _toggleAutoAi,
+            ),
+            LumaToolAction(
+              icon: _saving
+                  ? Icons.hourglass_top_rounded
+                  : Icons.download_rounded,
+              label: _l10n.get('save'),
+              color: AppTokens.primary,
+              onTap: _saving ? null : () => _saveResult(s),
+            ),
+          ]),
+        ])),
+
+      // ── AI panel ─────────────────────────────────────────────────────
+      LumaPanelTab.ai => SingleChildScrollView(
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AiCreativePanel(
+                    insight: _insight,
+                    isLoading: _aiLoading,
+                    filters: s.filters,
+                    selectedId: _selected(s).id,
+                    onApplyInsight: () => _applyInsight(s),
+                    onSelectRecommendation: (id) =>
+                        context.read<EditorBloc>().add(SelectFilter(id)),
+                    onCreateStyle: () => _saveStyle(s),
+                    t: T.from(context),
+                  ),
+                  const SizedBox(height: 12),
+          Wrap(spacing: 12, runSpacing: 12, children: [
+            for (final item in [
+              (
+                Icons.play_circle_fill_rounded,
+                _l10n.get('run_ai'),
+                AppTokens.primary,
+                () => _runAi(s)
+              ),
+              (
+                Icons.auto_fix_high_rounded,
+                _enhancing ? _l10n.get('loading') : _l10n.get('enhance'),
+                AppTokens.info,
+                _enhancing ? null : () => _autoEnhance(s)
+              ),
+              (
+                Icons.casino_rounded,
+                _l10n.get('random'),
+                AppTokens.warning,
+                () => _randomize(s)
+              ),
+              (
+                Icons.bookmark_add_outlined,
+                _l10n.get('save_style'),
+                accent,
+                () => _saveStyle(s)
+              ),
+            ])
+              SizedBox(
+                  width: 180,
+                  child: AIToolButton(
+                      icon: item.$1,
+                      label: item.$2,
+                      iconColor: item.$3,
+                      surface: AppTokens.card,
+                      textColor: AppTokens.text,
+                      onTap: item.$4)),
+          ]),
+        ])),
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            Colors.white.withValues(alpha: .04),
+            AppTokens.surface.withValues(alpha: .96),
+            accent.withValues(alpha: .08),
+          ], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(26),
+          border:
+              Border.all(color: accent.withValues(alpha: .16))),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+      child: Column(children: [
+        infoRow,
+        const SizedBox(height: 10),
+        tabBar,
+        const SizedBox(height: 10),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: AppTokens.normal,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.03, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            child: KeyedSubtree(key: ValueKey(_tab), child: body),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// No-image panel  (pick prompt)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _NoImagePanel extends StatelessWidget {
+  final AppL10n l10n;
+  final VoidCallback onPick;
+  const _NoImagePanel({required this.l10n, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) => Container(
         decoration: BoxDecoration(
             color: AppTokens.surface.withValues(alpha: .92),
             borderRadius: BorderRadius.circular(24),
@@ -502,375 +989,32 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
                 child: const Icon(Icons.add_photo_alternate_rounded,
                     color: Colors.black, size: 32)),
             const SizedBox(height: 16),
-            Text(_t.of('pick_hint'),
+            Text(l10n.get('pick_hint'),
                 style: const TextStyle(
                     color: AppTokens.text,
                     fontSize: 16,
                     fontWeight: FontWeight.w900)),
             const SizedBox(height: 8),
-            Text(_t.of('insight_pending'),
+            Text(l10n.get('insight_pending'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppTokens.text2, fontSize: 13)),
+                style: const TextStyle(
+                    color: AppTokens.text2, fontSize: 13)),
             const SizedBox(height: 18),
             FilledButton.icon(
-                onPressed: () => _pickImage(s),
+                onPressed: onPick,
                 icon: const Icon(Icons.photo_library_rounded),
-                label: Text(_t.of('tap_to_open')),
+                label: Text(l10n.get('tap_to_open')),
                 style: FilledButton.styleFrom(
                     backgroundColor: AppTokens.primary,
                     foregroundColor: Colors.black)),
           ]),
         ),
       );
-    }
-    
-    final selected = _selected(s);
-    final accent =
-        _insight == null ? selected.indicatorColor : AppTokens.primary;
-    final favoriteCount = s.filters.where((f) => f.isFavorite).length;
-    final recommendedCount = _insight?.recommendedFilterIds.length ?? 0;
-    
-    final tabBar = LumaPanelTabs(
-      t: _t,
-      activeTab: _tab,
-      accentColor: accent,
-      hasInsight: _insight != null,
-      onSelect: (tab) => setState(() => _tab = tab),
-    );
-    
-    final hero = LumaEditorHero(
-      t: _t,
-      accentColor: accent,
-      aiLoading: _aiLoading,
-      autoAi: _autoAi,
-      currentLook: selected.name,
-      insight: _insight,
-      onRunAi: () => _runAi(s),
-      onApplyAi: _insight == null ? null : () => _applyInsight(s),
-      onToggleAutoAi: _toggleAutoAi,
-    );
-    
-    Widget body = switch (_tab) {
-      LumaPanelTab.ai => SingleChildScrollView(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          AiCreativePanel(
-              insight: _insight,
-              isLoading: _aiLoading,
-              filters: s.filters,
-              selectedId: s.snapshot.selectedId,
-              onApplyInsight: () => _applyInsight(s),
-              onSelectRecommendation: (id) =>
-                  context.read<EditorBloc>().add(SelectFilter(id)),
-              onCreateStyle: () => _saveStyle(s),
-              t: _t),
-          const SizedBox(height: 12),
-          Wrap(spacing: 12, runSpacing: 12, children: [
-            for (final item in [
-              (
-                Icons.play_circle_fill_rounded,
-                _t.of('run_ai'),
-                AppTokens.primary,
-                () => _runAi(s)
-              ),
-              (
-                Icons.auto_fix_high_rounded,
-                _enhancing ? _t.of('loading') : _t.of('enhance'),
-                AppTokens.info,
-                _enhancing ? null : () => _autoEnhance(s)
-              ),
-              (
-                Icons.casino_rounded,
-                _t.of('random'),
-                AppTokens.warning,
-                () => _randomize(s)
-              ),
-              (
-                Icons.bookmark_add_outlined,
-                _t.of('save_style'),
-                accent,
-                () => _saveStyle(s)
-              ),
-            ])
-              SizedBox(
-                  width: 180,
-                  child: AIToolButton(
-                      icon: item.$1,
-                      label: item.$2,
-                      iconColor: item.$3,
-                      surface: AppTokens.card,
-                      textColor: AppTokens.text,
-                      onTap: item.$4)),
-          ]),
-        ])),
-      LumaPanelTab.filters =>
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          LumaSelectedLookCard(
-            t: _t,
-            filter: selected,
-            bytes: s.imageBytes!,
-            insight: _insight,
-            onToggleFavorite: () =>
-                context.read<EditorBloc>().add(ToggleFavorite(selected)),
-          ),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(
-              child: LumaOverviewStat(
-                icon: Icons.grid_view_rounded,
-                value: '${filters.length}',
-                label: _t.of('all_filters'),
-                color: AppTokens.info,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: LumaOverviewStat(
-                icon: Icons.star_rounded,
-                value: '$favoriteCount',
-                label: _t.of('favorites'),
-                color: AppTokens.warning,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: LumaOverviewStat(
-                icon: Icons.auto_awesome_rounded,
-                value: '$recommendedCount',
-                label: _t.of('ai_match'),
-                color: AppTokens.primary,
-              ),
-            ),
-          ]),
-          const SizedBox(height: 12),
-          LumaSearchBox(controller: _search, hint: _t.of('search')),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: [
-                for (final item in [
-                  (LumaFilterScope.all, _t.of('all_filters')),
-                  (LumaFilterScope.favorites, _t.of('favorites')),
-                  (LumaFilterScope.cinema, _t.of('cinema')),
-                  (LumaFilterScope.retro, _t.of('retro')),
-                  (LumaFilterScope.pro, _t.of('pro_pack')),
-                  (LumaFilterScope.custom, _t.of('my_styles'))
-                ])
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 8),
-                    child: ChoiceChip(
-                      label: Text(item.$2,
-                          style: const TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.w800)),
-                      selected: _scope == item.$1,
-                      onSelected: (_) => setState(() => _scope = item.$1),
-                      selectedColor: AppTokens.primary.withValues(alpha: 0.16),
-                      labelStyle: TextStyle(
-                          color: _scope == item.$1
-                              ? AppTokens.primary
-                              : AppTokens.text2),
-                      side: BorderSide(
-                          color: _scope == item.$1
-                              ? AppTokens.primary
-                              : Colors.white12),
-                      backgroundColor: Colors.white10,
-                    ),
-                  ),
-              ])),
-          const SizedBox(height: 10),
-          Expanded(
-              child: filters.isEmpty
-                  ? Center(
-                      child: Text(_t.of('no_styles'),
-                          style: const TextStyle(color: AppTokens.text2)))
-                  : GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 12,
-                              crossAxisSpacing: 12,
-                              childAspectRatio: .86),
-                      itemCount: filters.length,
-                      itemBuilder: (_, i) => LumaFilterTile(
-                          filter: filters[i],
-                          bytes: s.imageBytes!,
-                          t: _t,
-                          active: filters[i].id == s.snapshot.selectedId,
-                          onTap: () => context
-                              .read<EditorBloc>()
-                              .add(SelectFilter(filters[i].id)),
-                          onStar: () => context
-                              .read<EditorBloc>()
-                              .add(ToggleFavorite(filters[i])),
-                          onRename: filters[i].isCustom
-                              ? () => _renameCustomStyle(filters[i])
-                              : null,
-                          onDelete: filters[i].isCustom
-                              ? () => _deleteCustomStyle(filters[i])
-                              : null),
-                    )),
-        ]),
-      LumaPanelTab.adjust => LumaAdjustmentPanel(
-          s: s,
-          t: _t,
-          enhancing: _enhancing,
-          onAutoEnhance: () => _autoEnhance(s),
-        ),
-      LumaPanelTab.tools => SingleChildScrollView(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          LumaSectionLabel(
-            title: _t.of('quick_actions'),
-            subtitle: _t.of('studio_control'),
-            accentColor: accent,
-          ),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(
-              child: LumaOverviewStat(
-                icon: Icons.undo_rounded,
-                value: '${s.undo.length}',
-                label: _t.of('undo'),
-                color: AppTokens.warning,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: LumaOverviewStat(
-                icon: Icons.redo_rounded,
-                value: '${s.redo.length}',
-                label: _t.of('redo'),
-                color: AppTokens.info,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: LumaOverviewStat(
-                icon: s.clipboard == null
-                    ? Icons.content_paste_off_rounded
-                    : Icons.content_paste_go_rounded,
-                value: s.clipboard == null
-                    ? _t.of('none')
-                    : _t.of('ai_ready_short'),
-                label: _t.of('paste'),
-                color:
-                    s.clipboard == null ? AppTokens.text2 : AppTokens.primary,
-              ),
-            ),
-          ]),
-          const SizedBox(height: 12),
-          LumaActionDeck(actions: [
-            LumaToolAction(
-              icon: Icons.auto_fix_high_rounded,
-              label: _enhancing ? _t.of('loading') : _t.of('enhance'),
-              color: AppTokens.primary,
-              onTap: _enhancing ? null : () => _autoEnhance(s),
-            ),
-            LumaToolAction(
-              icon: Icons.casino_rounded,
-              label: _t.of('random'),
-              color: AppTokens.info,
-              onTap: () => _randomize(s),
-            ),
-            LumaToolAction(
-              icon: Icons.bookmark_add_outlined,
-              label: _t.of('save_style'),
-              color: AppTokens.warning,
-              onTap: () => _saveStyle(s),
-            ),
-            LumaToolAction(
-              icon: s.compareMode
-                  ? Icons.visibility_rounded
-                  : Icons.compare_rounded,
-              label: _t.of('compare'),
-              color: selected.indicatorColor,
-              onTap: () => context.read<EditorBloc>().add(ToggleCompare()),
-            ),
-            LumaToolAction(
-              icon: Icons.content_copy_rounded,
-              label: _t.of('copy'),
-              color: AppTokens.info,
-              onTap: () => context.read<EditorBloc>().add(CopySettings()),
-            ),
-            LumaToolAction(
-              icon: Icons.content_paste_go_rounded,
-              label: _t.of('paste'),
-              color: AppTokens.info,
-              onTap: s.clipboard == null
-                  ? null
-                  : () => context.read<EditorBloc>().add(PasteSettings()),
-            ),
-            LumaToolAction(
-              icon: Icons.undo_rounded,
-              label: _t.of('undo'),
-              color: AppTokens.warning,
-              onTap: s.undo.isEmpty
-                  ? null
-                  : () => context.read<EditorBloc>().add(Undo()),
-            ),
-            LumaToolAction(
-              icon: Icons.redo_rounded,
-              label: _t.of('redo'),
-              color: AppTokens.warning,
-              onTap: s.redo.isEmpty
-                  ? null
-                  : () => context.read<EditorBloc>().add(Redo()),
-            ),
-            LumaToolAction(
-              icon: Icons.restart_alt_rounded,
-              label: _t.of('reset_all'),
-              color: AppTokens.danger,
-              onTap: () => context.read<EditorBloc>().add(ResetAll()),
-            ),
-            LumaToolAction(
-              icon: _saving
-                  ? Icons.hourglass_top_rounded
-                  : Icons.download_rounded,
-              label: _t.of('save'),
-              color: AppTokens.primary,
-              onTap: _saving ? null : () => _saveResult(s),
-            ),
-          ]),
-        ])),
-    };
-    
-    return Container(
-      decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [
-            Colors.white.withValues(alpha: .05),
-            AppTokens.surface.withValues(alpha: .95),
-            accent.withValues(alpha: .10)
-          ], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: accent.withValues(alpha: .20))),
-      padding: const EdgeInsets.all(16),
-      child: Column(children: [
-        hero,
-        const SizedBox(height: 14),
-        tabBar,
-        const SizedBox(height: 14),
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: AppTokens.normal,
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.04, 0),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              ),
-            ),
-            child: KeyedSubtree(key: ValueKey(_tab), child: body),
-          ),
-        )
-      ]),
-    );
-  }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Data classes
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _PickedImage {
   final String path;
@@ -878,21 +1022,29 @@ class _PickedImage {
   const _PickedImage(this.path, this.bytes);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Animated glow background  (unchanged)
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _LumaGlowBackgroundWrapper extends StatelessWidget {
   final double progress;
   final Color accent;
-  const _LumaGlowBackgroundWrapper({required this.progress, required this.accent});
+  const _LumaGlowBackgroundWrapper(
+      {required this.progress, required this.accent});
+
   @override
   Widget build(BuildContext context) => Stack(children: [
         Positioned(
             top: -140 + (progress * 70),
             left: -80 + (progress * 24),
             child: LumaGlowBlob(
-                color: AppTokens.primary.withValues(alpha: .16), size: 280)),
+                color: AppTokens.primary.withValues(alpha: .16),
+                size: 280)),
         Positioned(
             top: 110 + ((1 - progress) * 50),
             right: -100 + (progress * 34),
-            child: LumaGlowBlob(color: accent.withValues(alpha: .16), size: 300)),
+            child: LumaGlowBlob(
+                color: accent.withValues(alpha: .16), size: 300)),
         Positioned(
             bottom: -150 + ((1 - progress) * 60),
             left: 30 + (progress * 30),

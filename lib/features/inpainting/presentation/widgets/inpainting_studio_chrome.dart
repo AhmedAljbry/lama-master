@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import 'package:lama/core/ui/AppL10n.dart';
+
 class InpaintingStudioTheme {
   const InpaintingStudioTheme._();
 
@@ -79,6 +81,151 @@ class InpaintingStudioTheme {
               offset: Offset(0, 12),
             ),
           ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// StudioStepBreadcrumb
+// 3-step progress indicator: Draw → Remove → Done
+// ─────────────────────────────────────────────────────────────────────────────
+
+class StudioStepBreadcrumb extends StatelessWidget {
+  /// 1 = Draw mask, 2 = AI running, 3 = Done
+  final int currentStep;
+  final AppL10n l10n;
+
+  const StudioStepBreadcrumb({
+    super.key,
+    required this.l10n,
+    this.currentStep = 1,
+  });
+
+  List<String> get _steps => [
+        l10n.get('breadcrumb_draw'),
+        l10n.get('breadcrumb_remove'),
+        l10n.get('breadcrumb_done'),
+      ];
+  static const _colors = [
+    InpaintingStudioTheme.mint,
+    InpaintingStudioTheme.violet,
+    InpaintingStudioTheme.cyan,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(_steps.length * 2 - 1, (i) {
+        if (i.isOdd) {
+          // separator line
+          final stepIndex = (i ~/ 2) + 1;
+          final passed = stepIndex < currentStep;
+          return Container(
+            width: 16,
+            height: 1.5,
+            color: passed
+                ? InpaintingStudioTheme.mint.withValues(alpha: 0.5)
+                : Colors.white.withValues(alpha: 0.12),
+          );
+        }
+        final stepIndex = i ~/ 2;
+        final stepNum = stepIndex + 1;
+        final active = stepNum == currentStep;
+        final done = stepNum < currentStep;
+        final color = _colors[stepIndex];
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          padding: EdgeInsets.symmetric(
+            horizontal: active ? 10 : 8,
+            vertical: 5,
+          ),
+          decoration: BoxDecoration(
+            color: active
+                ? color.withValues(alpha: 0.18)
+                : done
+                    ? color.withValues(alpha: 0.10)
+                    : Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: active
+                  ? color.withValues(alpha: 0.36)
+                  : Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (done)
+                Icon(Icons.check_rounded, size: 11, color: color)
+              else
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: active ? color : Colors.white.withValues(alpha: 0.2),
+                  ),
+                ),
+              if (active) ...[
+                SizedBox(width: 5),
+                Text(
+                  _steps[stepIndex],
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// StudioFloatingPillBar
+// Glass pill container for compact horizontal toolbar row on narrow screens
+// ─────────────────────────────────────────────────────────────────────────────
+
+class StudioFloatingPillBar extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  const StudioFloatingPillBar({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            color: InpaintingStudioTheme.surfaceSoft,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x2A000000),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
     );
   }
 }
@@ -169,7 +316,7 @@ class StudioGlassPanel extends StatelessWidget {
   const StudioGlassPanel({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(12),
     this.radius = 28,
     this.gradient,
     this.fillColor,
@@ -222,7 +369,7 @@ class StudioPill extends StatelessWidget {
         : Colors.white.withValues(alpha: 0.08);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(999),
@@ -232,7 +379,7 @@ class StudioPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 15, color: accent),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
@@ -322,7 +469,7 @@ class StudioStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(18),
@@ -334,13 +481,13 @@ class StudioStatTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: InpaintingStudioTheme.textMuted,
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
@@ -372,17 +519,17 @@ class StudioSectionLabel extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             color: InpaintingStudioTheme.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w900,
           ),
         ),
         if (subtitle != null) ...[
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             subtitle!,
-            style: const TextStyle(
+            style: TextStyle(
               color: InpaintingStudioTheme.textSecondary,
               fontSize: 13,
               height: 1.45,
@@ -423,7 +570,7 @@ class _StudioActionButton extends StatelessWidget {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(20),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
             gradient: gradient,
             color: gradient == null
@@ -446,7 +593,7 @@ class _StudioActionButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 20, color: foreground),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Flexible(
                 child: Text(
                   label,
@@ -502,7 +649,7 @@ class _GlowOrb extends StatelessWidget {
           ),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 68, sigmaY: 68),
-            child: const SizedBox.expand(),
+            child: SizedBox.expand(),
           ),
         ),
       ),

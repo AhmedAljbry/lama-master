@@ -108,7 +108,7 @@ class _BeforeAfterSliderState extends State<BeforeAfterSlider> {
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.drag_indicator_rounded,
                         color: Colors.black,
                         size: 20,
@@ -152,7 +152,7 @@ class _SliderLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.42),
         borderRadius: BorderRadius.circular(999),

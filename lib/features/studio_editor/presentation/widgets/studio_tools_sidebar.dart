@@ -78,42 +78,40 @@ class StudioToolsSidebar extends StatefulWidget {
 }
 
 class _StudioToolsSidebarState extends State<StudioToolsSidebar> {
-  EditorToolCategory _activeCategory = EditorToolCategory.setup;
+  EditorToolCategory _activeCategory = EditorToolCategory.source;
   String? _activeSliderLabel;
 
-  static const List<String> kStyles = <String>[
-    'Luma Master',
-    'Pro Studio',
-    'Color Theft',
-    'Theme Theft',
-    'Cinematic',
-    'Cyber Neon',
-    'Color Splash',
-    'HDR Magic',
-    'Sepia Retro',
+  static const List<String> kStyleKeys = <String>[
+    'style_luma_master',
+    'style_pro_studio',
+    'style_color_theft',
+    'style_theme_theft',
+    'style_cinematic',
+    'style_cyber_neon',
+    'style_color_splash',
+    'style_hdr_magic',
+    'style_sepia_retro',
   ];
 
   static const Map<String, IconData> _styleIcons = <String, IconData>{
-    'Luma Master': Icons.light_mode_rounded,
-    'Pro Studio': Icons.star_rounded,
-    'Color Theft': Icons.palette_rounded,
-    'Theme Theft': Icons.style_rounded,
-    'Cinematic': Icons.movie_rounded,
-    'Cyber Neon': Icons.bolt_rounded,
-    'Color Splash': Icons.water_drop_rounded,
-    'HDR Magic': Icons.hdr_on_rounded,
-    'Sepia Retro': Icons.camera_alt_rounded,
+    'style_luma_master': Icons.auto_awesome_rounded,
+    'style_pro_studio': Icons.stars_rounded,
+    'style_color_theft': Icons.palette_rounded,
+    'style_theme_theft': Icons.style_rounded,
+    'style_cinematic': Icons.movie_filter_rounded,
+    'style_cyber_neon': Icons.bolt_rounded,
+    'style_color_splash': Icons.blur_on_rounded,
+    'style_hdr_magic': Icons.hdr_strong_rounded,
+    'style_sepia_retro': Icons.history_edu_rounded,
   };
 
   List<_AdjustmentInfo> _adjustments(AppL10n l10n) => <_AdjustmentInfo>[
         _AdjustmentInfo(
           id: 'strength',
           label: l10n.get('slider_strength'),
-          icon: Icons.monitor_weight_outlined,
+          icon: Icons.tune_rounded,
           value: widget.strength,
-          min: 0.0,
-          max: 1.0,
-          defaultValue: 1.0,
+          min: 0.0, max: 1.0, defaultValue: 1.0,
           onChanged: widget.onStrengthChanged,
         ),
         _AdjustmentInfo(
@@ -121,49 +119,39 @@ class _StudioToolsSidebarState extends State<StudioToolsSidebar> {
           label: l10n.get('slider_skin'),
           icon: Icons.face_rounded,
           value: widget.skinProtect,
-          min: 0.0,
-          max: 1.0,
-          defaultValue: 0.85,
+          min: 0.0, max: 1.0, defaultValue: 0.85,
           onChanged: widget.onSkinProtectChanged,
         ),
         _AdjustmentInfo(
           id: 'luma',
           label: l10n.get('slider_luma'),
-          icon: Icons.brightness_6_rounded,
+          icon: Icons.brightness_medium_rounded,
           value: widget.lumaTransfer,
-          min: 0.0,
-          max: 1.0,
-          defaultValue: 0.3,
+          min: 0.0, max: 1.0, defaultValue: 0.3,
           onChanged: widget.onLumaChanged,
         ),
         _AdjustmentInfo(
           id: 'color',
           label: l10n.get('slider_color'),
-          icon: Icons.color_lens_outlined,
+          icon: Icons.colorize_rounded,
           value: widget.colorTransfer,
-          min: 0.0,
-          max: 2.0,
-          defaultValue: 1.0,
+          min: 0.0, max: 2.0, defaultValue: 1.0,
           onChanged: widget.onColorChanged,
         ),
         _AdjustmentInfo(
           id: 'contrast',
           label: l10n.get('slider_contrast'),
-          icon: Icons.contrast_rounded,
+          icon: Icons.tonality_rounded,
           value: widget.contrast,
-          min: 0.5,
-          max: 2.0,
-          defaultValue: 1.15,
+          min: 0.5, max: 2.0, defaultValue: 1.15,
           onChanged: widget.onContrastChanged,
         ),
         _AdjustmentInfo(
           id: 'vignette',
           label: l10n.get('slider_vignette'),
-          icon: Icons.camera_rounded,
+          icon: Icons.vignette_rounded,
           value: widget.vignette,
-          min: 0.0,
-          max: 1.0,
-          defaultValue: 0.3,
+          min: 0.0, max: 1.0, defaultValue: 0.3,
           onChanged: widget.onVignetteChanged,
         ),
         _AdjustmentInfo(
@@ -171,9 +159,7 @@ class _StudioToolsSidebarState extends State<StudioToolsSidebar> {
           label: l10n.get('slider_grain'),
           icon: Icons.grain_rounded,
           value: widget.grain,
-          min: 0.0,
-          max: 0.5,
-          defaultValue: 0.1,
+          min: 0.0, max: 0.5, defaultValue: 0.1,
           onChanged: widget.onGrainChanged,
         ),
       ];
@@ -181,120 +167,124 @@ class _StudioToolsSidebarState extends State<StudioToolsSidebar> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
-
-
+    final isReady = widget.hasTarget && widget.hasRef;
 
     return Column(
       children: <Widget>[
+        // ── Workflow Progress Strip ──────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTokens.s16,
+            AppTokens.s14,
+            AppTokens.s16,
+            0,
+          ),
+          child: WorkflowProgressStrip(
+            sourceReady: widget.hasTarget && widget.hasRef,
+            styleSelected: true, // always a style is "selected" (has default)
+            refineActive: widget.state == EditorState.result,
+          ),
+        ),
+        const SizedBox(height: AppTokens.s12),
+
+        // ── Tab Navigation ──────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTokens.s16,
+            0,
+            AppTokens.s16,
+            0,
+          ),
+          child: StudioCategoryMenu(
+            selectedCategory: _activeCategory,
+            isHorizontal: true,
+            onCategorySelected: (category) {
+              HapticFeedback.lightImpact();
+              setState(() {
+                _activeCategory = category;
+                _activeSliderLabel = null;
+              });
+            },
+          ),
+        ),
+
+        // ── Category Body ────────────────────────────────────
         Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: <Color>[
-                  AppTokens.surface,
-                  Color.lerp(AppTokens.surface, AppTokens.card2, 0.32) ??
-                      AppTokens.surface,
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: KeyedSubtree(
+              key: ValueKey<String>(
+                '${_activeCategory.name}:${_activeSliderLabel ?? 'view'}',
               ),
-              borderRadius: BorderRadius.circular(AppTokens.r24),
-              border: widget.isHorizontalScrollable
-                  ? Border(top: BorderSide(color: AppTokens.border))
-                  : Border.all(color: AppTokens.border),
-            ),
-            child: Column(
-              children: <Widget>[
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 260),
-                    transitionBuilder: (child, animation) =>
-                        FadeTransition(opacity: animation, child: child),
-                    child: KeyedSubtree(
-                      key: ValueKey<String>(
-                        '${_activeCategory.name}:${_activeSliderLabel ?? 'base'}',
-                      ),
-                      child: _buildCategoryBody(l10n),
-                    ),
-                  ),
-                ),
-                _buildFooter(context, l10n),
-              ],
+              child: _buildCategoryBody(l10n),
             ),
           ),
         ),
-        StudioCategoryMenu(
-          selectedCategory: _activeCategory,
-          isHorizontal: widget.isHorizontalScrollable,
-          onCategorySelected: (category) {
-            HapticFeedback.selectionClick();
-            setState(() {
-              _activeCategory = category;
-              _activeSliderLabel = null;
-            });
-          },
-        ),
+
+        // ── Footer Apply Button ──────────────────────────────
+        _buildFooter(l10n, isReady),
       ],
     );
   }
 
-
   Widget _buildCategoryBody(AppL10n l10n) {
     switch (_activeCategory) {
-      case EditorToolCategory.setup:
-        return _buildSetupCategory(l10n);
-      case EditorToolCategory.theme:
-        return _buildThemeCategory(l10n);
-      case EditorToolCategory.adjust:
-        return _buildAdjustCategory(l10n);
+      case EditorToolCategory.source:
+        return _buildSourceCategory(l10n);
+      case EditorToolCategory.style:
+        return _buildStyleCategory(l10n);
+      case EditorToolCategory.refine:
+        return _buildRefineCategory(l10n);
     }
   }
 
-  Widget _buildSetupCategory(AppL10n l10n) {
+  Widget _buildSourceCategory(AppL10n l10n) {
     return ListView(
       controller: widget.scrollController,
-      padding: const EdgeInsets.all(AppTokens.s16),
+      padding: const EdgeInsets.fromLTRB(
+        AppTokens.s16,
+        AppTokens.s16,
+        AppTokens.s16,
+        AppTokens.s8,
+      ),
       children: <Widget>[
         SectionHeader(
           title: l10n.get('section_sources'),
           subtitle: l10n.get('section_sources_desc'),
-          icon: Icons.folder_rounded,
+          icon: Icons.photo_library_rounded,
         ),
-        const SizedBox(height: AppTokens.s16),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: SourcePickerCard(
-                label: l10n.get('your_photo'),
-                statusLabel: widget.hasTarget
-                    ? l10n.get('status_ready')
-                    : l10n.get('status_missing'),
-                isReady: widget.hasTarget,
-                icon: Icons.person_rounded,
-                color: AppTokens.primary,
-                onTap: widget.onPickTarget,
-              ),
-            ),
-            const SizedBox(width: AppTokens.s12),
-            Expanded(
-              child: SourcePickerCard(
-                label: l10n.get('filter_ref'),
-                statusLabel: widget.hasRef
-                    ? l10n.get('status_ready')
-                    : l10n.get('status_missing'),
-                isReady: widget.hasRef,
-                icon: Icons.color_lens_rounded,
-                color: AppTokens.info,
-                onTap: widget.onPickRef,
-              ),
-            ),
-          ],
+        const SizedBox(height: AppTokens.s12),
+
+        // ── Full-width source picker cards ────────────────
+        SourcePickerCard(
+          label: l10n.get('your_photo'),
+          isReady: widget.hasTarget,
+          icon: Icons.add_photo_alternate_rounded,
+          color: AppTokens.primary,
+          onTap: widget.onPickTarget,
+          statusLabel: widget.hasTarget
+              ? l10n.get('status_ready')
+              : l10n.get('status_missing'),
         ),
-        const SizedBox(height: AppTokens.s24),
+        const SizedBox(height: AppTokens.s10),
+        SourcePickerCard(
+          label: l10n.get('filter_ref'),
+          isReady: widget.hasRef,
+          icon: Icons.color_lens_rounded,
+          color: AppTokens.info,
+          onTap: widget.onPickRef,
+          statusLabel: widget.hasRef
+              ? l10n.get('status_ready')
+              : l10n.get('status_missing'),
+        ),
+
+        const SizedBox(height: AppTokens.s20),
         SectionHeader(
           title: l10n.get('section_masking'),
           subtitle: l10n.get('section_masking_desc'),
-          icon: Icons.masks_rounded,
+          icon: Icons.auto_awesome_rounded,
         ),
         const SizedBox(height: AppTokens.s12),
         AiModeToggleCard(
@@ -303,7 +293,7 @@ class _StudioToolsSidebarState extends State<StudioToolsSidebar> {
           label: l10n.get('ai_mode_label'),
           subLabel: l10n.get('ai_mode_sub'),
         ),
-        const SizedBox(height: AppTokens.s12),
+        const SizedBox(height: AppTokens.s10),
         ManualMaskCard(
           isReady: widget.hasManualMask,
           isLocked: !widget.useAI || widget.isBusy,
@@ -315,91 +305,149 @@ class _StudioToolsSidebarState extends State<StudioToolsSidebar> {
           readyLabel: l10n.get('manual_ready'),
           idleLabel: l10n.get('manual_draw'),
         ),
-        const SizedBox(height: AppTokens.s12),
-        InspectorHintCard(
-          icon: Icons.info_outline_rounded,
-          accent: AppTokens.info,
-          title: l10n.get('workspace_tip'),
-          description: l10n.get('manual_select_hint'),
-        ),
       ],
     );
   }
 
-  Widget _buildThemeCategory(AppL10n l10n) {
+  Widget _buildStyleCategory(AppL10n l10n) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 360 ? 2 : 1;
+        // Use horizontal filmstrip for narrower panels (mobile/tablet),
+        // fall back to 3-column grid on desktop-width panels.
+        final useFilmstrip = constraints.maxWidth < 480;
 
-        return ListView(
-          controller: widget.scrollController,
-          padding: const EdgeInsets.all(AppTokens.s16),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SectionHeader(
-              title: l10n.get('section_themes'),
-              subtitle: l10n.get('section_themes_desc'),
-              icon: Icons.style_rounded,
-            ),
-            const SizedBox(height: AppTokens.s16),
-            StyleSpotlightCard(
-              title: widget.selectedStyle,
-              subtitle: widget.useAI
-                  ? l10n.get('current_style_ai_on')
-                  : l10n.get('current_style_ai_off'),
-              icon: _styleIcons[widget.selectedStyle] ?? Icons.style_rounded,
-              accent: AppTokens.info,
-            ),
-            const SizedBox(height: AppTokens.s16),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: AppTokens.s10,
-                mainAxisSpacing: AppTokens.s10,
-                childAspectRatio: columns == 1 ? 2.8 : 2.1,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTokens.s16,
+                AppTokens.s16,
+                AppTokens.s16,
+                AppTokens.s12,
               ),
-              itemCount: kStyles.length,
-              itemBuilder: (context, index) {
-                final style = kStyles[index];
-                final isSelected = widget.selectedStyle == style;
-                return StyleOptionCard(
-                  label: style,
-                  icon: _styleIcons[style] ?? Icons.tune_rounded,
-                  isSelected: isSelected,
-                  onTap: widget.isBusy
-                      ? null
-                      : () {
-                          HapticFeedback.selectionClick();
-                          widget.onStyleChanged(style);
-                        },
-                );
-              },
+              child: SectionHeader(
+                title: l10n.get('section_themes'),
+                subtitle: l10n.get('section_themes_desc'),
+                icon: Icons.auto_awesome_motion_rounded,
+              ),
             ),
+
+            if (useFilmstrip) ...<Widget>[
+              // Horizontal scrollable filmstrip
+              SizedBox(
+                height: 112,
+                child: ListView.separated(
+                  controller: widget.scrollController,
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppTokens.s16),
+                  itemCount: kStyleKeys.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: AppTokens.s10),
+                  itemBuilder: (context, index) {
+                    final style = kStyleKeys[index];
+                    final isSelected = widget.selectedStyle == style;
+                    return SizedBox(
+                      width: 90,
+                      child: StyleOptionCard(
+                        label: l10n.get(style),
+                        icon: _styleIcons[style] ?? Icons.style_rounded,
+                        isSelected: isSelected,
+                        onTap: widget.isBusy
+                            ? null
+                            : () {
+                                HapticFeedback.lightImpact();
+                                widget.onStyleChanged(style);
+                              },
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: AppTokens.s8),
+              // Selected style spotlight
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTokens.s16),
+                child: _SelectedStyleBanner(
+                  styleKey: widget.selectedStyle,
+                  icon: _styleIcons[widget.selectedStyle] ??
+                      Icons.style_rounded,
+                  label: l10n.get(widget.selectedStyle),
+                  l10n: l10n,
+                ),
+              ),
+            ] else ...<Widget>[
+              Expanded(
+                child: ListView(
+                  controller: widget.scrollController,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTokens.s16,
+                    0,
+                    AppTokens.s16,
+                    AppTokens.s8,
+                  ),
+                  children: <Widget>[
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: AppTokens.s10,
+                        mainAxisSpacing: AppTokens.s10,
+                        childAspectRatio: 0.88,
+                      ),
+                      itemCount: kStyleKeys.length,
+                      itemBuilder: (context, index) {
+                        final style = kStyleKeys[index];
+                        final isSelected = widget.selectedStyle == style;
+                        return StyleOptionCard(
+                          label: l10n.get(style),
+                          icon: _styleIcons[style] ?? Icons.style_rounded,
+                          isSelected: isSelected,
+                          onTap: widget.isBusy
+                              ? null
+                              : () {
+                                  HapticFeedback.lightImpact();
+                                  widget.onStyleChanged(style);
+                                },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         );
       },
     );
   }
 
-  Widget _buildAdjustCategory(AppL10n l10n) {
+  Widget _buildRefineCategory(AppL10n l10n) {
     final adjustments = _adjustments(l10n);
-    final activeAdjustment = adjustments.where(
-      (item) => item.id == _activeSliderLabel,
-    ).firstOrNull;
-    final modified =
-        adjustments.where((item) => item.hasModifications).toList();
+    final activeAdjustment =
+        adjustments.where((item) => item.id == _activeSliderLabel).firstOrNull;
 
     return ListView(
       controller: widget.scrollController,
-      padding: const EdgeInsets.all(AppTokens.s16),
+      padding: const EdgeInsets.fromLTRB(
+        AppTokens.s16,
+        AppTokens.s16,
+        AppTokens.s16,
+        AppTokens.s8,
+      ),
       children: <Widget>[
         SectionHeader(
           title: l10n.get('section_adjust'),
           subtitle: l10n.get('section_adjust_desc'),
           icon: Icons.tune_rounded,
         ),
-        const SizedBox(height: AppTokens.s16),
+        const SizedBox(height: AppTokens.s14),
+
+        // Active slider overlay (contextual, shown at top)
         if (activeAdjustment != null) ...<Widget>[
           ContextualSliderOverlay(
             label: activeAdjustment.label,
@@ -407,95 +455,154 @@ class _StudioToolsSidebarState extends State<StudioToolsSidebar> {
             min: activeAdjustment.min,
             max: activeAdjustment.max,
             icon: activeAdjustment.icon,
-            onChanged: widget.isBusy ? (_) {} : activeAdjustment.onChanged,
+            onChanged:
+                widget.isBusy ? (_) {} : activeAdjustment.onChanged,
             onClose: () => setState(() => _activeSliderLabel = null),
           ),
-          const SizedBox(height: AppTokens.s16),
-        ] else
-          InspectorHintCard(
-            icon: Icons.tune_rounded,
-            accent: AppTokens.gold,
-            title: l10n.get('adjust_desc'),
-            description: modified.isEmpty
-                ? l10n.get('adjust_none')
-                : '${modified.length} ${l10n.get('adjust_active')}',
-          ),
-        const SizedBox(height: AppTokens.s16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: widget.isHorizontalScrollable ? 4 : 3,
-          crossAxisSpacing: AppTokens.s10,
-          mainAxisSpacing: AppTokens.s12,
-          childAspectRatio: widget.isHorizontalScrollable ? 1.05 : 0.96,
-          children: adjustments.map((adjustment) {
-            return AdjustToolButton(
-              label: adjustment.label,
-              icon: adjustment.icon,
-              hasModifications: adjustment.hasModifications,
-              isSelected: _activeSliderLabel == adjustment.id,
-              onTap: widget.isBusy
-                  ? null
-                  : () => setState(() => _activeSliderLabel = adjustment.id),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: AppTokens.s16),
-        Wrap(
-          spacing: AppTokens.s8,
-          runSpacing: AppTokens.s8,
-          children: modified.isEmpty
-              ? <Widget>[
-                  StatusInfoPill(
-                    label: l10n.get('adjust_none'),
-                    color: AppTokens.text2,
-                  ),
-                ]
-              : modified
-                  .map(
-                    (adjustment) => StatusInfoPill(
-                      label: '${adjustment.label} ${adjustment.progressLabel}',
-                      color: _activeSliderLabel == adjustment.id
-                          ? AppTokens.gold
-                          : AppTokens.primary,
-                    ),
-                  )
-                  .toList(),
+          const SizedBox(height: AppTokens.s14),
+        ],
+
+        // Inline sliders — always visible, no two-tap required
+        ...adjustments.map((adjustment) {
+          final isActive = _activeSliderLabel == adjustment.id;
+          return _InlineAdjustRow(
+            info: adjustment,
+            isActive: isActive,
+            isDisabled: widget.isBusy,
+            onTap: () => setState(() =>
+                _activeSliderLabel =
+                    isActive ? null : adjustment.id),
+            onChanged: widget.isBusy
+                ? (_) {}
+                : adjustment.onChanged,
+          );
+        }),
+
+        const SizedBox(height: AppTokens.s12),
+        InspectorHintCard(
+          icon: Icons.lightbulb_outline_rounded,
+          accent: AppTokens.gold,
+          title: l10n.get('adjust_desc'),
+          description: l10n.get('manual_select_hint'),
         ),
       ],
     );
   }
 
-  Widget _buildFooter(BuildContext context, AppL10n l10n) {
-    final helperText = widget.isBusy
-        ? l10n.get('apply_processing_hint')
-        : widget.hasTarget && widget.hasRef
-            ? l10n.get('apply_ready_hint')
-            : l10n.get('apply_missing_hint');
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTokens.s16,
-        AppTokens.s12,
-        AppTokens.s16,
-        AppTokens.s16,
+  Widget _buildFooter(AppL10n l10n, bool isReady) {
+    return Container(
+      padding: const EdgeInsets.all(AppTokens.s16),
+      decoration: BoxDecoration(
+        color: AppTokens.card.withValues(alpha: 0.3),
+        border: Border(
+          top: BorderSide(color: AppTokens.border.withValues(alpha: 0.25)),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           EnterpriseApplyBtn(
             label: l10n.get('apply_btn'),
-            icon: Icons.auto_fix_high_rounded,
-            isReady: widget.hasTarget && widget.hasRef,
+            icon: Icons.auto_awesome_rounded,
+            isReady: isReady,
             isBusy: widget.isBusy,
             onTap: widget.onApply,
           ),
-          const SizedBox(height: AppTokens.s10),
-          Text(
-            helperText,
-            style: AppTokens.caption.copyWith(
-              color: AppTokens.text2,
-              height: 1.5,
+          if (!isReady && !widget.isBusy) ...<Widget>[
+            const SizedBox(height: AppTokens.s8),
+            Text(
+              l10n.get('apply_missing_hint'),
+              textAlign: TextAlign.center,
+              style: AppTokens.caption.copyWith(
+                color: AppTokens.text2,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Selected Style Banner — compact info strip in filmstrip mode
+// ─────────────────────────────────────────────────────────────
+class _SelectedStyleBanner extends StatelessWidget {
+  final String styleKey;
+  final IconData icon;
+  final String label;
+  final AppL10n l10n;
+  const _SelectedStyleBanner({
+    required this.styleKey,
+    required this.icon,
+    required this.label,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppTokens.s14, vertical: AppTokens.s10),
+      decoration: BoxDecoration(
+        color: AppTokens.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppTokens.r14),
+        border: Border.all(
+          color: AppTokens.primary.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppTokens.primary.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(AppTokens.r10),
+            ),
+            child: Icon(icon, color: AppTokens.primary, size: 17),
+          ),
+          const SizedBox(width: AppTokens.s10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  l10n.get('section_themes').toUpperCase(),
+                  style: AppTokens.caption.copyWith(
+                    color: AppTokens.primary,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: AppTokens.labelBold.copyWith(
+                    color: AppTokens.text,
+                    fontSize: 12,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppTokens.primary.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppTokens.rFull),
+            ),
+            child: Text(
+              'SELECTED',
+              style: TextStyle(
+                color: AppTokens.primary,
+                fontSize: 8,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.8,
+              ),
             ),
           ),
         ],
@@ -504,6 +611,128 @@ class _StudioToolsSidebarState extends State<StudioToolsSidebar> {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Inline Adjust Row — compact slider row for Refine tab
+// ─────────────────────────────────────────────────────────────
+class _InlineAdjustRow extends StatelessWidget {
+  final _AdjustmentInfo info;
+  final bool isActive;
+  final bool isDisabled;
+  final VoidCallback onTap;
+  final ValueChanged<double> onChanged;
+
+  const _InlineAdjustRow({
+    required this.info,
+    required this.isActive,
+    required this.isDisabled,
+    required this.onTap,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress =
+        ((info.value - info.min) / (info.max - info.min) * 100)
+            .clamp(0, 100)
+            .round();
+    final Color accent =
+        isActive ? AppTokens.gold : (info.hasModifications ? AppTokens.primary : AppTokens.text2);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(bottom: AppTokens.s8),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+      decoration: BoxDecoration(
+        color: isActive
+            ? accent.withValues(alpha: 0.08)
+            : AppTokens.card.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(AppTokens.r14),
+        border: Border.all(
+          color: isActive
+              ? accent.withValues(alpha: 0.4)
+              : (info.hasModifications
+                  ? AppTokens.primary.withValues(alpha: 0.2)
+                  : AppTokens.border.withValues(alpha: 0.6)),
+          width: isActive ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          // Header row — tap to select/focus
+          GestureDetector(
+            onTap: isDisabled ? null : onTap,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: <Widget>[
+                Icon(info.icon, size: 15, color: accent),
+                const SizedBox(width: AppTokens.s8),
+                Expanded(
+                  child: Text(
+                    info.label,
+                    style: AppTokens.labelBold.copyWith(
+                      color: accent,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                if (info.hasModifications)
+                  Container(
+                    width: 6,
+                    height: 6,
+                    margin: const EdgeInsets.only(right: AppTokens.s6),
+                    decoration: BoxDecoration(
+                      color: AppTokens.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppTokens.r8),
+                  ),
+                  child: Text(
+                    '$progress%',
+                    style: AppTokens.caption.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 9,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Always-visible compact slider
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: isActive ? 4.0 : 2.5,
+              thumbShape: RoundSliderThumbShape(
+                  enabledThumbRadius: isActive ? 8.0 : 5.5),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+              activeTrackColor: accent,
+              inactiveTrackColor: AppTokens.border.withValues(alpha: 0.5),
+              thumbColor: isActive ? Colors.white : accent,
+              overlayColor: accent.withValues(alpha: 0.14),
+            ),
+            child: Slider(
+              value: info.value,
+              min: info.min,
+              max: info.max,
+              onChanged: isDisabled ? null : onChanged,
+              onChangeEnd: (_) => HapticFeedback.selectionClick(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Adjustment data model
+// ─────────────────────────────────────────────────────────────
 class _AdjustmentInfo {
   final String id;
   final String label;
@@ -526,9 +755,4 @@ class _AdjustmentInfo {
   });
 
   bool get hasModifications => (value - defaultValue).abs() > 0.001;
-
-  String get progressLabel {
-    final percent = max == min ? 0 : (((value - min) / (max - min)) * 100);
-    return '${percent.clamp(0, 100).round()}%';
-  }
 }

@@ -74,7 +74,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
   Future<void> _saveHighQualityMask() async {
     HapticFeedback.heavyImpact();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: const Text("جاري معالجة القناع الدقيق..."), backgroundColor: AppTokens.surface),
+      SnackBar(content: Text("جاري معالجة القناع الدقيق..."), backgroundColor: AppTokens.surface),
     );
 
     try {
@@ -133,16 +133,16 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
     return Scaffold(
       backgroundColor: AppTokens.bg,
       appBar: AppBar(
-        title: const Text('التحديد الدقيق (Masking)', style: TextStyle(color: AppTokens.text, fontWeight: FontWeight.w900, fontSize: 16)),
+        title: Text('التحديد الدقيق (Masking)', style: TextStyle(color: AppTokens.text, fontWeight: FontWeight.w900, fontSize: 16)),
         backgroundColor: AppTokens.surface,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppTokens.text),
+        iconTheme: IconThemeData(color: AppTokens.text),
         actions: [
           IconButton(
-            icon: const Icon(Icons.check_circle_rounded, color: AppTokens.primary, size: 28),
+            icon: Icon(Icons.check_circle_rounded, color: AppTokens.primary, size: 28),
             onPressed: paths.isEmpty ? null : _saveHighQualityMask,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
         ],
       ),
       body: Stack(
@@ -202,14 +202,14 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 30),
+              padding: EdgeInsets.only(bottom: 30),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTokens.r24),
                 child: BackdropFilter(
                   filter: ui.ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.9,
-                    padding: const EdgeInsets.symmetric(horizontal: AppTokens.s16, vertical: AppTokens.s8),
+                    padding: EdgeInsets.symmetric(horizontal: AppTokens.s16, vertical: AppTokens.s8),
                     decoration: BoxDecoration(
                       color: AppTokens.surface.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(AppTokens.r24),
@@ -279,7 +279,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
                             ),
                             // زر مسح الكل
                             IconButton(
-                              icon: const Icon(Icons.delete_sweep_rounded, color: AppTokens.text2),
+                              icon: Icon(Icons.delete_sweep_rounded, color: AppTokens.text2),
                               onPressed: () {
                                 HapticFeedback.heavyImpact();
                                 setState(() => paths.clear());
@@ -304,7 +304,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isActive ? activeColor.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTokens.r16),
@@ -314,7 +314,7 @@ class _MaskEditorScreenState extends State<MaskEditorScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: isActive ? activeColor : AppTokens.text2, size: 20),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(label, style: TextStyle(color: isActive ? activeColor : AppTokens.text2, fontSize: 10, fontWeight: FontWeight.bold)),
           ],
         ),

@@ -19,13 +19,13 @@ import 'package:lama/presentation/widgets/Steal/MaskEditorScreen.dart';
 enum EditorState { setup, processing, result }
 
 class StudioEditorMainScreen extends StatefulWidget {
-  final Locale locale;
-  final VoidCallback onToggleLocale;
+  final Locale? locale;
+  final VoidCallback? onToggleLocale;
 
   const StudioEditorMainScreen({
     super.key,
-    required this.locale,
-    required this.onToggleLocale,
+    this.locale,
+    this.onToggleLocale,
   });
 
   @override
@@ -45,18 +45,18 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
   bool _isComparing = false;
   bool _useAI = false;
 
-  static const List<String> kStyles = <String>[
-    'Luma Master',
-    'Pro Studio',
-    'Color Theft',
-    'Theme Theft',
-    'Cinematic',
-    'Cyber Neon',
-    'Color Splash',
-    'HDR Magic',
-    'Sepia Retro',
+  static const List<String> kStyleKeys = <String>[
+    'style_luma_master',
+    'style_pro_studio',
+    'style_color_theft',
+    'style_theme_theft',
+    'style_cinematic',
+    'style_cyber_neon',
+    'style_color_splash',
+    'style_hdr_magic',
+    'style_sepia_retro',
   ];
-  String _selectedStyle = kStyles.first;
+  String _selectedStyleKey = kStyleKeys.first;
 
   double _strength = 1.0;
   double _skinProtect = 0.85;
@@ -91,9 +91,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
   }
 
   void _undoHistory() {
-    if (!_canUndo) {
-      return;
-    }
+    if (!_canUndo) return;
     HapticFeedback.selectionClick();
     setState(() {
       _histIdx--;
@@ -102,9 +100,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
   }
 
   void _redoHistory() {
-    if (!_canRedo) {
-      return;
-    }
+    if (!_canRedo) return;
     HapticFeedback.selectionClick();
     setState(() {
       _histIdx++;
@@ -119,9 +115,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
 
     try {
       final picked = await toolkit.pickImage();
-      if (!mounted || picked == null) {
-        return;
-      }
+      if (!mounted || picked == null) return;
 
       setState(() {
         if (isTarget) {
@@ -139,14 +133,10 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
         }
       });
     } on StudioImageConvertException {
-      if (mounted) {
-        _snack(l10n.get('snack_convert_fail'), isError: true);
-      }
+      if (mounted) _snack(l10n.get('snack_convert_fail'), isError: true);
     } catch (error, stack) {
       toolkit.reporter.capture(error, stack, context: 'studioPickImage');
-      if (mounted) {
-        _snack(error.toString(), isError: true);
-      }
+      if (mounted) _snack(error.toString(), isError: true);
     }
   }
 
@@ -177,9 +167,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
   }
 
   Future<void> _startProcessing() async {
-    if (_isProcessing) {
-      return;
-    }
+    if (_isProcessing) return;
 
     HapticFeedback.heavyImpact();
     final l10n = AppL10n.of(context);
@@ -207,9 +195,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
           config: _buildConfig(),
         ),
       );
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       if (_useAI && !_hasManualMask) {
         if (!result.targetPersonDetected) {
@@ -229,16 +215,14 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
       _snack(l10n.get('snack_done'));
     } catch (error, stack) {
       toolkit.reporter.capture(error, stack, context: 'studioProcess');
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() => _state = EditorState.setup);
       _snack('${l10n.get('snack_error_prefix')}$error', isError: true);
     }
   }
 
   TheftConfig _buildConfig() {
-    final style = _selectedStyle;
+    final style = _selectedStyleKey;
     return TheftConfig(
       strength: _strength,
       skinProtect: _skinProtect,
@@ -247,23 +231,21 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
       contrastBoost: _contrast,
       vignette: _vignette,
       grain: _grain,
-      isLightTheft: style == 'Luma Master',
-      isStyleTheft: style == 'Pro Studio',
-      isColorTheft: style == 'Color Theft',
-      isThemeTheft: style == 'Theme Theft',
-      isCinematic: style == 'Cinematic',
-      isCyberpunk: style == 'Cyber Neon',
-      isColorSplash: style == 'Color Splash',
-      isHDR: style == 'HDR Magic',
-      isSepia: style == 'Sepia Retro',
+      isLightTheft: style == 'style_luma_master',
+      isStyleTheft: style == 'style_pro_studio',
+      isColorTheft: style == 'style_color_theft',
+      isThemeTheft: style == 'style_theme_theft',
+      isCinematic: style == 'style_cinematic',
+      isCyberpunk: style == 'style_cyber_neon',
+      isColorSplash: style == 'style_color_splash',
+      isHDR: style == 'style_hdr_magic',
+      isSepia: style == 'style_sepia_retro',
     ).sanitized();
   }
 
   Future<void> _save() async {
     final bytes = _outputBytes;
-    if (bytes == null) {
-      return;
-    }
+    if (bytes == null) return;
     final l10n = AppL10n.of(context);
     final toolkit = context.read<StudioEditorToolkit>();
     HapticFeedback.heavyImpact();
@@ -271,9 +253,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
 
     try {
       final saved = await toolkit.saveResult(bytes);
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       if (saved) {
         _snack(l10n.get('snack_saved'));
@@ -282,9 +262,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
       }
     } catch (error, stack) {
       toolkit.reporter.capture(error, stack, context: 'studioSave');
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       _snack(l10n.get('snack_save_fail'), isError: true);
     }
@@ -303,27 +281,19 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
 
     try {
       final shared = await toolkit.shareResult(bytes, text: 'Studio Pro');
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      if (!shared) {
-        _snack(l10n.get('snack_share_fail'), isError: true);
-      }
+      if (!shared) _snack(l10n.get('snack_share_fail'), isError: true);
     } catch (error, stack) {
       toolkit.reporter.capture(error, stack, context: 'studioShare');
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       _snack('${l10n.get('snack_share_fail')}: $error', isError: true);
     }
   }
 
   void _openFullScreen() {
-    if (_targetBytes == null) {
-      return;
-    }
+    if (_targetBytes == null) return;
     HapticFeedback.selectionClick();
     final show = _isComparing ? _targetBytes! : (_outputBytes ?? _targetBytes!);
     Navigator.push(
@@ -339,12 +309,9 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
   }
 
   void _snack(String msg, {bool isError = false, bool isWarning = false}) {
-    var color = AppTokens.primary;
-    if (isError) {
-      color = AppTokens.danger;
-    } else if (isWarning) {
-      color = AppTokens.warning;
-    }
+    Color color = AppTokens.primary;
+    if (isError) { color = AppTokens.danger; }
+    else if (isWarning) { color = AppTokens.warning; }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
@@ -352,7 +319,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
         backgroundColor: AppTokens.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.r16),
-          side: BorderSide(color: color.withValues(alpha: 0.28)),
+          side: BorderSide(color: color.withValues(alpha: 0.25)),
         ),
         content: Text(
           msg,
@@ -362,19 +329,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
     );
   }
 
-  String _statusLabel(AppL10n l10n) {
-    switch (_state) {
-      case EditorState.setup:
-        return l10n.get('editor_state_setup');
-      case EditorState.processing:
-        return l10n.get('editor_state_processing');
-      case EditorState.result:
-        return l10n.get('editor_state_result');
-    }
-  }
-
   StudioToolsSidebar _buildToolsSidebar({
-    required bool isHorizontal,
     ScrollController? scrollController,
   }) {
     return StudioToolsSidebar(
@@ -383,7 +338,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
       hasTarget: _hasTarget,
       hasRef: _hasReference,
       hasManualMask: _hasManualMask,
-      selectedStyle: _selectedStyle,
+      selectedStyle: _selectedStyleKey,
       strength: _strength,
       skinProtect: _skinProtect,
       lumaTransfer: _lumaTransfer,
@@ -391,26 +346,23 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
       contrast: _contrast,
       vignette: _vignette,
       grain: _grain,
-      isHorizontalScrollable: isHorizontal,
-      scrollController: scrollController,
       isBusy: _isProcessing,
+      scrollController: scrollController,
       onAIToggle: (value) => setState(() {
         _useAI = value;
-        if (!value) {
-          _manualMaskBytes = null;
-        }
+        if (!value) _manualMaskBytes = null;
       }),
       onPickTarget: () => _pickImage(true),
       onPickRef: () => _pickImage(false),
       onManualSelect: _openMaskEditor,
-      onStyleChanged: (style) => setState(() => _selectedStyle = style),
-      onStrengthChanged: (value) => setState(() => _strength = value),
-      onSkinProtectChanged: (value) => setState(() => _skinProtect = value),
-      onLumaChanged: (value) => setState(() => _lumaTransfer = value),
-      onColorChanged: (value) => setState(() => _colorTransfer = value),
-      onContrastChanged: (value) => setState(() => _contrast = value),
-      onVignetteChanged: (value) => setState(() => _vignette = value),
-      onGrainChanged: (value) => setState(() => _grain = value),
+      onStyleChanged: (style) => setState(() => _selectedStyleKey = style),
+      onStrengthChanged: (v) => setState(() => _strength = v),
+      onSkinProtectChanged: (v) => setState(() => _skinProtect = v),
+      onLumaChanged: (v) => setState(() => _lumaTransfer = v),
+      onColorChanged: (v) => setState(() => _colorTransfer = v),
+      onContrastChanged: (v) => setState(() => _contrast = v),
+      onVignetteChanged: (v) => setState(() => _vignette = v),
+      onGrainChanged: (v) => setState(() => _grain = v),
       onApply: _startProcessing,
       onEditResult: () => setState(() {
         _state = EditorState.setup;
@@ -427,7 +379,9 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
     final showSidebar = isDesktop || (isTablet && isLandscape);
+    final safePad = MediaQuery.of(context).padding;
 
+    // The canvas workspace widget (reused in both layouts)
     final workspace = StudioCanvasWorkspace(
       state: _state,
       targetBytes: _targetBytes,
@@ -436,26 +390,28 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
       isComparing: _isComparing,
       useAI: _useAI,
       hasManualMask: _hasManualMask,
-      selectedStyle: _selectedStyle,
+      selectedStyle: _selectedStyleKey,
       onTapFullScreen: _openFullScreen,
       onPickTarget: () => _pickImage(true),
       onPickReference: () => _pickImage(false),
-      onCompareToggle: (value) => setState(() => _isComparing = value),
+      onCompareToggle: (v) => setState(() => _isComparing = v),
       onCompareToggleEnd: () => setState(() => _isComparing = false),
     );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
+      backgroundColor: AppTokens.bg,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
+        preferredSize: const Size.fromHeight(76),
         child: SafeArea(
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? AppTokens.s24 : AppTokens.s16,
-              vertical: AppTokens.s8,
+            padding: EdgeInsets.fromLTRB(
+              isDesktop ? AppTokens.s24 : AppTokens.s16,
+              AppTokens.s8,
+              isDesktop ? AppTokens.s24 : AppTokens.s16,
+              0,
             ),
             child: StudioHeaderBar(
-              onToggleLocale: widget.onToggleLocale,
               onBack: () => Navigator.of(context).maybePop(),
               canUndo: _canUndo,
               canRedo: _canRedo,
@@ -465,7 +421,7 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
               onShare: _share,
               hasResult: _hasResult,
               statusLabel: _statusLabel(l10n),
-              styleLabel: _selectedStyle,
+              styleLabel: l10n.get(_selectedStyleKey),
               hasTarget: _hasTarget,
               hasReference: _hasReference,
               useAI: _useAI,
@@ -476,98 +432,107 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: <Color>[
               AppTokens.bg,
-              Color.lerp(AppTokens.bg, AppTokens.surface, 0.55) ?? AppTokens.bg,
-              AppTokens.surface,
+              Color.lerp(AppTokens.bg, const Color(0xFF0F0F12), 0.5) ?? AppTokens.bg,
+              const Color(0xFF0A0A0B),
             ],
-            stops: const <double>[0.0, 0.45, 1.0],
           ),
         ),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 450),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          child: _state == EditorState.processing
-              ? const StudioProcessingScreen(key: ValueKey('processing'))
-              : _state == EditorState.result && _outputBytes != null
-                  ? StudioResultScreen(
-                      key: const ValueKey('result'),
-                      imageBytes: _outputBytes!,
-                      selectedStyle: _selectedStyle,
-                      useAI: _useAI,
-                      hasManualMask: _hasManualMask,
-                      onEdit: () => setState(() {
-                        _state = EditorState.setup;
-                        _isComparing = false;
-                      }),
-                      onSave: _save,
-                      onShare: _share,
-                    )
-                  : Column(
-                      key: const ValueKey('workspace'),
-                      children: <Widget>[
-            SizedBox(height: MediaQuery.of(context).padding.top + 80),
+        child: Column(
+          children: <Widget>[
+            // Space for appbar
+            SizedBox(height: safePad.top + 84),
             Expanded(
-              child: showSidebar
-                  ? Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        isDesktop ? AppTokens.s24 : AppTokens.s16,
-                        AppTokens.s16,
-                        isDesktop ? AppTokens.s24 : AppTokens.s16,
-                        AppTokens.s20,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: <Widget>[
-                          Expanded(flex: 7, child: workspace),
-                          const SizedBox(width: AppTokens.s24),
-                          SizedBox(
-                            width: isDesktop ? 396 : 360,
-                            child: _buildToolsSidebar(isHorizontal: false),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Column(
-                      children: <Widget>[
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppTokens.s16,
-                              AppTokens.s16,
-                              AppTokens.s16,
-                              AppTokens.s16,
-                            ),
-                            child: workspace,
-                          ),
-                        ),
-                        SafeArea(
-                          top: false,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppTokens.s24,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 450),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                child: _state == EditorState.processing
+                    ? const StudioProcessingScreen(key: ValueKey<String>('processing'))
+                    : _state == EditorState.result && _outputBytes != null
+                        ? StudioResultScreen(
+                            key: const ValueKey<String>('result'),
+                            imageBytes: _outputBytes!,
+                            selectedStyle: _selectedStyleKey,
+                            useAI: _useAI,
+                            hasManualMask: _hasManualMask,
+                            onEdit: () => setState(() {
+                              _state = EditorState.setup;
+                              _isComparing = false;
+                            }),
+                            onSave: _save,
+                            onShare: _share,
+                          )
+                        : Padding(
+                            key: const ValueKey<String>('workspace_root'),
+                            padding: EdgeInsets.fromLTRB(
+                              isDesktop ? AppTokens.s24 : AppTokens.s12,
                               0,
-                              AppTokens.s24,
-                              AppTokens.s16,
+                              isDesktop ? AppTokens.s24 : AppTokens.s12,
+                              isDesktop ? AppTokens.s24 : AppTokens.s12,
                             ),
-                            child: _MobileFloatingToolbar(
-                              onOpenTools: () => _showMobileToolsSheet(context),
-                              hasTarget: _hasTarget,
-                              isBusy: _isProcessing,
-                              onApply: _startProcessing,
-                            ),
+                            child: showSidebar
+                                ? _buildDesktopLayout(workspace, isDesktop)
+                                : _buildMobileLayout(workspace),
                           ),
-                        ),
-                      ],
-                    ),
+              ),
             ),
           ],
         ),
       ),
-      ),
+    );
+  }
+
+  String _statusLabel(AppL10n l10n) {
+    switch (_state) {
+      case EditorState.setup:
+        return l10n.get('editor_state_setup');
+      case EditorState.processing:
+        return l10n.get('editor_state_processing');
+      case EditorState.result:
+        return l10n.get('editor_state_result');
+    }
+  }
+
+  Widget _buildDesktopLayout(Widget workspace, bool isDesktop) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Expanded(flex: 7, child: workspace),
+        const SizedBox(width: AppTokens.s16),
+        SizedBox(
+          width: isDesktop ? 380 : 340,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppTokens.surface,
+              borderRadius: BorderRadius.circular(AppTokens.r24),
+              border: Border.all(color: AppTokens.border.withValues(alpha: 0.4)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: _buildToolsSidebar(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(Widget workspace) {
+    return Column(
+      children: <Widget>[
+        Expanded(child: workspace),
+        const SizedBox(height: AppTokens.s12),
+        _MobileToolbar(
+          hasTarget: _hasTarget,
+          isBusy: _isProcessing,
+          canUndo: _canUndo,
+          onOpenTools: () => _showMobileToolsSheet(context),
+          onApply: _startProcessing,
+          onUndo: _undoHistory,
+        ),
+      ],
     );
   }
 
@@ -576,36 +541,36 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (ctx) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.70,
-          minChildSize: 0.40,
-          maxChildSize: 0.92,
+          initialChildSize: 0.78,
+          minChildSize: 0.50,
+          maxChildSize: 0.96,
+          expand: false,
           builder: (context, scrollController) {
             return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
-                color: AppTokens.bg,
-                border: Border(
-                  top: BorderSide(
-                    color: AppTokens.border.withValues(alpha: 0.6),
-                    width: 1.5,
-                  ),
-                ),
+                color: AppTokens.surface,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(AppTokens.r32),
                 ),
+                border: Border.all(
+                  color: AppTokens.border.withValues(alpha: 0.18),
+                ),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    blurRadius: 40,
-                    spreadRadius: 10,
-                    offset: const Offset(0, -10),
+                    color: Colors.black.withValues(alpha: 0.75),
+                    blurRadius: 60,
+                    spreadRadius: 2,
                   ),
                 ],
               ),
               child: Column(
                 children: <Widget>[
-                  const SizedBox(height: AppTokens.s12),
+                  const SizedBox(height: AppTokens.s10),
+                  // Drag handle — wider & more prominent
                   Container(
                     width: 48,
                     height: 5,
@@ -614,12 +579,9 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
                       borderRadius: BorderRadius.circular(AppTokens.rFull),
                     ),
                   ),
-                  const SizedBox(height: AppTokens.s8),
+                  const SizedBox(height: 2),
                   Expanded(
-                    child: _buildToolsSidebar(
-                      isHorizontal: false,
-                      scrollController: scrollController,
-                    ),
+                    child: _buildToolsSidebar(scrollController: scrollController),
                   ),
                 ],
               ),
@@ -631,56 +593,67 @@ class _StudioEditorMainScreenState extends State<StudioEditorMainScreen> {
   }
 }
 
-class _MobileFloatingToolbar extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────
+// Mobile Bottom Toolbar — 3 actions: Edit Tools + Undo + Apply
+// ─────────────────────────────────────────────────────────────
+class _MobileToolbar extends StatelessWidget {
   final VoidCallback onOpenTools;
   final bool hasTarget;
   final bool isBusy;
   final VoidCallback onApply;
+  final bool canUndo;
+  final VoidCallback onUndo;
 
-  const _MobileFloatingToolbar({
+  const _MobileToolbar({
     required this.onOpenTools,
     required this.hasTarget,
     required this.isBusy,
     required this.onApply,
+    this.canUndo = false,
+    required this.onUndo,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
     return Container(
+      height: 68,
       decoration: BoxDecoration(
-        color: AppTokens.surface,
-        borderRadius: BorderRadius.circular(AppTokens.r24),
-        border: Border.all(color: AppTokens.border),
+        color: AppTokens.surface.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(AppTokens.r20),
+        border: Border.all(color: AppTokens.border.withValues(alpha: 0.35)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 24,
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 32,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         children: <Widget>[
+          // ── Open Edit Tools ──────────────────────────────
           Expanded(
+            flex: 2,
             child: InkWell(
               onTap: onOpenTools,
-              borderRadius: BorderRadius.circular(AppTokens.r16),
-              child: Padding(
-                padding: const EdgeInsets.all(AppTokens.s8),
+              borderRadius: BorderRadius.circular(AppTokens.r14),
+              child: Center(
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Icon(
+                    const Icon(
                       Icons.tune_rounded,
                       color: AppTokens.text,
+                      size: 18,
                     ),
-                    const SizedBox(width: AppTokens.s12),
+                    const SizedBox(width: AppTokens.s8),
                     Text(
                       l10n.get('btn_edit'),
-                      style: AppTokens.headingM.copyWith(
+                      style: AppTokens.labelBold.copyWith(
                         color: AppTokens.text,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -688,28 +661,100 @@ class _MobileFloatingToolbar extends StatelessWidget {
               ),
             ),
           ),
-          if (hasTarget) ...<Widget>[
-            Container(
-              width: 1,
-              height: 32,
-              color: AppTokens.border,
-              margin: const EdgeInsets.symmetric(horizontal: AppTokens.s8),
-            ),
-            IconButton(
-              onPressed: isBusy ? null : onApply,
-              icon: Icon(
-                Icons.auto_fix_high_rounded,
-                color: isBusy ? AppTokens.text2 : AppTokens.primary,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor:
-                    isBusy ? AppTokens.surface : AppTokens.primary.withValues(alpha: 0.15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTokens.r12),
+
+          // Divider
+          Container(
+            width: 1,
+            height: 28,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            color: AppTokens.border.withValues(alpha: 0.4),
+          ),
+
+          // ── Undo ─────────────────────────────────────────
+          Tooltip(
+            message: l10n.get('btn_undo'),
+            child: InkWell(
+              onTap: (canUndo && !isBusy) ? onUndo : null,
+              borderRadius: BorderRadius.circular(AppTokens.r12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTokens.s12, vertical: 8),
+                child: Icon(
+                  Icons.undo_rounded,
+                  size: 20,
+                  color: (canUndo && !isBusy)
+                      ? AppTokens.text
+                      : AppTokens.text2.withValues(alpha: 0.3),
                 ),
               ),
             ),
-          ]
+          ),
+
+          // Divider
+          Container(
+            width: 1,
+            height: 28,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            color: AppTokens.border.withValues(alpha: 0.4),
+          ),
+
+          // ── Apply ─────────────────────────────────────────
+          if (hasTarget)
+            GestureDetector(
+              onTap: isBusy ? null : onApply,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.s18,
+                  vertical: 11,
+                ),
+                decoration: BoxDecoration(
+                  gradient: isBusy ? null : AppTokens.primaryGradient,
+                  color: isBusy ? AppTokens.card2 : null,
+                  borderRadius: BorderRadius.circular(AppTokens.r14),
+                  boxShadow: isBusy ? null : AppTokens.primaryGlow(0.18),
+                ),
+                child: isBusy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTokens.text2,
+                        ),
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          const Icon(
+                            Icons.auto_awesome_rounded,
+                            color: Colors.black,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            l10n.get('apply_btn'),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppTokens.s10),
+              child: Text(
+                '① Add photo',
+                style: AppTokens.caption.copyWith(
+                  color: AppTokens.text2.withValues(alpha: 0.6),
+                  fontSize: 10,
+                ),
+              ),
+            ),
         ],
       ),
     );

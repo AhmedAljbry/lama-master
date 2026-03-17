@@ -8,8 +8,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:lama/core/i18n/t.dart';
+
+import 'package:lama/core/ui/AppL10n.dart';
 import 'package:lama/core/routing/app_routes.dart';
 import 'package:lama/core/ui/cover_mapping.dart';
 import 'package:lama/core/ui/mask_exporter.dart';
@@ -87,14 +88,14 @@ class _EditorPageState extends State<EditorPage>
 
   @override
   Widget build(BuildContext context) {
-    final t = context.read<T>();
+    final l10n = AppL10n.of(context);
     final pickState = context.watch<ImagePickCubit>().state;
 
     if (pickState is! ImagePickReady) {
       return _buildErrorState(
         InpaintingStudioTheme.background,
         InpaintingStudioTheme.textPrimary,
-        t,
+        l10n,
         InpaintingStudioTheme.mint,
       );
     }
@@ -115,10 +116,6 @@ class _EditorPageState extends State<EditorPage>
               final verticalPadding = constraints.maxHeight < 760 ? 10.0 : 16.0;
               final sidePanelWidth =
                   math.min(386.0, constraints.maxWidth * 0.31);
-              final bottomPanelHeight = math.min(
-                340.0,
-                math.max(248.0, constraints.maxHeight * 0.34),
-              );
 
               return Stack(
                 children: [
@@ -138,34 +135,35 @@ class _EditorPageState extends State<EditorPage>
                               previous.strokes.length != current.strokes.length,
                           builder: (context, drawingState) {
                             return InpaintingEditorToolbar(
-                              title: t.of('magic_title'),
+                              l10n: l10n,
+                              title: l10n.get('magic_title'),
                               subtitle: drawingState.strokes.isEmpty
-                                  ? t.of('editor_tip_run')
-                                  : t.of('editor_tip_precision'),
+                                  ? l10n.get('editor_tip_run')
+                                  : l10n.get('editor_tip_precision'),
                               statusLabel: drawingState.strokes.isEmpty
-                                  ? t.of('editor_mask_pending')
-                                  : t.of('editor_mask_ready'),
+                                  ? l10n.get('editor_mask_pending')
+                                  : l10n.get('editor_mask_ready'),
                               hasMask: drawingState.strokes.isNotEmpty,
                               compareEnabled: _showOriginalPreview,
                               canUndo: drawingState.canUndo,
                               canRedo: drawingState.canRedo,
                               compact: compactToolbar,
                               onBack: _handleBackNavigation,
-                              onHelp: () => _showEditorHelpSheet(context, t),
+                               onHelp: () => _showEditorHelpSheet(context, l10n),
                               onUndo: () => context.read<DrawingCubit>().undo(),
                               onRedo: () => context.read<DrawingCubit>().redo(),
                               onClear: () =>
                                   context.read<DrawingCubit>().clear(),
                               onToggleCompare: _toggleComparePreview,
-                              undoLabel: t.of('undo'),
-                              redoLabel: t.of('redo'),
-                              clearLabel: t.of('clear'),
-                              compareLabel: t.of('compare'),
-                              compareActiveLabel: t.of('compare_live'),
+                              undoLabel: l10n.get('undo'),
+                              redoLabel: l10n.get('redo'),
+                              clearLabel: l10n.get('clear'),
+                              compareLabel: l10n.get('compare'),
+                              compareActiveLabel: l10n.get('compare_live'),
                             );
                           },
                         ),
-                        const SizedBox(height: 14),
+                        SizedBox(height: 14),
                         Expanded(
                           child: isWideLayout
                               ? Row(
@@ -175,46 +173,28 @@ class _EditorPageState extends State<EditorPage>
                                     Expanded(
                                       child: _buildWorkspaceCard(
                                         context: context,
-                                        t: t,
+                                        l10n: l10n,
                                         image: image,
                                         compact: false,
                                       ),
                                     ),
-                                    const SizedBox(width: 18),
+                                    SizedBox(width: 18),
                                     SizedBox(
                                       width: sidePanelWidth,
                                       child: _buildControlsPanel(
                                         context: context,
-                                        t: t,
+                                        l10n: l10n,
                                         layout:
                                             InpaintingControlsLayout.sideDock,
                                       ),
                                     ),
                                   ],
                                 )
-                              : Column(
-                                  children: [
-                                    Expanded(
-                                      child: _buildWorkspaceCard(
-                                        context: context,
-                                        t: t,
-                                        image: image,
-                                        compact: true,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 14),
-                                    ConstrainedBox(
-                                      constraints: BoxConstraints(
-                                        maxHeight: bottomPanelHeight,
-                                      ),
-                                      child: _buildControlsPanel(
-                                        context: context,
-                                        t: t,
-                                        layout:
-                                            InpaintingControlsLayout.bottomDock,
-                                      ),
-                                    ),
-                                  ],
+                              : _buildNarrowLayout(
+                                  context: context,
+                                  l10n: l10n,
+                                  image: image,
+                                  horizontalPadding: horizontalPadding,
                                 ),
                         ),
                       ],
@@ -230,382 +210,425 @@ class _EditorPageState extends State<EditorPage>
     );
   }
 
-  Widget _buildWorkspaceCard({
+  /// Narrow layout: canvas fills available space, compact toolbar below,
+  /// pinned Run AI row at the very bottom, DraggableScrollableSheet overlays
+  /// advanced settings on demand.
+  Widget _buildNarrowLayout({
     required BuildContext context,
-    required T t,
+    required AppL10n l10n,
     required ui.Image image,
-    required bool compact,
+    required double horizontalPadding,
   }) {
     return BlocBuilder<DrawingCubit, DrawingState>(
       builder: (context, drawingState) {
-        return StudioGlassPanel(
-          radius: compact ? 28 : 34,
-          padding: EdgeInsets.all(compact ? 12 : 16),
-          fillColor: InpaintingStudioTheme.surfaceSoft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWorkspaceHeader(
-                t: t,
-                drawingState: drawingState,
-                compact: compact,
-              ),
-              if (_showOriginalPreview || !_showMaskOverlay) ...[
-                const SizedBox(height: 12),
-                _buildWorkspaceNotice(t: t),
-              ],
-              const SizedBox(height: 12),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final canvasSize = constraints.biggest;
-                    final isCompactHud =
-                        compact || canvasSize.shortestSide < 360;
-                    final magnifierDiameter = math.min(
-                      math.max(canvasSize.shortestSide * 0.3, 104.0),
-                      isCompactHud ? 116.0 : 150.0,
-                    );
-                    final brushWidthImagePx = _brushWidgetPxToImagePx(
-                      drawingState.brushSize,
-                      canvasSize,
-                      image.width,
-                      image.height,
-                    );
+        return Stack(
+          children: [
+            // ── Main column: canvas + compact toolbar + CTA ──────────
+            Column(
+              children: [
+                // Canvas (fills all available space)
+                Expanded(
+                  child: _buildWorkspaceCard(
+                    context: context,
+                    l10n: l10n,
+                    image: image,
+                    compact: true,
+                    drawingStateOverride: drawingState,
+                  ),
+                ),
+                SizedBox(height: 10),
 
-                    return Stack(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.circular(compact ? 26 : 30),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.08),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 34,
-                                offset: const Offset(0, 14),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(compact ? 26 : 30),
-                            child: Listener(
-                              onPointerDown: (_) => _handlePointerDown(context),
-                              onPointerUp: (_) => _handlePointerEnd(),
-                              onPointerCancel: (_) => _handlePointerEnd(),
-                              onPointerSignal: (event) =>
-                                  _onPointerSignal(event, canvasSize),
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onScaleStart: (details) =>
-                                    _onScaleStart(context, details, canvasSize),
-                                onScaleUpdate: (details) => _onScaleUpdate(
-                                    context, details, canvasSize),
-                                onScaleEnd: (_) => _onScaleEnd(context),
-                                onDoubleTap: _resetViewport,
-                                child: ColoredBox(
-                                  color: const Color(0xFF061017),
-                                  child: Stack(
-                                    children: [
-                                      Positioned.fill(
-                                        child: ValueListenableBuilder<Matrix4>(
-                                          valueListenable: _viewportController,
-                                          builder: (context, matrix, child) {
-                                            return ClipRect(
-                                              child: Transform(
-                                                transform: matrix,
-                                                child: child,
-                                              ),
-                                            );
-                                          },
-                                          child: SizedBox(
-                                            key: _stackKey,
-                                            width: canvasSize.width,
-                                            height: canvasSize.height,
-                                            child: Stack(
-                                              fit: StackFit.expand,
-                                              children: [
-                                                RepaintBoundary(
-                                                  child: CustomPaint(
-                                                    painter: ImagePainter(
-                                                      image,
-                                                      fit: BoxFit.contain,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Positioned.fill(
-                                                  child: IgnorePointer(
-                                                    child: AnimatedOpacity(
-                                                      duration: const Duration(
-                                                        milliseconds: 180,
-                                                      ),
-                                                      opacity: _showMaskOverlay &&
-                                                              !_showOriginalPreview
-                                                          ? 1
-                                                          : 0,
-                                                      child: RepaintBoundary(
-                                                        child: CustomPaint(
-                                                          painter:
-                                                              MaskStrokesPainter(
-                                                            strokes:
-                                                                drawingState
-                                                                    .strokes,
-                                                            isPreview: true,
-                                                            imageW: image.width,
-                                                            imageH:
-                                                                image.height,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 12,
-                                        left: 12,
-                                        child: _buildEditorStatusCard(
-                                          t: t,
-                                          drawingState: drawingState,
-                                          imageWidth: image.width,
-                                          imageHeight: image.height,
-                                          compact: isCompactHud,
-                                        ),
-                                      ),
-                                      if (_cursorPoint != null &&
-                                          !_isViewportGestureActive &&
-                                          !_showOriginalPreview)
-                                        BrushCursor(
-                                          point: _cursorPoint,
-                                          size: drawingState.brushSize,
-                                          visible: true,
-                                          kind: drawingState.brush.kind,
-                                        ),
-                                      Positioned(
-                                        top: 12,
-                                        right: 12,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            ValueListenableBuilder<Matrix4>(
-                                              valueListenable:
-                                                  _viewportController,
-                                              builder:
-                                                  (context, matrix, child) {
-                                                return _buildZoomBadge(
-                                                  scale: matrix
-                                                      .getMaxScaleOnAxis(),
-                                                  accentColor:
-                                                      InpaintingStudioTheme
-                                                          .mint,
-                                                  compact: isCompactHud,
-                                                );
-                                              },
-                                            ),
-                                            if (_showOriginalPreview ||
-                                                !_showMaskOverlay) ...[
-                                              const SizedBox(height: 8),
-                                              StudioPill(
-                                                icon: _showOriginalPreview
-                                                    ? Icons.compare_rounded
-                                                    : Icons
-                                                        .visibility_off_rounded,
-                                                label: _showOriginalPreview
-                                                    ? t.of('original_label')
-                                                    : t.of('workflow_mask'),
-                                                accent: _showOriginalPreview
-                                                    ? InpaintingStudioTheme.cyan
-                                                    : InpaintingStudioTheme
-                                                        .amber,
-                                                filled: true,
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      Positioned(
-                                        left: 12,
-                                        bottom: 12,
-                                        child: _buildGestureHint(
-                                          t: t,
-                                          compact: isCompactHud,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        right: 12,
-                                        bottom: 12,
-                                        child: _buildCanvasActionRail(
-                                          compact: isCompactHud,
-                                          onResetViewport: _resetViewport,
-                                          fitTooltip:
-                                              t.of('editor_workspace_fit'),
-                                          onShowQa: !const bool.fromEnvironment(
-                                            'dart.vm.product',
-                                          )
-                                              ? _testMaskRendering
-                                              : null,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (_magnifierImagePoint != null &&
-                            !_isViewportGestureActive &&
-                            !_showOriginalPreview)
-                          Positioned(
-                            top: 18,
-                            left: 18,
-                            child: IgnorePointer(
-                              child: FixedBrushMagnifier(
-                                image: image,
-                                strokes: drawingState.strokes,
-                                focusImagePoint: _magnifierImagePoint!,
-                                brushWidthImagePx: brushWidthImagePx,
-                                brushKind: drawingState.brush.kind,
-                                diameter: magnifierDiameter,
-                              ),
-                            ),
-                          ),
-                      ],
+                // Compact toolbar pill
+                InpaintingCompactToolbar(
+                  isEraser:
+                      drawingState.brush.kind == BrushKind.eraser,
+                  maskVisible: _showMaskOverlay,
+                  canUndo: drawingState.canUndo,
+                  brushPx: drawingState.brushSize,
+                  onBrushMode: () =>
+                      context.read<DrawingCubit>().setBrushKind(BrushKind.solid),
+                  onEraserMode: () =>
+                      context.read<DrawingCubit>().setBrushKind(BrushKind.eraser),
+                  onToggleMaskVisibility: _toggleMaskVisibility,
+                  onUndo: () => context.read<DrawingCubit>().undo(),
+                  onBrushSizeChanged: (v) =>
+                      context.read<DrawingCubit>().setBrush(v),
+                ),
+                SizedBox(height: 10),
+
+                // Pinned Run AI row
+                _buildNarrowRunRow(
+                  context: context,
+                  l10n: l10n,
+                  hasMask: drawingState.strokes.isNotEmpty,
+                  image: image,
+                ),
+                SizedBox(height: 6),
+
+                // Hint: swipe up for advanced
+                Center(
+                  child: Text(
+                    '↑  ${l10n.get('preview_tools')}',
+                    style: TextStyle(
+                      color: InpaintingStudioTheme.textMuted,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 6),
+              ],
+            ),
+
+            // ── Draggable advanced settings sheet ───────────────────
+            DraggableScrollableSheet(
+              initialChildSize: 0.0,
+              minChildSize: 0.0,
+              maxChildSize: 0.78,
+              snap: true,
+              snapSizes: const [0.0, 0.55, 0.78],
+              builder: (sheetContext, scrollController) {
+                return ValueListenableBuilder<Matrix4>(
+                  valueListenable: _viewportController,
+                  builder: (context, matrix, child) {
+                    return _buildControlsPanel(
+                      context: context,
+                      l10n: l10n,
+                      layout: InpaintingControlsLayout.bottomDock,
                     );
                   },
-                ),
-              ),
-            ],
-          ),
+                );
+              },
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildWorkspaceHeader({
-    required T t,
-    required DrawingState drawingState,
-    required bool compact,
+  Widget _buildNarrowRunRow({
+    required BuildContext context,
+    required AppL10n l10n,
+    required bool hasMask,
+    required ui.Image image,
   }) {
-    final toolAccent = drawingState.brush.kind == BrushKind.eraser
-        ? InpaintingStudioTheme.rose
-        : InpaintingStudioTheme.mint;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                t.of('editor_title'),
-                style: TextStyle(
-                  color: InpaintingStudioTheme.textPrimary,
-                  fontSize: compact ? 18 : 22,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _showOriginalPreview
-                    ? t.of('compare_live')
-                    : drawingState.strokes.isEmpty
-                        ? t.of('editor_tip_run')
-                        : t.of('editor_tip_precision'),
-                style: TextStyle(
-                  color: InpaintingStudioTheme.textSecondary,
-                  fontSize: compact ? 12.5 : 13.5,
-                  height: 1.45,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: compact ? 160 : 250),
-          child: Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              StudioPill(
-                icon: drawingState.brush.kind == BrushKind.eraser
-                    ? Icons.auto_fix_off_rounded
-                    : Icons.brush_rounded,
-                label: drawingState.brush.kind == BrushKind.eraser
-                    ? t.of('eraser')
-                    : t.of('brush'),
-                accent: toolAccent,
-                filled: true,
-              ),
-              ValueListenableBuilder<Matrix4>(
-                valueListenable: _viewportController,
-                builder: (context, matrix, child) {
-                  final zoom = matrix.getMaxScaleOnAxis();
-                  return StudioPill(
-                    icon: Icons.zoom_in_map_rounded,
-                    label: 'x${zoom.toStringAsFixed(zoom < 2 ? 1 : 2)}',
-                    accent: InpaintingStudioTheme.cyan,
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWorkspaceNotice({required T t}) {
-    final accent = _showOriginalPreview
-        ? InpaintingStudioTheme.cyan
-        : InpaintingStudioTheme.amber;
-    final icon = _showOriginalPreview
-        ? Icons.compare_rounded
-        : Icons.visibility_off_rounded;
-    final message = _showOriginalPreview
-        ? '${t.of('compare_live')} | ${t.of('original_label')}'
-        : '${t.of('workflow_mask')} | ${t.of('compare_live')}';
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: accent),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                color: InpaintingStudioTheme.textPrimary,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-              ),
+    return Opacity(
+      opacity: hasMask ? 1.0 : 0.44,
+      child: InkWell(
+        onTap: hasMask
+            ? () => _runMagicPipeline(context, image, l10n)
+            : null,
+        borderRadius: BorderRadius.circular(24),
+        child: Ink(
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: hasMask
+                ? InpaintingStudioTheme.primaryGradient
+                : null,
+            color: hasMask
+                ? null
+                : Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: hasMask
+                  ? Colors.transparent
+                  : Colors.white.withValues(alpha: 0.08),
             ),
+            boxShadow: hasMask
+                ? const [
+                    BoxShadow(
+                      color: Color(0x326DC6B0),
+                      blurRadius: 22,
+                      offset: Offset(0, 8),
+                    ),
+                  ]
+                : null,
           ),
-        ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.auto_fix_high_rounded,
+                size: 20,
+                color: hasMask
+                    ? Colors.black
+                    : InpaintingStudioTheme.textMuted,
+              ),
+              SizedBox(width: 9),
+              Text(
+                l10n.get('magic'),
+                style: TextStyle(
+                  color: hasMask
+                      ? Colors.black
+                      : InpaintingStudioTheme.textMuted,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15.5,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+  Widget _buildWorkspaceCard({
+    required BuildContext context,
+    required AppL10n l10n,
+    required ui.Image image,
+    required bool compact,
+    DrawingState? drawingStateOverride,
+  }) {
+    Widget buildContent(DrawingState drawingState) {
+      return StudioGlassPanel(
+        radius: compact ? 28 : 34,
+        padding: EdgeInsets.all(compact ? 10 : 16),
+        fillColor: InpaintingStudioTheme.surfaceSoft,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final canvasSize = constraints.biggest;
+            final isCompactHud =
+                compact || canvasSize.shortestSide < 360;
+            final magnifierDiameter = math.min(
+              math.max(canvasSize.shortestSide * 0.3, 104.0),
+              isCompactHud ? 116.0 : 150.0,
+            );
+            final brushWidthImagePx = _brushWidgetPxToImagePx(
+              drawingState.brushSize,
+              canvasSize,
+              image.width,
+              image.height,
+            );
+
+            return Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius:
+                        BorderRadius.circular(compact ? 26 : 30),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 34,
+                        offset: const Offset(0, 14),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius:
+                        BorderRadius.circular(compact ? 26 : 30),
+                    child: Listener(
+                      onPointerDown: (_) => _handlePointerDown(context),
+                      onPointerUp: (_) => _handlePointerEnd(),
+                      onPointerCancel: (_) => _handlePointerEnd(),
+                      onPointerSignal: (event) =>
+                          _onPointerSignal(event, canvasSize),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onScaleStart: (details) =>
+                            _onScaleStart(context, details, canvasSize),
+                        onScaleUpdate: (details) => _onScaleUpdate(
+                            context, details, canvasSize),
+                        onScaleEnd: (_) => _onScaleEnd(context),
+                        onDoubleTap: _resetViewport,
+                        child: ColoredBox(
+                          color: const Color(0xFF061017),
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: ValueListenableBuilder<Matrix4>(
+                                  valueListenable: _viewportController,
+                                  builder: (context, matrix, child) {
+                                    return ClipRect(
+                                      child: Transform(
+                                        transform: matrix,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: SizedBox(
+                                    key: _stackKey,
+                                    width: canvasSize.width,
+                                    height: canvasSize.height,
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        RepaintBoundary(
+                                          child: CustomPaint(
+                                            painter: ImagePainter(
+                                              image,
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned.fill(
+                                          child: IgnorePointer(
+                                            child: AnimatedOpacity(
+                                              duration: const Duration(
+                                                milliseconds: 180,
+                                              ),
+                                              opacity: _showMaskOverlay &&
+                                                      !_showOriginalPreview
+                                                  ? 1
+                                                  : 0,
+                                              child: RepaintBoundary(
+                                                child: CustomPaint(
+                                                  painter:
+                                                      MaskStrokesPainter(
+                                                    strokes:
+                                                        drawingState
+                                                            .strokes,
+                                                    isPreview: true,
+                                                    imageW: image.width,
+                                                    imageH:
+                                                        image.height,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 12,
+                                left: 12,
+                                child: _buildEditorStatusCard(
+                                  l10n: l10n,
+                                  drawingState: drawingState,
+                                  imageWidth: image.width,
+                                  imageHeight: image.height,
+                                  compact: isCompactHud,
+                                ),
+                              ),
+                              if (_cursorPoint != null &&
+                                  !_isViewportGestureActive &&
+                                  !_showOriginalPreview)
+                                BrushCursor(
+                                  point: _cursorPoint,
+                                  size: drawingState.brushSize,
+                                  visible: true,
+                                  kind: drawingState.brush.kind,
+                                ),
+                              Positioned(
+                                top: 12,
+                                right: 12,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.end,
+                                  children: [
+                                    ValueListenableBuilder<Matrix4>(
+                                      valueListenable:
+                                          _viewportController,
+                                      builder:
+                                          (context, matrix, child) {
+                                        return _buildZoomBadge(
+                                          scale: matrix
+                                              .getMaxScaleOnAxis(),
+                                          accentColor:
+                                              InpaintingStudioTheme
+                                                  .mint,
+                                          compact: isCompactHud,
+                                        );
+                                      },
+                                    ),
+                                    if (_showOriginalPreview ||
+                                        !_showMaskOverlay) ...[
+                                      SizedBox(height: 8),
+                                      StudioPill(
+                                        icon: _showOriginalPreview
+                                            ? Icons.compare_rounded
+                                            : Icons
+                                                .visibility_off_rounded,
+                                        label: _showOriginalPreview
+                                            ? l10n.get('original_label')
+                                            : l10n.get('workflow_mask'),
+                                        accent: _showOriginalPreview
+                                            ? InpaintingStudioTheme.cyan
+                                            : InpaintingStudioTheme
+                                                .amber,
+                                        filled: true,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              Positioned(
+                                left: 12,
+                                bottom: 12,
+                                child: _buildGestureHint(
+                                  l10n: l10n,
+                                  compact: isCompactHud,
+                                ),
+                              ),
+                              Positioned(
+                                right: 12,
+                                bottom: 12,
+                                child: _buildCanvasActionRail(
+                                  compact: isCompactHud,
+                                  onResetViewport: _resetViewport,
+                                  fitTooltip:
+                                      l10n.get('editor_workspace_fit'),
+                                  onShowQa: !const bool.fromEnvironment(
+                                    'dart.vm.product',
+                                  )
+                                      ? _testMaskRendering
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_magnifierImagePoint != null &&
+                    !_isViewportGestureActive &&
+                    !_showOriginalPreview)
+                  Positioned(
+                    top: 18,
+                    left: 18,
+                    child: IgnorePointer(
+                      child: FixedBrushMagnifier(
+                        image: image,
+                        strokes: drawingState.strokes,
+                        focusImagePoint: _magnifierImagePoint!,
+                        brushWidthImagePx: brushWidthImagePx,
+                        brushKind: drawingState.brush.kind,
+                        diameter: magnifierDiameter,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      );
+    }
+
+    if (drawingStateOverride != null) {
+      return buildContent(drawingStateOverride);
+    }
+    return BlocBuilder<DrawingCubit, DrawingState>(
+      builder: (context, drawingState) => buildContent(drawingState),
+    );
+  }
+
+
+
 
   Widget _buildControlsPanel({
     required BuildContext context,
-    required T t,
+    required AppL10n l10n,
     required InpaintingControlsLayout layout,
   }) {
     return ValueListenableBuilder<Matrix4>(
@@ -614,7 +637,8 @@ class _EditorPageState extends State<EditorPage>
         return BlocBuilder<DrawingCubit, DrawingState>(
           builder: (context, drawingState) {
             return InpaintingBrushControls(
-              t: t,
+              l10n: l10n,
+              t: T.from(context),
               layout: layout,
               isEraser: drawingState.brush.kind == BrushKind.eraser,
               hasMask: drawingState.strokes.isNotEmpty,
@@ -635,7 +659,7 @@ class _EditorPageState extends State<EditorPage>
               onResetWorkspace: () => _resetWorkspace(context),
               onResetViewport: _resetViewport,
               onMagic: () =>
-                  _runMagicPipeline(context, _imageFromPick(context), t),
+                  _runMagicPipeline(context, _imageFromPick(context), l10n),
               onToggleMaskVisibility: _toggleMaskVisibility,
               onToggleCompare: _toggleComparePreview,
               onBrushSizeChanged: (value) =>
@@ -691,17 +715,17 @@ class _EditorPageState extends State<EditorPage>
     }
   }
 
-  Future<void> _showEditorHelpSheet(BuildContext context, T t) async {
+  Future<void> _showEditorHelpSheet(BuildContext context, AppL10n l10n) async {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (sheetContext) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: StudioGlassPanel(
             radius: 30,
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             fillColor: InpaintingStudioTheme.surfaceSoft,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -716,16 +740,16 @@ class _EditorPageState extends State<EditorPage>
                         gradient: InpaintingStudioTheme.primaryGradient,
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.auto_fix_high_rounded,
                         color: Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        t.of('magic_title'),
-                        style: const TextStyle(
+                        l10n.get('magic_title'),
+                        style: TextStyle(
                           color: InpaintingStudioTheme.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
@@ -734,34 +758,34 @@ class _EditorPageState extends State<EditorPage>
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 _HelpStep(
                   index: '01',
                   accent: InpaintingStudioTheme.cyan,
-                  title: t.of('workflow_upload'),
-                  body: t.of('pick_hint'),
+                  title: l10n.get('workflow_upload'),
+                  body: l10n.get('pick_hint'),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _HelpStep(
                   index: '02',
                   accent: InpaintingStudioTheme.violet,
-                  title: t.of('workflow_mask'),
-                  body: t.of('editor_tip_precision'),
+                  title: l10n.get('workflow_mask'),
+                  body: l10n.get('editor_tip_precision'),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _HelpStep(
                   index: '03',
                   accent: InpaintingStudioTheme.mint,
-                  title: t.of('workflow_render'),
-                  body: t.of('magic_pick_feature_quality'),
+                  title: l10n.get('workflow_render'),
+                  body: l10n.get('magic_pick_feature_quality'),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 Align(
                   alignment: Alignment.centerRight,
                   child: StudioSecondaryButton(
                     onPressed: () => Navigator.of(sheetContext).pop(),
                     icon: Icons.check_rounded,
-                    label: t.of('cancel'),
+                    label: l10n.get('cancel'),
                     accent: InpaintingStudioTheme.textPrimary,
                   ),
                 ),
@@ -782,7 +806,7 @@ class _EditorPageState extends State<EditorPage>
             decoration: BoxDecoration(
               color: InpaintingStudioTheme.background.withValues(alpha: 0.52),
             ),
-            child: const Center(
+            child: Center(
               child: StudioGlassPanel(
                 radius: 999,
                 padding: EdgeInsets.all(24),
@@ -821,7 +845,7 @@ class _HelpStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(20),
@@ -848,23 +872,23 @@ class _HelpStep extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textPrimary,
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 Text(
                   body,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textSecondary,
                     fontSize: 12.5,
                     height: 1.45,

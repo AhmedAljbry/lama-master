@@ -25,7 +25,7 @@ class AIToolButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -63,7 +63,7 @@ class AIToolButton extends StatelessWidget {
                 color: enabled ? iconColor : iconColor.withValues(alpha: 0.4),
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
               child: Text(
                 label,
@@ -76,7 +76,7 @@ class AIToolButton extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Icon(
               Icons.arrow_forward_rounded,
               size: 16,

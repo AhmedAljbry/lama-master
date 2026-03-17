@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:lama/core/i18n/t.dart';
+import 'package:lama/core/ui/AppL10n.dart';
 import 'package:lama/core/ui/tokens.dart';
 
 Future<String?> showStyleNameDialog(
   BuildContext context, {
-  required T t,
+  required AppL10n l10n,
   required String title,
   required String actionLabel,
   String initialValue = '',
@@ -33,7 +33,7 @@ Future<String?> showStyleNameDialog(
           autofocus: true,
           style: const TextStyle(color: AppTokens.text),
           decoration: InputDecoration(
-            hintText: t.of('filter_name'),
+            hintText: l10n.get('filter_name'),
             hintStyle: const TextStyle(color: AppTokens.text2),
             filled: true,
             fillColor: AppTokens.card,
@@ -51,7 +51,7 @@ Future<String?> showStyleNameDialog(
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
-              t.of('cancel'),
+              l10n.get('cancel'),
               style: const TextStyle(color: AppTokens.text2),
             ),
           ),

@@ -86,7 +86,7 @@ class _MainWorkspaceScreenState extends State<MainWorkspaceScreen> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                   child: Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: AppTokens.surface.withOpacity(0.72),
                       borderRadius: BorderRadius.circular(999),
@@ -110,7 +110,7 @@ class _MainWorkspaceScreenState extends State<MainWorkspaceScreen> {
                           index: 0,
                           activeColor: AppTokens.primary,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         _buildNavButton(
                           title: 'AI Studio',
                           icon: Icons.auto_awesome,
@@ -142,7 +142,7 @@ class _MainWorkspaceScreenState extends State<MainWorkspaceScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: isActive ? activeColor.withOpacity(0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
@@ -163,7 +163,7 @@ class _MainWorkspaceScreenState extends State<MainWorkspaceScreen> {
               curve: Curves.easeInOut,
               child: isActive
                   ? Padding(
-                      padding: const EdgeInsets.only(left: 8),
+                      padding: EdgeInsets.only(left: 8),
                       child: Text(
                         title,
                         style: TextStyle(
@@ -173,7 +173,7 @@ class _MainWorkspaceScreenState extends State<MainWorkspaceScreen> {
                         ),
                       ),
                     )
-                  : const SizedBox.shrink(),
+                  : SizedBox.shrink(),
             ),
           ],
         ),

@@ -14,6 +14,9 @@ import 'package:lama/core/config/app_config.dart';
 import 'package:lama/features/image_location_intel/data/services/openai_location_scene_service.dart';
 import 'package:native_exif/native_exif.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:lama/core/ui/AppL10n.dart';
+import '../../../../core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 
 enum AnalyzeMode {
   existingImage,
@@ -100,23 +103,16 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
   AnalysisResult? _result;
   String? _error;
 
+
   bool get _isSupportedPlatform {
-    if (kIsWeb) {
-      return false;
-    }
     return defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS;
   }
 
-  _ImageIntelCopy get _copy {
-    final locale = Localizations.localeOf(context);
-    return _ImageIntelCopy(locale.languageCode.toLowerCase().startsWith('ar'));
-  }
-
   Future<void> _analyzeExistingImage() async {
-    final copy = _copy;
+    final l10n = AppL10n.of(context);
     if (!_isSupportedPlatform) {
-      setState(() => _error = copy.mobileOnlyMessage);
+      setState(() => _error = l10n.get('intel_mobile_only'));
       return;
     }
 
@@ -154,9 +150,9 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
   }
 
   Future<void> _captureNewImageWithGuaranteedGps() async {
-    final copy = _copy;
+    final l10n = AppL10n.of(context);
     if (!_isSupportedPlatform) {
-      setState(() => _error = copy.mobileOnlyMessage);
+      setState(() => _error = l10n.get('intel_mobile_only'));
       return;
     }
 
@@ -197,10 +193,10 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
   }
 
   Future<Position> _getCurrentPreciseLocation() async {
-    final copy = _copy;
+    final l10n = AppL10n.of(context);
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      throw Exception(copy.locationServiceOff);
+      throw Exception(l10n.get('intel_location_service_off'));
     }
 
     var permission = await Geolocator.checkPermission();
@@ -209,11 +205,11 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     }
 
     if (permission == LocationPermission.denied) {
-      throw Exception(copy.locationPermissionDenied);
+      throw Exception(l10n.get('intel_location_permission_denied'));
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw Exception(copy.locationPermissionDeniedForever);
+      throw Exception(l10n.get('intel_location_permission_denied_forever'));
     }
 
     return Geolocator.getCurrentPosition(
@@ -229,7 +225,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     double? forcedLatitude,
     double? forcedLongitude,
   }) async {
-    final copy = _copy;
+    final l10n = AppL10n.of(context);
     final appConfig = context.read<AppConfig>();
     final file = File(imagePath);
     final bytes = await file.readAsBytes();
@@ -264,8 +260,8 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
       final ocrText = await ocrFuture;
       final faceCount = await faceFuture;
 
-      final localLocation = await _resolveLocation(
-        copy: copy,
+      final resolvedLocation = await _resolveLocation(
+        l10n: l10n,
         exifLatitude: exifLatitude,
         exifLongitude: exifLongitude,
         baseAddress: baseAddress,
@@ -281,14 +277,14 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
         imageBytes: bytes,
         ocrText: ocrText,
         existingAddress: baseAddress,
-        latitude: localLocation.latitude,
-        longitude: localLocation.longitude,
-        localLocationSummary: localLocation.locationSummary,
+        latitude: null,
+        longitude: null,
+        localLocationSummary: null,
       );
 
-      final resolvedLocation = await _mergeAiLocation(
-        copy: copy,
-        base: localLocation,
+      final resolvedLocationFinal = await _mergeAiLocation(
+        l10n: l10n,
+        base: resolvedLocation,
         aiInsight: aiInsight,
       );
 
@@ -315,14 +311,14 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
         warning: resolvedLocation.warning,
       );
     } catch (error) {
-      throw Exception('${copy.analysisFailedPrefix}$error');
+      throw Exception('${l10n.get('intel_analysis_failed_prefix')}$error');
     } finally {
       await exifReader.close();
     }
   }
 
   Future<_ResolvedLocation> _resolveLocation({
-    required _ImageIntelCopy copy,
+    required AppL10n l10n,
     required double? exifLatitude,
     required double? exifLongitude,
     required String? baseAddress,
@@ -348,10 +344,10 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
       confidenceScore = 0.99;
       clues.add(
         LocationClue(
-          title: copy.exifGpsClueTitle,
+          title: l10n.get('intel_exif_gps_clue_title'),
           value:
               '${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}',
-          detail: copy.exifGpsClueDetail,
+          detail: l10n.get('intel_exif_gps_clue_detail'),
           isStrong: true,
         ),
       );
@@ -361,13 +357,13 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
       locationMode = 'exact';
       locationSource = 'live_gps';
       confidenceScore = 0.96;
-      warning = copy.liveGpsWarning;
+      warning = l10n.get('intel_live_gps_warning');
       clues.add(
         LocationClue(
-          title: copy.liveGpsClueTitle,
+          title: l10n.get('intel_live_gps_clue_title'),
           value:
               '${forcedLatitude.toStringAsFixed(6)}, ${forcedLongitude.toStringAsFixed(6)}',
-          detail: copy.liveGpsClueDetail,
+          detail: l10n.get('intel_live_gps_clue_detail'),
           isStrong: true,
         ),
       );
@@ -377,9 +373,9 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     if (exifTextClues.isNotEmpty) {
       clues.add(
         LocationClue(
-          title: copy.exifTextClueTitle,
+          title: l10n.get('intel_exif_text_clue_title'),
           value: _truncate(exifTextClues.first, 96),
-          detail: copy.exifTextClueDetail,
+          detail: l10n.get('intel_exif_text_clue_detail'),
           isStrong: false,
         ),
       );
@@ -394,9 +390,9 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     if (readableLines.isNotEmpty) {
       clues.add(
         LocationClue(
-          title: copy.detectedTextClueTitle,
+          title: l10n.get('intel_detected_text_clue_title'),
           value: _truncate(readableLines.take(2).join(' | '), 96),
-          detail: copy.detectedTextClueDetail,
+          detail: l10n.get('intel_detected_text_clue_detail'),
           isStrong: false,
         ),
       );
@@ -407,10 +403,10 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
       final coordinate = coordinateMatches.first;
       clues.add(
         LocationClue(
-          title: copy.textCoordinatesClueTitle,
+          title: l10n.get('intel_text_coordinates_clue_title'),
           value:
               '${coordinate.latitude.toStringAsFixed(6)}, ${coordinate.longitude.toStringAsFixed(6)}',
-          detail: copy.textCoordinatesClueDetail,
+          detail: l10n.get('intel_text_coordinates_clue_detail'),
           isStrong: true,
         ),
       );
@@ -430,9 +426,9 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
       searchQuery = placeQueries.first;
       clues.add(
         LocationClue(
-          title: copy.searchQueryClueTitle,
+          title: l10n.get('intel_search_query_clue_title'),
           value: placeQueries.first,
-          detail: copy.searchQueryClueDetail,
+          detail: l10n.get('intel_search_query_clue_detail'),
           isStrong: _containsLocationKeyword(placeQueries.first),
         ),
       );
@@ -442,9 +438,9 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     if (geocoded != null) {
       clues.add(
         LocationClue(
-          title: copy.geocodedPlaceClueTitle,
+          title: l10n.get('intel_geocoded_place_clue_title'),
           value: geocoded.resolvedAddress ?? geocoded.query,
-          detail: copy.geocodedPlaceClueDetail(geocoded.query),
+          detail: l10n.intelGeocodedPlaceClueDetail(geocoded.query),
           isStrong: true,
         ),
       );
@@ -477,7 +473,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     }
 
     final locationSummary = _buildLocationSummary(
-      copy: copy,
+      l10n: l10n,
       locationMode: locationMode,
       locationSource: locationSource,
       address: address,
@@ -501,7 +497,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
   }
 
   Future<_ResolvedLocation> _mergeAiLocation({
-    required _ImageIntelCopy copy,
+    required AppL10n l10n,
     required _ResolvedLocation base,
     required AiSceneLocationInsight aiInsight,
   }) async {
@@ -524,9 +520,9 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     if ((aiInsight.summary ?? '').trim().isNotEmpty) {
       clues.add(
         LocationClue(
-          title: copy.aiSceneSummaryClueTitle,
+          title: l10n.get('intel_ai_scene_summary_clue_title'),
           value: _truncate(aiInsight.summary!, 110),
-          detail: copy.aiSceneSummaryClueDetail,
+          detail: l10n.get('intel_ai_scene_summary_clue_detail'),
           isStrong: false,
         ),
       );
@@ -535,9 +531,9 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     for (final visualClue in aiInsight.visualClues.take(4)) {
       clues.add(
         LocationClue(
-          title: copy.aiVisualClueTitle,
+          title: l10n.get('intel_ai_visual_clue_title'),
           value: _truncate(visualClue, 96),
-          detail: copy.aiVisualClueDetail,
+          detail: l10n.get('intel_ai_visual_clue_detail'),
           isStrong: false,
         ),
       );
@@ -552,9 +548,9 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
     if (aiQuery != null) {
       clues.add(
         LocationClue(
-          title: copy.aiLocationGuessClueTitle,
+          title: l10n.get('intel_ai_location_guess_clue_title'),
           value: _truncate(aiInsight.bestLocationGuess ?? aiQuery, 96),
-          detail: copy.aiLocationGuessClueDetail,
+          detail: l10n.get('intel_ai_location_guess_clue_detail'),
           isStrong: (aiInsight.confidenceScore ?? 0) >= 0.55,
         ),
       );
@@ -577,7 +573,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
             confidenceScore,
             (aiInsight.confidenceScore ?? 0.58).clamp(0.45, 0.84),
           );
-          locationSummary = copy.aiSceneSummary(address ?? aiQuery);
+          locationSummary = l10n.intelAiSceneSummary(address ?? aiQuery);
         }
       } catch (_) {
         if (base.locationMode == 'unknown') {
@@ -587,11 +583,11 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
             confidenceScore,
             (aiInsight.confidenceScore ?? 0.44).clamp(0.35, 0.72),
           );
-          locationSummary = copy.aiSceneQuerySummary(aiQuery);
+          locationSummary = l10n.intelAiSceneQuerySummary(aiQuery);
         }
       }
     } else if (base.locationMode == 'exact' && aiQuery != null) {
-      locationSummary = copy.aiSupportsExactSummary(base.locationSummary);
+      locationSummary = l10n.intelAiSupportsExactSummary(base.locationSummary);
     }
 
     if (aiInsight.caution != null &&
@@ -616,7 +612,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
   }
 
   String _buildLocationSummary({
-    required _ImageIntelCopy copy,
+    required AppL10n l10n,
     required String locationMode,
     required String locationSource,
     required String? address,
@@ -625,23 +621,23 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
   }) {
     switch (locationSource) {
       case 'exif_gps':
-        return copy.exactGpsSummary(address);
+        return l10n.intelExactGpsSummary(address);
       case 'live_gps':
-        return copy.liveGpsSummary(address);
+        return l10n.intelLiveGpsSummary(address);
       case 'text_coordinates':
-        return copy.textCoordinatesSummary(address ?? mapQuery);
+        return l10n.intelTextCoordinatesSummary(address ?? mapQuery);
       case 'text_geocode':
-        return copy.textGeocodeSummary(address ?? mapQuery);
+        return l10n.intelTextGeocodeSummary(address ?? mapQuery);
       case 'text_query':
-        return copy.textQuerySummary(mapQuery);
+        return l10n.intelTextQuerySummary(mapQuery);
       default:
         if (locationMode == 'estimated' && mapQuery != null) {
-          return copy.textQuerySummary(mapQuery);
+          return l10n.intelTextQuerySummary(mapQuery);
         }
         if (clueCount > 0) {
-          return copy.weakCluesSummary;
+          return l10n.get('intel_weak_clues_summary');
         }
-        return copy.noLocationSummary;
+        return l10n.get('intel_no_location_summary');
     }
   }
 
@@ -1012,75 +1008,75 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
   }
 
   Future<void> _openExactMap(double lat, double lng) async {
-    final copy = _copy;
+    final l10n = AppL10n.of(context);
     final uri = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
     );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw Exception(copy.mapOpenFailed);
+      throw Exception(l10n.get('intel_map_open_failed'));
     }
   }
 
   Future<void> _openMapQuery(String query) async {
-    final copy = _copy;
+    final l10n = AppL10n.of(context);
     final uri = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}',
     );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw Exception(copy.mapOpenFailed);
+      throw Exception(l10n.get('intel_map_open_failed'));
     }
   }
 
   Future<void> _openWebSearch(String query) async {
-    final copy = _copy;
+    final l10n = AppL10n.of(context);
     final uri = Uri.parse(
       'https://www.google.com/search?q=${Uri.encodeComponent(query)}',
     );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw Exception(copy.searchOpenFailed);
+      throw Exception(l10n.get('intel_search_open_failed'));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final copy = _copy;
+    final l10n = AppL10n.of(context);
     final result = _result;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(copy.pageTitle),
+        title: Text(l10n.get('intel_page_title')),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         children: <Widget>[
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    copy.pageHeadline,
+                    l10n.get('intel_page_headline'),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
-                    copy.pageDescription,
+                    l10n.get('intel_page_description'),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
-                    copy.limitationsNote,
+                    l10n.get('intel_limitations_note'),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                   ),
                   if (!_isSupportedPlatform) ...<Widget>[
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Text(
-                      copy.mobileOnlyMessage,
+                      l10n.get('intel_mobile_only'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.w700,
@@ -1091,28 +1087,28 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           FilledButton.icon(
             onPressed:
                 _busy || !_isSupportedPlatform ? null : _analyzeExistingImage,
-            icon: const Icon(Icons.photo_library_outlined),
-            label: Text(copy.analyzeExistingButton),
+            icon: Icon(Icons.photo_library_outlined),
+            label: Text(l10n.get('intel_analyze_existing')),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           FilledButton.tonalIcon(
             onPressed: _busy || !_isSupportedPlatform
                 ? null
                 : _captureNewImageWithGuaranteedGps,
-            icon: const Icon(Icons.add_a_photo_outlined),
-            label: Text(copy.captureWithGpsButton),
+            icon: Icon(Icons.add_a_photo_outlined),
+            label: Text(l10n.get('intel_capture_with_gps')),
           ),
-          const SizedBox(height: 20),
-          if (_busy) const Center(child: CircularProgressIndicator()),
+          SizedBox(height: 20),
+          if (_busy) Center(child: CircularProgressIndicator()),
           if (_error != null) ...<Widget>[
             Card(
               color: Theme.of(context).colorScheme.errorContainer,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 child: Text(
                   _error!,
                   style: TextStyle(
@@ -1122,12 +1118,12 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
           ],
           if (result != null) ...<Widget>[
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -1140,71 +1136,71 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                         fit: BoxFit.cover,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: <Widget>[
                         _statusChip(
-                          copy.locationModeName(result.locationMode),
+                          l10n.intelLocationModeName(result.locationMode),
                           _modeColor(result.locationMode),
                         ),
                         _statusChip(
-                          '${copy.confidenceName(result.confidenceScore)} ${copy.confidencePercent(result.confidenceScore)}',
+                          '${l10n.intelConfidenceName(result.confidenceScore)} ${(result.confidenceScore * 100).round()}%',
                           _confidenceColor(result.confidenceScore),
                         ),
                         _statusChip(
-                          copy.locationSourceName(result.locationSource),
+                          l10n.intelLocationSourceName(result.locationSource),
                           Theme.of(context).colorScheme.secondary,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Text(
-                      copy.locationReportTitle,
+                      l10n.get('intel_location_report_title'),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(result.locationSummary),
-                    const SizedBox(height: 12),
-                    _infoLine(copy.modeLabel, copy.modeName(result.mode)),
+                    SizedBox(height: 12),
+                    _infoLine(l10n.get('intel_mode_label'), l10n.intelModeName(result.mode == AnalyzeMode.existingImage)),
                     _infoLine(
-                      copy.locationModeLabel,
-                      copy.locationModeName(result.locationMode),
+                      l10n.get('intel_location_mode_label'),
+                      l10n.intelLocationModeName(result.locationMode),
                     ),
                     _infoLine(
-                      copy.sourceLabel,
-                      copy.locationSourceName(result.locationSource),
+                      l10n.get('intel_source_label'),
+                      l10n.intelLocationSourceName(result.locationSource),
                     ),
                     _infoLine(
-                      copy.confidenceLabel,
-                      '${copy.confidenceName(result.confidenceScore)} ${copy.confidencePercent(result.confidenceScore)}',
+                      l10n.get('intel_confidence_label'),
+                      '${l10n.intelConfidenceName(result.confidenceScore)} ${(result.confidenceScore * 100).round()}%',
                     ),
                     _infoLine(
-                      copy.latitudeLabel,
-                      result.latitude?.toStringAsFixed(6) ?? copy.notAvailable,
+                      l10n.get('intel_latitude_label'),
+                      result.latitude?.toStringAsFixed(6) ?? l10n.get('intel_not_available'),
                     ),
                     _infoLine(
-                      copy.longitudeLabel,
-                      result.longitude?.toStringAsFixed(6) ?? copy.notAvailable,
+                      l10n.get('intel_longitude_label'),
+                      result.longitude?.toStringAsFixed(6) ?? l10n.get('intel_not_available'),
                     ),
                     _infoLine(
-                      copy.addressLabel,
-                      result.address ?? copy.notAvailable,
+                      l10n.get('intel_address_label'),
+                      result.address ?? l10n.get('intel_not_available'),
                     ),
                     _infoLine(
-                      copy.bestQueryLabel,
-                      result.mapQuery ?? copy.notAvailable,
+                      l10n.get('intel_best_query_label'),
+                      result.mapQuery ?? l10n.get('intel_not_available'),
                     ),
-                    _infoLine(copy.facesLabel, '${result.faceCount}'),
+                    _infoLine(l10n.get('intel_faces_label'), '${result.faceCount}'),
                     _infoLine(
-                      copy.blurScoreLabel,
-                      result.blurScore?.toStringAsFixed(2) ?? copy.notAvailable,
+                      l10n.get('intel_blur_score_label'),
+                      result.blurScore?.toStringAsFixed(2) ?? l10n.get('intel_not_available'),
                     ),
                     if (result.warning != null) ...<Widget>[
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         result.warning!,
                         style: TextStyle(
@@ -1213,7 +1209,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -1224,21 +1220,21 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                               result.latitude!,
                               result.longitude!,
                             ),
-                            icon: const Icon(Icons.location_on_outlined),
-                            label: Text(copy.openExactMapButton),
+                            icon: Icon(Icons.location_on_outlined),
+                            label: Text(l10n.get('intel_open_exact_map')),
                           ),
                         if (result.hasMapQuery)
                           OutlinedButton.icon(
                             onPressed: () => _openMapQuery(result.mapQuery!),
-                            icon: const Icon(Icons.map_outlined),
-                            label: Text(copy.searchOnMapsButton),
+                            icon: Icon(Icons.map_outlined),
+                            label: Text(l10n.get('intel_search_on_maps')),
                           ),
                         if (result.hasSearchQuery)
                           OutlinedButton.icon(
                             onPressed: () =>
                                 _openWebSearch(result.searchQuery!),
-                            icon: const Icon(Icons.travel_explore_outlined),
-                            label: Text(copy.searchWebButton),
+                            icon: Icon(Icons.travel_explore_outlined),
+                            label: Text(l10n.get('intel_search_web')),
                           ),
                       ],
                     ),
@@ -1246,46 +1242,46 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      copy.aiSectionTitle,
+                      l10n.get('intel_ai_section_title'),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(copy.aiStatusLabel(result.aiInsight)),
+                    SizedBox(height: 8),
+                    Text(l10n.intelAiStatusLabel(result.aiInsight.status ?? '')),
                     if (result.aiInsight.success) ...<Widget>[
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       _infoLine(
-                        copy.aiConfidenceLabel,
+                        l10n.get('intel_ai_confidence_label'),
                         result.aiInsight.confidenceScore == null
-                            ? copy.notAvailable
-                            : '${copy.confidenceName(result.aiInsight.confidenceScore!)} ${copy.confidencePercent(result.aiInsight.confidenceScore!)}',
+                            ? l10n.get('intel_not_available')
+                            : '${l10n.intelConfidenceName(result.aiInsight.confidenceScore!)} ${(result.aiInsight.confidenceScore! * 100).round()}%',
                       ),
                       _infoLine(
-                        copy.aiSceneTypeLabel,
-                        result.aiInsight.sceneType ?? copy.notAvailable,
+                        l10n.get('intel_ai_scene_type_label'),
+                        result.aiInsight.sceneType ?? l10n.get('intel_not_available'),
                       ),
                       _infoLine(
-                        copy.aiBestGuessLabel,
-                        result.aiInsight.bestLocationGuess ?? copy.notAvailable,
+                        l10n.get('intel_ai_best_guess_label'),
+                        result.aiInsight.bestLocationGuess ?? l10n.get('intel_not_available'),
                       ),
                       _infoLine(
-                        copy.aiBestQueryLabel,
+                        l10n.get('intel_ai_best_query_label'),
                         result.aiInsight.bestLocationQuery ??
                             result.aiInsight.searchQuery ??
-                            copy.notAvailable,
+                            l10n.get('intel_not_available'),
                       ),
                       if ((result.aiInsight.summary ?? '').trim().isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                          padding: EdgeInsets.only(bottom: 8),
                           child: Text(result.aiInsight.summary!),
                         ),
                       if (result.aiInsight.visualClues.isNotEmpty)
@@ -1304,7 +1300,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                         ),
                       if ((result.aiInsight.caution ?? '').trim().isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(top: 8),
+                          padding: EdgeInsets.only(top: 8),
                           child: Text(
                             result.aiInsight.caution!,
                             style: TextStyle(
@@ -1319,7 +1315,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                         (result.aiInsight.error ?? '')
                             .trim()
                             .isNotEmpty) ...<Widget>[
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         result.aiInsight.error!,
                         style: TextStyle(
@@ -1331,22 +1327,22 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      copy.locationCluesTitle,
+                      l10n.get('intel_location_clues_title'),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     if (result.locationClues.isEmpty)
-                      Text(copy.noLocationClues)
+                      Text(l10n.get('intel_no_location_clues'))
                     else
                       ...result.locationClues.map(
                         (clue) => ListTile(
@@ -1370,46 +1366,46 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      copy.ocrTitle,
+                      l10n.get('intel_ocr_title'),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(result.ocrText ?? copy.noTextFound),
+                    SizedBox(height: 8),
+                    Text(result.ocrText ?? l10n.get('intel_no_text_found')),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      copy.colorsTitle,
+                      l10n.get('intel_colors_title'),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: <Widget>[
-                        _colorTile(result.averageColor, copy.averageColorLabel),
+                        _colorTile(result.averageColor, l10n.get('intel_average_color_label')),
                         ...result.dominantColors.take(4).map(
-                              (color) => _colorTile(color, copy.topColorLabel),
+                              (color) => _colorTile(color, l10n.get('intel_top_color_label')),
                             ),
                       ],
                     ),
@@ -1417,14 +1413,14 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
                   title: Text(
-                    copy.exifTitle,
+                    l10n.get('intel_exif_title'),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -1447,14 +1443,14 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
 
   Widget _infoLine(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: EdgeInsets.only(bottom: 6),
       child: RichText(
         text: TextSpan(
           style: Theme.of(context).textTheme.bodyMedium,
           children: <InlineSpan>[
             TextSpan(
               text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: TextStyle(fontWeight: FontWeight.w700),
             ),
             TextSpan(text: value),
           ],
@@ -1476,7 +1472,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
             border: Border.all(color: Colors.black12),
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(label, style: Theme.of(context).textTheme.labelSmall),
       ],
     );
@@ -1484,7 +1480,7 @@ class _ImageLocationIntelPageState extends State<ImageLocationIntelPage> {
 
   Widget _statusChip(String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
@@ -1598,236 +1594,4 @@ class _VisualStats {
     required this.dominantColors,
     required this.blurScore,
   });
-}
-
-class _ImageIntelCopy {
-  final bool isArabic;
-
-  const _ImageIntelCopy(this.isArabic);
-
-  String get pageTitle =>
-      isArabic ? 'تحليل موقع الصورة' : 'Image Location Intel';
-  String get pageHeadline => isArabic
-      ? 'استخرج GPS إن وجد، ثم حلل النص والقرائن داخل الصورة لتقدير مكانها.'
-      : 'Extract GPS when available, then analyze text and clues inside the image to estimate where it was taken.';
-  String get pageDescription => isArabic
-      ? 'هذه الصفحة تبحث أولًا عن إحداثيات EXIF، ثم تحاول استنتاج الموقع من النصوص والعناوين والمعالم الظاهرة، وتبني مستوى ثقة وأفضل نتيجة قابلة للفتح في Google Maps.'
-      : 'This page checks EXIF coordinates first, then tries to infer location from visible text, address fragments, and scene clues, producing a confidence score and the best Google Maps target.';
-  String get limitationsNote => isArabic
-      ? 'مهم: بدون GPS أو نص واضح أو معلم معروف، النتيجة ستكون تقديرية فقط وليست دليلا قطعيا.'
-      : 'Important: without GPS, clear text, or a known landmark, the result remains an estimate rather than proof.';
-  String get mobileOnlyMessage => isArabic
-      ? 'هذه الميزة تعمل حاليًا على Android و iPhone فقط.'
-      : 'This feature currently works on Android and iPhone only.';
-  String get analyzeExistingButton =>
-      isArabic ? 'تحليل صورة موجودة' : 'Analyze Existing Image';
-  String get captureWithGpsButton =>
-      isArabic ? 'التقاط صورة جديدة مع GPS' : 'Capture New Image With GPS';
-  String get locationServiceOff =>
-      isArabic ? 'خدمة الموقع مغلقة.' : 'Location service is turned off.';
-  String get locationPermissionDenied =>
-      isArabic ? 'تم رفض صلاحية الموقع.' : 'Location permission was denied.';
-  String get locationPermissionDeniedForever => isArabic
-      ? 'صلاحية الموقع مرفوضة نهائيًا من إعدادات الجهاز.'
-      : 'Location permission was permanently denied in device settings.';
-  String get liveGpsWarning => isArabic
-      ? 'تم استخدام GPS المباشر من الجهاز وقت الالتقاط، لكنه ليس مثبتًا داخل EXIF للصورة نفسها.'
-      : 'Live GPS from the device was used at capture time, but it is not confirmed inside the image EXIF itself.';
-  String get analysisFailedPrefix =>
-      isArabic ? 'فشل تحليل الصورة: ' : 'Image analysis failed: ';
-  String get mapOpenFailed =>
-      isArabic ? 'تعذر فتح الخريطة.' : 'Could not open the map.';
-  String get searchOpenFailed =>
-      isArabic ? 'تعذر فتح البحث.' : 'Could not open the search page.';
-  String get modeLabel => isArabic ? 'الوضع' : 'Mode';
-  String get locationModeLabel => isArabic ? 'نوع التحديد' : 'Location mode';
-  String get sourceLabel => isArabic ? 'مصدر الموقع' : 'Location source';
-  String get confidenceLabel => isArabic ? 'مستوى الثقة' : 'Confidence';
-  String get latitudeLabel => isArabic ? 'خط العرض' : 'Latitude';
-  String get longitudeLabel => isArabic ? 'خط الطول' : 'Longitude';
-  String get addressLabel => isArabic ? 'العنوان' : 'Address';
-  String get bestQueryLabel =>
-      isArabic ? 'أفضل استعلام للموقع' : 'Best location query';
-  String get facesLabel => isArabic ? 'الوجوه' : 'Faces';
-  String get blurScoreLabel => isArabic ? 'مؤشر الحدة' : 'Blur score';
-  String get locationReportTitle =>
-      isArabic ? 'تقرير تحديد الموقع' : 'Location Report';
-  String get aiSectionTitle =>
-      isArabic ? 'تحليل الذكاء الاصطناعي للمشهد' : 'AI Scene Analysis';
-  String get aiConfidenceLabel =>
-      isArabic ? 'ثقة الذكاء الاصطناعي' : 'AI confidence';
-  String get aiSceneTypeLabel => isArabic ? 'نوع المشهد' : 'Scene type';
-  String get aiBestGuessLabel => isArabic ? 'أفضل تخمين' : 'Best guess';
-  String get aiBestQueryLabel => isArabic ? 'أفضل استعلام AI' : 'Best AI query';
-  String get openExactMapButton =>
-      isArabic ? 'فتح الموقع على الخريطة' : 'Open Exact Map';
-  String get searchOnMapsButton =>
-      isArabic ? 'بحث في Google Maps' : 'Search on Google Maps';
-  String get searchWebButton => isArabic ? 'بحث على الويب' : 'Search the Web';
-  String get locationCluesTitle => isArabic ? 'قرائن المكان' : 'Location Clues';
-  String get noLocationClues => isArabic
-      ? 'لم يتم العثور على قرائن مكانية كافية داخل الصورة.'
-      : 'No strong location clues were found inside the image.';
-  String get ocrTitle => isArabic ? 'النص المستخرج' : 'OCR Text';
-  String get noTextFound =>
-      isArabic ? 'لا يوجد نص واضح.' : 'No clear text found.';
-  String get colorsTitle => isArabic ? 'الألوان' : 'Colors';
-  String get averageColorLabel => isArabic ? 'متوسط' : 'Average';
-  String get topColorLabel => isArabic ? 'بارز' : 'Top';
-  String get exifTitle => 'EXIF';
-  String get notAvailable => isArabic ? 'غير متاح' : 'N/A';
-  String get exifGpsClueTitle => isArabic ? 'GPS داخل EXIF' : 'GPS in EXIF';
-  String get exifGpsClueDetail => isArabic
-      ? 'الصورة نفسها تحتوي على إحداثيات محفوظة داخل بياناتها.'
-      : 'The image itself contains coordinates stored in its metadata.';
-  String get liveGpsClueTitle =>
-      isArabic ? 'GPS مباشر وقت الالتقاط' : 'Live GPS at capture';
-  String get liveGpsClueDetail => isArabic
-      ? 'استخدم التطبيق موقع الجهاز لحظة التقاط الصورة الجديدة.'
-      : 'The app used the device location at the moment of taking the new image.';
-  String get exifTextClueTitle =>
-      isArabic ? 'نصوص داخل EXIF' : 'Text inside EXIF';
-  String get exifTextClueDetail => isArabic
-      ? 'بعض الصور تحمل وصفًا أو تعليقًا قد يساعد في الاستدلال على المكان.'
-      : 'Some images include descriptions or comments that may help infer location.';
-  String get detectedTextClueTitle =>
-      isArabic ? 'نص ظاهر في الصورة' : 'Visible text in image';
-  String get detectedTextClueDetail => isArabic
-      ? 'النص المستخرج قد يحتوي على عنوان أو اسم مكان أو لافتة.'
-      : 'Extracted text may include an address, place name, or sign.';
-  String get textCoordinatesClueTitle =>
-      isArabic ? 'إحداثيات مكتوبة داخل الصورة' : 'Coordinates written in image';
-  String get textCoordinatesClueDetail => isArabic
-      ? 'تم العثور على أرقام تبدو كإحداثيات داخل النص الظاهر على الصورة.'
-      : 'The visible text contains numbers that look like latitude and longitude coordinates.';
-  String get searchQueryClueTitle =>
-      isArabic ? 'أفضل عبارة بحث مكانية' : 'Best location search phrase';
-  String get searchQueryClueDetail => isArabic
-      ? 'هذه أقوى عبارة يمكن إرسالها إلى Maps أو البحث العام.'
-      : 'This is the strongest phrase that can be sent to Maps or web search.';
-  String get geocodedPlaceClueTitle =>
-      isArabic ? 'مكان مطابق من النص' : 'Place matched from text';
-  String get aiSceneSummaryClueTitle =>
-      isArabic ? 'ملخص AI للمشهد' : 'AI scene summary';
-  String get aiSceneSummaryClueDetail => isArabic
-      ? 'الذكاء الاصطناعي حاول قراءة المشهد نفسه من مبانٍ وطبيعة ومعالم.'
-      : 'The AI tried to read the scene itself from buildings, nature, and landmarks.';
-  String get aiVisualClueTitle =>
-      isArabic ? 'قرينة بصرية من AI' : 'AI visual clue';
-  String get aiVisualClueDetail => isArabic
-      ? 'هذه إشارة بصرية استنتجها النموذج من الصورة.'
-      : 'This is a visual clue inferred by the model from the image.';
-  String get aiLocationGuessClueTitle =>
-      isArabic ? 'تخمين AI للمكان' : 'AI location guess';
-  String get aiLocationGuessClueDetail => isArabic
-      ? 'أفضل مكان أو عبارة خرج بها النموذج من تحليل المشهد.'
-      : 'The best place or query produced by the model from scene analysis.';
-  String geocodedPlaceClueDetail(String query) => isArabic
-      ? 'تم تحويل النص "$query" إلى مكان فعلي قابل للعرض على الخريطة.'
-      : 'The text "$query" was converted into a real place that can be shown on the map.';
-  String exactGpsSummary(String? address) => isArabic
-      ? 'تم العثور على موقع دقيق من GPS داخل بيانات الصورة.${address != null ? ' العنوان التقريبي: $address.' : ''}'
-      : 'An exact location was found from GPS metadata inside the image.${address != null ? ' Approximate address: $address.' : ''}';
-  String liveGpsSummary(String? address) => isArabic
-      ? 'تم تحديد الموقع بدقة من GPS الجهاز وقت الالتقاط.${address != null ? ' العنوان التقريبي: $address.' : ''}'
-      : 'The location was determined accurately from the device GPS at capture time.${address != null ? ' Approximate address: $address.' : ''}';
-  String textCoordinatesSummary(String? locationLabel) => isArabic
-      ? 'لا يوجد GPS مؤكد، لكن تم العثور على إحداثيات مكتوبة داخل الصورة${locationLabel != null ? ' وتشير غالبًا إلى: $locationLabel.' : '.'}'
-      : 'No confirmed GPS was found, but the image contains written coordinates${locationLabel != null ? ' that likely point to: $locationLabel.' : '.'}';
-  String textGeocodeSummary(String? locationLabel) => isArabic
-      ? 'لا يوجد GPS مباشر، لكن النص الظاهر أعطى مكانًا محتملًا${locationLabel != null ? ': $locationLabel.' : '.'}'
-      : 'There is no direct GPS, but the visible text produced a likely place${locationLabel != null ? ': $locationLabel.' : '.'}';
-  String textQuerySummary(String? query) => isArabic
-      ? 'تعذر تثبيت الموقع بدقة، لكن التطبيق استخرج عبارة بحث مكانية مفيدة${query != null ? ': $query.' : '.'}'
-      : 'An exact place could not be confirmed, but the app extracted a useful location query${query != null ? ': $query.' : '.'}';
-  String aiSceneSummary(String? label) => isArabic
-      ? 'الذكاء الاصطناعي قرأ المشهد البصري ورجّح موقعًا محتملًا${label != null ? ': $label.' : '.'}'
-      : 'The AI read the visual scene and suggested a likely place${label != null ? ': $label.' : '.'}';
-  String aiSceneQuerySummary(String? query) => isArabic
-      ? 'الذكاء الاصطناعي لم يثبت إحداثيات دقيقة، لكنه قدّم عبارة مكانية قوية${query != null ? ': $query.' : '.'}'
-      : 'The AI could not confirm exact coordinates, but it produced a strong location query${query != null ? ': $query.' : '.'}';
-  String aiSupportsExactSummary(String baseSummary) => isArabic
-      ? '$baseSummary كما أن تحليل AI للمباني والطبيعة يدعم هذه النتيجة.'
-      : '$baseSummary The AI reading of buildings and natural cues also supports this result.';
-  String get weakCluesSummary => isArabic
-      ? 'تم العثور على بعض القرائن، لكنها ليست كافية لتحديد المكان بثقة عالية.'
-      : 'Some clues were found, but they are not enough to identify the place with high confidence.';
-  String get noLocationSummary => isArabic
-      ? 'لم يتم العثور على GPS أو نص أو قرائن مكانية كافية لتحديد مكان الصورة.'
-      : 'No GPS, text, or strong spatial clues were found to identify where the image was taken.';
-
-  String modeName(AnalyzeMode mode) {
-    if (isArabic) {
-      return mode == AnalyzeMode.existingImage
-          ? 'صورة موجودة'
-          : 'التقاط جديد مع GPS';
-    }
-    return mode == AnalyzeMode.existingImage
-        ? 'Existing image'
-        : 'New capture with GPS';
-  }
-
-  String locationModeName(String mode) {
-    switch (mode) {
-      case 'exact':
-        return isArabic ? 'دقيق' : 'Exact';
-      case 'estimated':
-        return isArabic ? 'تقديري' : 'Estimated';
-      default:
-        return isArabic ? 'غير معروف' : 'Unknown';
-    }
-  }
-
-  String locationSourceName(String source) {
-    switch (source) {
-      case 'exif_gps':
-        return isArabic ? 'GPS داخل الصورة' : 'Image EXIF GPS';
-      case 'live_gps':
-        return isArabic ? 'GPS الجهاز' : 'Device GPS';
-      case 'text_coordinates':
-        return isArabic ? 'إحداثيات من النص' : 'Coordinates from text';
-      case 'text_geocode':
-        return isArabic ? 'عنوان من النص' : 'Address from text';
-      case 'text_query':
-        return isArabic ? 'استعلام من النص' : 'Query from text';
-      case 'ai_scene':
-        return isArabic ? 'تحليل AI للمشهد' : 'AI scene analysis';
-      case 'ai_scene_query':
-        return isArabic ? 'استعلام AI' : 'AI scene query';
-      default:
-        return isArabic ? 'غير معروف' : 'Unknown';
-    }
-  }
-
-  String confidenceName(double score) {
-    if (score >= 0.9) {
-      return isArabic ? 'عالية جدًا' : 'Very high';
-    }
-    if (score >= 0.7) {
-      return isArabic ? 'عالية' : 'High';
-    }
-    if (score >= 0.45) {
-      return isArabic ? 'متوسطة' : 'Medium';
-    }
-    return isArabic ? 'ضعيفة' : 'Low';
-  }
-
-  String confidencePercent(double score) => '${(score * 100).round()}%';
-
-  String aiStatusLabel(AiSceneLocationInsight insight) {
-    switch (insight.status) {
-      case 'ready':
-        return isArabic
-            ? 'AI مفعّل وتم تحليل المشهد بصريًا.'
-            : 'AI is enabled and the scene was analyzed visually.';
-      case 'failed':
-        return isArabic
-            ? 'تمت محاولة تحليل AI لكن الطلب فشل.'
-            : 'AI analysis was attempted but the request failed.';
-      default:
-        return isArabic
-            ? 'تحليل AI غير مفعّل. أضف OPENAI_API_KEY لتفعيل التعرف على المباني والطبيعة والمعالم.'
-            : 'AI analysis is not enabled. Add OPENAI_API_KEY to enable building, nature, and landmark reasoning.';
-    }
-  }
 }

@@ -6,13 +6,19 @@ import 'package:flutter/services.dart';
 import 'app.dart';
 import 'core/config/app_config.dart';
 import 'core/feature_flags/feature_flags.dart';
-import 'core/i18n/t.dart';
 import 'core/logging/app_logger.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/i18n/locale_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final prefs = await SharedPreferences.getInstance();
+  final localeController = LocaleController(prefs);
+
   const logger = AppLogger();
+  // ... existing logging setup ...
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     logger.log(
@@ -47,15 +53,11 @@ Future<void> main() async {
       ? FeatureFlags.prod
       : FeatureFlags.dev;
 
-  final deviceLanguage = PlatformDispatcher.instance.locale.languageCode;
-  final appLanguage =
-      deviceLanguage.toLowerCase().startsWith('ar') ? Lang.ar : Lang.en;
-
   runApp(
     App(
       config: AppConfig.fromEnvironment(),
       flags: flags,
-      lang: appLanguage,
+      localeController: localeController,
     ),
   );
 }

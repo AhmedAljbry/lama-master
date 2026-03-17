@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:lama/core/i18n/t.dart';
-import 'package:lama/presentation/pages/PT.dart';
+import 'package:lama/core/ui/AppTokens.dart';
+import 'package:lama/core/ui/app_theme.dart';
 import 'package:lama/presentation/pages/Pro.dart'; // ← T, Lang (real import — NO stubs)
 
 
@@ -87,7 +88,7 @@ class _ProResultPageState extends State<ProResultPage>
     setState(() => _isSaving = true);
     try {
       await widget.onSave();
-      if (mounted) _showSnack(widget.t.of('saved'), PT.mint);
+      if (mounted) _showSnack(widget.t.of('saved'), AppTokens.primary);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -96,12 +97,12 @@ class _ProResultPageState extends State<ProResultPage>
   void _showSnack(String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg,
-          style: const TextStyle(fontWeight: FontWeight.w700)),
+          style: TextStyle(fontWeight: FontWeight.w700)),
       backgroundColor: color,
       behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.all(16),
+      margin: EdgeInsets.all(16),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(PT.r16)),
+          borderRadius: BorderRadius.circular(AppTokens.r16)),
       duration: const Duration(seconds: 2),
     ));
   }
@@ -112,7 +113,7 @@ class _ProResultPageState extends State<ProResultPage>
     return Directionality(
       textDirection: t.isRTL ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: PT.bg,
+        backgroundColor: AppTokens.bg,
         body: SafeArea(
           child: AdaptiveLayout(
             phone:   _phone(context, t),
@@ -192,20 +193,20 @@ class _ProResultPageState extends State<ProResultPage>
         ),
         Container(
           width: panelW,
-          color: PT.surface,
-          padding: const EdgeInsets.all(PT.s24),
+          color: AppTokens.surface,
+          padding: EdgeInsets.all(AppTokens.s24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: PT.s32),
+              SizedBox(height: AppTokens.s32),
               // Info card
               Container(
-                padding: const EdgeInsets.all(PT.s16),
+                padding: EdgeInsets.all(AppTokens.s16),
                 decoration: BoxDecoration(
-                  color: PT.card,
-                  borderRadius: BorderRadius.circular(PT.r16),
+                  color: AppTokens.card,
+                  borderRadius: BorderRadius.circular(AppTokens.r16),
                   border: Border.all(
-                      color: PT.mint.withOpacity(0.1)),
+                      color: AppTokens.primary.withOpacity(0.1)),
                 ),
                 child: Column(
                   children: [
@@ -224,12 +225,12 @@ class _ProResultPageState extends State<ProResultPage>
                 onTap: _handleSave,
                 loading: _isSaving,
               ),
-              const SizedBox(height: PT.s12),
+              SizedBox(height: AppTokens.s12),
               _OutlineBtn(
                   label: t.of('result_edit'),
                   icon: Icons.edit_rounded,
                   onTap: widget.onEditAgain),
-              const SizedBox(height: PT.s8),
+              SizedBox(height: AppTokens.s8),
               _OutlineBtn(
                   label: t.of('result_new'),
                   icon: Icons.add_photo_alternate_rounded,
@@ -251,7 +252,7 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
           horizontal: 16, vertical: 14),
       child: Row(
         children: [
@@ -261,36 +262,32 @@ class _TopBar extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: PT.card,
-                borderRadius: BorderRadius.circular(PT.r12),
+                color: AppTokens.card,
+                borderRadius: BorderRadius.circular(AppTokens.r12),
                 border: Border.all(color: Colors.white12),
               ),
-              child: const Icon(
+              child: Icon(
                   Icons.arrow_back_ios_new_rounded,
-                  color: PT.t2,
+                  color: AppTokens.text2,
                   size: 16),
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ShaderMask(
-                shaderCallback: (b) =>
-                    PT.gradMint.createShader(b),
-                child: Text(
-                  t.of('result_title'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
+              Text(
+                t.of('result_title'),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
               Text(
                 t.of('result_subtitle'),
-                style: const TextStyle(
-                    color: PT.t2,
+                style: TextStyle(
+                    color: AppTokens.text2,
                     fontSize: 12,
                     fontWeight: FontWeight.w500),
               ),
@@ -327,7 +324,7 @@ class _ImageArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -338,7 +335,7 @@ class _ImageArea extends StatelessWidget {
               constraints:
               BoxConstraints(maxWidth: Pro.canvasW(context)),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(PT.r20),
+                borderRadius: BorderRadius.circular(AppTokens.r20),
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: comparing
@@ -358,7 +355,7 @@ class _ImageArea extends StatelessWidget {
               top: 16,
               left: 16,
               child: _Label(
-                  text: t.of('before'), color: PT.t2),
+                  text: t.of('before'), color: AppTokens.text2),
             ),
           if (showBadge)
             Positioned(
@@ -367,25 +364,25 @@ class _ImageArea extends StatelessWidget {
                 opacity: Tween<double>(begin: 1.0, end: 0.0)
                     .animate(badgeFade),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                       horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius:
-                    BorderRadius.circular(PT.rFull),
+                    BorderRadius.circular(AppTokens.rFull),
                     border: Border.all(color: Colors.white12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                           Icons.compare_arrows_rounded,
-                          color: PT.t3,
+                          color: (AppTokens.text2),
                           size: 13),
-                      const SizedBox(width: PT.s8),
+                      SizedBox(width: AppTokens.s8),
                       Text(t.of('compare_hold'),
-                          style: const TextStyle(
-                              color: PT.t3,
+                          style: TextStyle(
+                              color: (AppTokens.text2.withOpacity(0.7)),
                               fontSize: 11,
                               fontWeight: FontWeight.w600)),
                     ],
@@ -418,18 +415,18 @@ class _ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(PT.r24)),
+      borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTokens.r24)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           padding:
-          const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          EdgeInsets.fromLTRB(16, 16, 16, 24),
           decoration: BoxDecoration(
-            color: PT.surface.withOpacity(0.92),
+            color: AppTokens.surface.withOpacity(0.92),
             border: Border(
                 top: BorderSide(
-                    color: PT.mint.withOpacity(0.1))),
+                    color: AppTokens.primary.withOpacity(0.1))),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -443,7 +440,7 @@ class _ActionBar extends StatelessWidget {
                 loading: isSaving,
                 fullWidth: true,
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -452,7 +449,7 @@ class _ActionBar extends StatelessWidget {
                         icon: Icons.edit_rounded,
                         onTap: onEdit),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(
                     child: _OutlineBtn(
                         label: t.of('result_new'),
@@ -494,15 +491,14 @@ class _GradBtn extends StatelessWidget {
         width: fullWidth ? double.infinity : null,
         height: 50,
         decoration: BoxDecoration(
-          gradient: loading ? null : PT.gradMint,
-          color: loading ? PT.card : null,
-          borderRadius: BorderRadius.circular(PT.r16),
+          color: loading ? AppTokens.card : AppTokens.primary,
+          borderRadius: BorderRadius.circular(AppTokens.r16),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             loading
-                ? const SizedBox(
+                ? SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
@@ -510,9 +506,9 @@ class _GradBtn extends StatelessWidget {
                   color: Colors.black),
             )
                 : Icon(icon, color: Colors.black, size: 18),
-            const SizedBox(width: PT.s8),
+            SizedBox(width: AppTokens.s8),
             Text(label,
-                style: const TextStyle(
+                style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w900,
                     fontSize: 14)),
@@ -540,18 +536,18 @@ class _OutlineBtn extends StatelessWidget {
       child: Container(
         height: 46,
         decoration: BoxDecoration(
-          color: PT.card,
-          borderRadius: BorderRadius.circular(PT.r16),
+          color: AppTokens.card,
+          borderRadius: BorderRadius.circular(AppTokens.r16),
           border: Border.all(color: Colors.white12),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: PT.t2, size: 16),
-            const SizedBox(width: PT.s8),
+            Icon(icon, color: AppTokens.text2, size: 16),
+            SizedBox(width: AppTokens.s8),
             Text(label,
-                style: const TextStyle(
-                    color: PT.t2,
+                style: TextStyle(
+                    color: AppTokens.text2,
                     fontWeight: FontWeight.w700,
                     fontSize: 13)),
           ],
@@ -569,11 +565,11 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
           horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.black54,
-        borderRadius: BorderRadius.circular(PT.rFull),
+        borderRadius: BorderRadius.circular(AppTokens.rFull),
       ),
       child: Text(text,
           style: TextStyle(
@@ -591,16 +587,16 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: PT.s4),
+      padding: EdgeInsets.symmetric(vertical: AppTokens.s4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(
-                  color: PT.t2, fontSize: 12)),
+              style: TextStyle(
+                  color: AppTokens.text2, fontSize: 12)),
           Text(value,
-              style: const TextStyle(
-                  color: PT.t1,
+              style: TextStyle(
+                  color: AppTokens.text,
                   fontSize: 12,
                   fontWeight: FontWeight.w700)),
         ],

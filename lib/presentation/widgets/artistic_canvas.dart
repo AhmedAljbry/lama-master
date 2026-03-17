@@ -166,7 +166,7 @@ class ArtisticCanvas extends StatelessWidget {
     );
     return Container(
       padding: effectiveParams.polaroidFrame
-          ? const EdgeInsets.fromLTRB(20, 20, 20, 80)
+          ? EdgeInsets.fromLTRB(20, 20, 20, 80)
           : EdgeInsets.zero,
       color: effectiveParams.polaroidFrame
           ? const Color(0xFFF0F0F0)
@@ -405,13 +405,13 @@ class ArtisticCanvas extends StatelessWidget {
               // Cinema bars
               // =============================
               if (effectiveParams.cinemaMode) ...[
-                const Positioned(
+                Positioned(
                     top: 0,
                     left: 0,
                     right: 0,
                     height: 40,
                     child: ColoredBox(color: Colors.black)),
-                const Positioned(
+                Positioned(
                     bottom: 0,
                     left: 0,
                     right: 0,

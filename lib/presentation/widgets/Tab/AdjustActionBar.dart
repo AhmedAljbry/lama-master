@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:lama/core/Responsive_Helper/ResponsiveHelper.dart';
 import 'package:lama/core/Stayl/Them.dart';
-import 'package:lama/core/i18n/t.dart';
+import '../../../../core/ui/AppL10n.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AdjustActionBar extends StatelessWidget {
-  final Lang lang;
   final VoidCallback? onReset;
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
@@ -18,7 +18,6 @@ class AdjustActionBar extends StatelessWidget {
 
   const AdjustActionBar({
     super.key,
-    required this.lang,
     required this.canUndo,
     required this.canRedo,
     required this.advanced,
@@ -32,15 +31,15 @@ class AdjustActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = T(lang);
+    final l10n = context.read<AppL10n>();
 
     return Row(
       children: [
         Expanded(
           child: _ActionPill(
             label: advanced
-                ? '${t.of('advanced')}: ON'
-                : '${t.of('advanced')}: OFF',
+                ? '${l10n.get('advanced')}: ON'
+                : '${l10n.get('advanced')}: OFF',
             onTap: onToggleAdvanced,
             active: advanced,
           ),
@@ -48,7 +47,7 @@ class AdjustActionBar extends StatelessWidget {
         SizedBox(width: R.sp(context, 8)),
         Expanded(
           child: _ActionPill(
-            label: t.of('undo'),
+            label: l10n.get('undo'),
             onTap: onUndo,
             disabled: !canUndo,
           ),
@@ -56,7 +55,7 @@ class AdjustActionBar extends StatelessWidget {
         SizedBox(width: R.sp(context, 8)),
         Expanded(
           child: _ActionPill(
-            label: t.of('redo'),
+            label: l10n.get('redo'),
             onTap: onRedo,
             disabled: !canRedo,
           ),
@@ -67,7 +66,7 @@ class AdjustActionBar extends StatelessWidget {
             onLongPressStart: (_) => onCompareHoldStart?.call(),
             onLongPressEnd: (_) => onCompareHoldEnd?.call(),
             child: _ActionPill(
-              label: t.of('compare_hold'),
+              label: l10n.get('compare_hold'),
               onTap: null,
             ),
           ),
@@ -75,7 +74,7 @@ class AdjustActionBar extends StatelessWidget {
         SizedBox(width: R.sp(context, 8)),
         Expanded(
           child: _ActionPill(
-            label: t.of('reset'),
+            label: l10n.get('reset'),
             onTap: onReset,
           ),
         ),

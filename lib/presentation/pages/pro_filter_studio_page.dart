@@ -9,7 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 // ─── Project imports ──────────────────────────────────────────────
-import 'package:lama/core/i18n/t.dart'; // T, Lang
+import 'package:lama/core/i18n/t.dart';
+import 'package:lama/core/ui/AppL10n.dart';
+import 'package:lama/core/i18n/locale_controller.dart';
 import 'package:lama/core/performance/render_capture_service.dart';
 import 'package:lama/features/filter_studio/data/services/filter_studio_ai_analysis_service.dart';
 import 'package:lama/features/filter_studio/domain/entities/app_preset.dart';
@@ -24,7 +26,8 @@ import 'package:lama/features/filter_studio/presentation/bloc/filter_studio_stat
 import 'package:lama/features/filter_studio/presentation/pages/filter_studio_scope.dart';
 import 'package:lama/features/filter_studio/presentation/services/filter_studio_ai_style_matcher.dart';
 import 'package:lama/features/filter_studio/presentation/services/filter_studio_style_catalog.dart';
-import 'package:lama/presentation/pages/PT.dart';
+import 'package:lama/core/ui/AppTokens.dart';
+import 'package:lama/core/ui/app_theme.dart';
 import 'package:lama/presentation/pages/Pro.dart';
 import 'package:lama/presentation/pages/ProResultPage.dart';
 import 'package:lama/presentation/pages/ProcessingOverlay_ProFilterStudioPage.dart';
@@ -34,13 +37,9 @@ import 'package:lama/presentation/widgets/filter_studio/filter_studio_shell.dart
 
 // ─── Pro files (same folder — relative imports) ───────────────────
 
-// ─────────────────────────────────────────────────────────────────
 class ProFilterStudioPage extends StatefulWidget {
-  final Lang currentLang;
-
   const ProFilterStudioPage({
     super.key,
-    this.currentLang = Lang.en,
   });
 
   @override
@@ -54,7 +53,6 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
   final GlobalKey _repaintKey = GlobalKey();
 
   bool _showResult = false;
-  Lang _lang = Lang.en;
   Uint8List? _imageBytes;
   FilterStudioAiInsight? _aiInsight;
   bool _isAnalyzingInsight = false;
@@ -67,33 +65,34 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
   @override
   void initState() {
     super.initState();
-    _lang = widget.currentLang;
   }
 
-  T get _t => T(_lang);
+  T get _t => T.from(context);
+  AppL10n get l10n => AppL10n.of(context);
+  Lang get _lang => l10n.isAr ? Lang.ar : Lang.en;
 
-  String get _aiButtonLabel {
+  String _aiButtonLabel(AppL10n l10n) {
     final insight = _aiInsight;
     if (_isAnalyzingInsight) {
-      return _t.of('ai_status_running');
+      return l10n.get('ai_status_running');
     }
     if (_imageBytes == null) {
       return 'AI';
     }
     if (insight == null) {
-      return _t.of('ai_auto_fix');
+      return l10n.get('ai_auto_fix');
     }
-    return '${_t.of('ai_ready_short')} ${(insight.confidence * 100).round()}%';
+    return '${l10n.get('ai_ready_short')} ${(insight.confidence * 100).round()}%';
   }
 
-  String get _aiStatusLabel {
+  String _aiStatusLabel(AppL10n l10n) {
     if (_isAnalyzingInsight) {
-      return _t.of('ai_status_running');
+      return l10n.get('ai_status_running');
     }
     if (_aiInsight != null) {
-      return _t.of('ai_status_ready');
+      return l10n.get('ai_status_ready');
     }
-    return _t.of('ai_manual');
+    return l10n.get('ai_manual');
   }
 
   FilterStudioStylePreset? get _selectedStyle {
@@ -123,12 +122,13 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
   String _currentLookLabel(
     FilterStudioState state,
     Map<AppPreset, PresetConfig> presets,
+    AppL10n l10n,
   ) {
     final selectedStyle = _selectedStyle;
     if (selectedStyle != null) {
-      return selectedStyle.name(_lang);
+      return selectedStyle.name(l10n.locale.languageCode == 'ar' ? Lang.ar : Lang.en);
     }
-    return presets[state.selectedPreset]?.name ?? _t.of('normal');
+    return presets[state.selectedPreset]?.name ?? l10n.get('normal');
   }
 
   void _handleBack(BuildContext context, FilterStudioState state) {
@@ -160,22 +160,24 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
     }
     return presets[state.selectedPreset]?.auraColor ??
         presets[state.selectedPreset]?.colorOverlay ??
-        PT.mint;
+        AppTokens.primary;
   }
 
   List<FilterStudioInspectorTab> _buildInspectorTabs(
     BuildContext context,
     FilterStudioState state,
     Map<AppPreset, PresetConfig> presets,
+    AppL10n l10n,
   ) {
     final bloc = context.read<FilterStudioBloc>();
+    final isAr = l10n.locale.languageCode == 'ar';
 
     return [
       FilterStudioInspectorTab(
-        label: _t.of('ai_tab'),
+        label: l10n.get('ai_tab'),
         icon: Icons.auto_awesome_rounded,
         child: AiStudioTab(
-          lang: _lang,
+          l10n: l10n,
           hasImage: state.imageFile != null,
           insight: _aiInsight,
           isLoading: _isAnalyzingInsight,
@@ -191,10 +193,10 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         ),
       ),
       FilterStudioInspectorTab(
-        label: _t.of('presets'),
+        label: l10n.get('presets'),
         icon: Icons.auto_fix_high_rounded,
         child: PresetsTab(
-          lang: _lang,
+          l10n: l10n,
           presets: presets,
           selectedPreset: state.selectedPreset,
           onPresetSelected: (preset) => _selectCorePreset(context, preset),
@@ -204,10 +206,10 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         ),
       ),
       FilterStudioInspectorTab(
-        label: _t.of('adjust'),
+        label: l10n.get('adjust'),
         icon: Icons.tune_rounded,
         child: AdjustTab(
-          lang: _lang,
+          l10n: l10n,
           exposure: state.params.exposure,
           brightness: state.params.brightness,
           contrast: state.params.contrast,
@@ -234,10 +236,10 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         ),
       ),
       FilterStudioInspectorTab(
-        label: _t.of('effects'),
+        label: l10n.get('effects'),
         icon: Icons.blur_on_rounded,
         child: EffectsTab(
-          lang: _lang,
+          l10n: l10n,
           blur: state.params.blur,
           aura: state.params.aura,
           auraColor: state.params.auraColor,
@@ -251,10 +253,10 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         ),
       ),
       FilterStudioInspectorTab(
-        label: _t.of('overlays'),
+        label: l10n.get('overlays'),
         icon: Icons.layers_rounded,
         child: OverlaysTab(
-          lang: _lang,
+          l10n: l10n,
           showDateStamp: state.params.showDateStamp,
           cinemaMode: state.params.cinemaMode,
           polaroidFrame: state.params.polaroidFrame,
@@ -277,8 +279,9 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
     FilterStudioLayoutMode mode,
     Color accent,
   ) {
-    final tabs = _buildInspectorTabs(context, state, presets);
-    final currentLookLabel = _currentLookLabel(state, presets);
+    final l10n = AppL10n.of(context);
+    final tabs = _buildInspectorTabs(context, state, presets, l10n);
+    final currentLookLabel = _currentLookLabel(state, presets, l10n);
 
     final preview = FilterStudioPreviewPane(
       t: t,
@@ -287,8 +290,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       state: state,
       repaintKey: _repaintKey,
       currentLookLabel: currentLookLabel,
-      aiStatusLabel: _aiStatusLabel,
-      totalLooks: _styleLibrary.length,
+      aiStatusLabel: _aiStatusLabel(l10n),      totalLooks: _styleLibrary.length,
       onUndo: () =>
           context.read<FilterStudioBloc>().add(const AdjustUndoRequested()),
       onRedo: () =>
@@ -308,8 +310,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       mode: mode,
       accent: accent,
       currentLookLabel: currentLookLabel,
-      aiStatusLabel: _aiStatusLabel,
-      hasPersonMask: state.personMask != null,
+      aiStatusLabel: _aiStatusLabel(l10n),      hasPersonMask: state.personMask != null,
       selectedIndex: state.params.selectedTabIndex,
       tabs: tabs,
       onTabChanged: (index) =>
@@ -358,7 +359,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
           flex: mode == FilterStudioLayoutMode.expanded ? 9 : 8,
           child: preview,
         ),
-        const SizedBox(width: PT.s16),
+        SizedBox(width: AppTokens.s16),
         SizedBox(width: inspectorWidth, child: inspector),
       ],
     );
@@ -383,7 +384,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         cinemaMode: true,
         vignette: 0.18,
         dustOverlay: 0.08,
-        auraColor: PT.gold,
+        auraColor: AppTokens.warning,
         colorOverlay: const Color(0x0F10233F),
       ),
       AppPreset.dreamy: PresetConfig(
@@ -416,7 +417,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         vignette: 0.10,
         lightLeakIndex: 1,
         dustOverlay: 0.10,
-        auraColor: PT.gold,
+        auraColor: AppTokens.warning,
         colorOverlay: Colors.orange.withOpacity(0.10),
       ),
       AppPreset.noir: PresetConfig(
@@ -427,7 +428,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         grain: 0.22,
         vignette: 0.24,
         cinemaMode: true,
-        auraColor: PT.t2,
+        auraColor: AppTokens.text2,
         colorPop: true,
       ),
       AppPreset.neon: PresetConfig(
@@ -460,7 +461,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         saturation: 1.06,
         blur: 1.8,
         lightLeakIndex: 1,
-        auraColor: PT.gold,
+        auraColor: AppTokens.warning,
         colorOverlay: Colors.redAccent.withOpacity(0.10),
       ),
       AppPreset.editorial: PresetConfig(
@@ -470,7 +471,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         saturation: 1.04,
         exposure: 0.01,
         vignette: 0.06,
-        auraColor: PT.mint,
+        auraColor: AppTokens.primary,
       ),
       AppPreset.vaporwave: PresetConfig(
         name: t.of('vaporwave'),
@@ -494,7 +495,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         exposure: 0.02,
         brightness: -0.01,
         vignette: 0.08,
-        auraColor: PT.cyan,
+        auraColor: AppTokens.info,
         colorOverlay: const Color(0x10FFFFFF),
       ),
       AppPreset.halo: PresetConfig(
@@ -533,7 +534,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
         cinemaMode: true,
         vignette: 0.18,
         lightLeakIndex: 1,
-        auraColor: PT.cyan,
+        auraColor: AppTokens.info,
         colorOverlay: const Color(0x0DFFFFFF),
       ),
     };
@@ -569,7 +570,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
 
   void _toggleLang() {
     HapticFeedback.selectionClick();
-    setState(() => _lang = _lang == Lang.en ? Lang.ar : Lang.en);
+    context.read<LocaleController>().toggleLocale();
     final bytes = _imageBytes;
     if (bytes != null) {
       if (_aiInsight != null || _isAnalyzingInsight) {
@@ -585,7 +586,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
   }) async {
     final bytes = _imageBytes;
     if (bytes == null) {
-      _showStudioSnack(context, _t.of('pick_hint'), PT.danger);
+      _showStudioSnack(context, _t.of('pick_hint'), AppTokens.danger);
       return;
     }
 
@@ -601,7 +602,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       context,
       insight,
       message: _t.of('ai_auto_applied'),
-      color: PT.cyan,
+      color: AppTokens.info,
     );
   }
 
@@ -648,7 +649,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
     FilterParams params, {
     AppPreset? preset,
     String? message,
-    Color color = PT.mint,
+    Color color = AppTokens.primary,
   }) {
     HapticFeedback.mediumImpact();
     setState(() => _selectedStyleId = null);
@@ -679,7 +680,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
     BuildContext context,
     FilterStudioAiInsight insight, {
     required String message,
-    Color color = PT.mint,
+    Color color = AppTokens.primary,
   }) {
     _applyRecipe(
       context,
@@ -715,7 +716,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       _showStudioSnack(
         context,
         _t.of('subject_mask_needed'),
-        PT.warning,
+        AppTokens.warning,
       );
       return;
     }
@@ -732,7 +733,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       next,
       preset: state.selectedPreset,
       message: _t.of('depth_blur'),
-      color: PT.purple,
+      color: AppTokens.accent,
     );
   }
 
@@ -754,7 +755,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       _showStudioSnack(
         context,
         _t.of('subject_mask_needed'),
-        PT.warning,
+        AppTokens.warning,
       );
       return;
     }
@@ -766,7 +767,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       blur: (state.params.blur + 2.2).clamp(0.0, 20.0),
       aura:
           (state.params.aura < 0.18 ? 0.18 : state.params.aura).clamp(0.0, 1.0),
-      auraColor: PT.cyan,
+      auraColor: AppTokens.info,
       colorPop: true,
       vignette: (state.params.vignette + 0.10).clamp(0.0, 0.8),
     );
@@ -776,7 +777,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       next,
       preset: state.selectedPreset,
       message: _t.of('smart_focus'),
-      color: PT.cyan,
+      color: AppTokens.info,
     );
   }
 
@@ -797,7 +798,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       next,
       preset: state.selectedPreset,
       message: _t.of('cinema_boost'),
-      color: PT.gold,
+      color: AppTokens.warning,
     );
   }
 
@@ -838,7 +839,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       next,
       preset: state.selectedPreset,
       message: _t.of('clean_pro'),
-      color: PT.mint,
+      color: AppTokens.primary,
     );
   }
 
@@ -857,13 +858,13 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
       SnackBar(
         content: Text(
           message,
-          style: const TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
+        margin: EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(PT.r16),
+          borderRadius: BorderRadius.circular(AppTokens.r16),
         ),
       ),
     );
@@ -876,6 +877,7 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
   Widget build(BuildContext context) {
     final presets = _presets;
     final t = _t;
+    final l10n = this.l10n;
 
     return FilterStudioScope(
       presets: presets,
@@ -886,13 +888,13 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
           ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
             content: Text(
               state.lastFailure?.message ?? 'Error',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: TextStyle(fontWeight: FontWeight.w700),
             ),
-            backgroundColor: PT.danger,
+            backgroundColor: AppTokens.danger,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
+            margin: EdgeInsets.all(16),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(PT.r16)),
+                borderRadius: BorderRadius.circular(AppTokens.r16)),
           ));
         },
         builder: (ctx, state) {
@@ -918,10 +920,10 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
           return Directionality(
             textDirection: t.isRTL ? TextDirection.rtl : TextDirection.ltr,
             child: Scaffold(
-              backgroundColor: PT.bgOf(context),
+              backgroundColor: AppTokens.bg,
               body: Stack(
                 children: [
-                  const Positioned.fill(child: FilterStudioShellBackdrop()),
+                  Positioned.fill(child: FilterStudioShellBackdrop()),
                   SafeArea(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
@@ -929,10 +931,10 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
                         final accent = _currentAccent(state, presets);
                         final screenPadding =
                             mode == FilterStudioLayoutMode.compact
-                                ? const EdgeInsets.fromLTRB(12, 12, 12, 12)
+                                ? EdgeInsets.fromLTRB(12, 12, 12, 12)
                                 : mode == FilterStudioLayoutMode.medium
-                                    ? const EdgeInsets.fromLTRB(18, 18, 18, 18)
-                                    : const EdgeInsets.fromLTRB(24, 20, 24, 20);
+                                    ? EdgeInsets.fromLTRB(18, 18, 18, 18)
+                                    : EdgeInsets.fromLTRB(24, 20, 24, 20);
 
                         return Padding(
                           padding: screenPadding,
@@ -946,9 +948,9 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
                                 hasImage: state.imageFile != null,
                                 currentLookLabel: state.imageFile == null
                                     ? null
-                                    : _currentLookLabel(state, presets),
-                                aiStatusLabel: _aiStatusLabel,
-                                aiButtonLabel: _aiButtonLabel,
+                                    : _currentLookLabel(state, presets, l10n),
+                                aiStatusLabel: _aiStatusLabel(l10n),
+                                aiButtonLabel: _aiButtonLabel(l10n),
                                 isAiBusy: _isAnalyzingInsight,
                                 hasAiInsight: _aiInsight != null,
                                 onBack: () => _handleBack(ctx, state),
@@ -1027,924 +1029,6 @@ class _ProFilterStudioPageState extends State<ProFilterStudioPage> {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// CANVAS AREA
+// END OF FILE
 // ─────────────────────────────────────────────────────────────────
-class _CanvasArea extends StatelessWidget {
-  final FilterStudioState state;
-  final GlobalKey repaintKey;
-  final T t;
-  final VoidCallback onPick;
-  final String currentLookLabel;
-  final String aiStatusLabel;
-  final int totalLooks;
-  final double topPadding;
-  final double bottomPadding;
-  final bool canUndo;
-  final bool canRedo;
-  final VoidCallback onUndo;
-  final VoidCallback onRedo;
-  final VoidCallback onCompareStart;
-  final VoidCallback onCompareEnd;
-  final VoidCallback onAiAuto;
-  final VoidCallback onCinematic;
-  final VoidCallback onRandom;
-  final VoidCallback onDepthBlur;
 
-  const _CanvasArea({
-    required this.state,
-    required this.repaintKey,
-    required this.t,
-    required this.onPick,
-    required this.currentLookLabel,
-    required this.aiStatusLabel,
-    required this.totalLooks,
-    required this.topPadding,
-    required this.bottomPadding,
-    required this.canUndo,
-    required this.canRedo,
-    required this.onUndo,
-    required this.onRedo,
-    required this.onCompareStart,
-    required this.onCompareEnd,
-    required this.onAiAuto,
-    required this.onCinematic,
-    required this.onRandom,
-    required this.onDepthBlur,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (state.imageFile == null) {
-      return _EmptyState(
-        t: t,
-        onPick: onPick,
-        totalLooks: totalLooks,
-      );
-    }
-    return Padding(
-      padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: Pro.canvasW(context)),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 90),
-                child: Stack(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(PT.r20),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black45,
-                            blurRadius: 40,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: RepaintBoundary(
-                        key: repaintKey,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(PT.r20),
-                          child: ArtisticCanvas(
-                            imageFile: state.imageFile!,
-                            personMask: state.personMask,
-                            params: state.params,
-                            showOriginal: state.isComparingHold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: PT.s12,
-                      left: PT.s12,
-                      child: _StudioHudCard(
-                        title: t.of('studio_control'),
-                        value: currentLookLabel,
-                        status: aiStatusLabel,
-                      ),
-                    ),
-                    Positioned(
-                      left: PT.s12,
-                      right: PT.s12,
-                      bottom: PT.s12,
-                      child: Wrap(
-                        spacing: PT.s8,
-                        runSpacing: PT.s8,
-                        children: [
-                          _StudioHudPill(
-                            label: '$totalLooks ${t.of('looks_label')}',
-                            color: PT.mint,
-                          ),
-                          _StudioHudPill(
-                            label: t.of('live_preview'),
-                            color: PT.cyan,
-                          ),
-                          _StudioHudPill(
-                            label: aiStatusLabel,
-                            color: PT.gold,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _PreviewQuickDock(
-                  t: t,
-                  canUndo: canUndo,
-                  canRedo: canRedo,
-                  onUndo: onUndo,
-                  onRedo: onRedo,
-                  onCompareStart: onCompareStart,
-                  onCompareEnd: onCompareEnd,
-                  onAiAuto: onAiAuto,
-                  onCinematic: onCinematic,
-                  onRandom: onRandom,
-                  onDepthBlur: onDepthBlur,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────
-// EMPTY STATE
-// ─────────────────────────────────────────────────────────────────
-class _EmptyState extends StatefulWidget {
-  final T t;
-  final VoidCallback onPick;
-  final int totalLooks;
-
-  const _EmptyState({
-    required this.t,
-    required this.onPick,
-    required this.totalLooks,
-  });
-
-  @override
-  State<_EmptyState> createState() => _EmptyStateState();
-}
-
-class _EmptyStateState extends State<_EmptyState>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _scale;
-  late final Animation<double> _opacity;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 700))
-      ..forward();
-    _scale = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack)
-        .drive(Tween(begin: 0.85, end: 1.0));
-    _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut)
-        .drive(Tween(begin: 0.0, end: 1.0));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, child) => Transform.scale(
-        scale: _scale.value,
-        child: Opacity(opacity: _opacity.value, child: child),
-      ),
-      child: Center(
-        child: GestureDetector(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            widget.onPick();
-          },
-          child: Container(
-            width: 300,
-            padding: const EdgeInsets.all(PT.s32),
-            decoration: BoxDecoration(
-              color: PT.surface,
-              borderRadius: BorderRadius.circular(PT.r24),
-              border: Border.all(color: PT.mint.withOpacity(0.2)),
-              boxShadow: PT.glow(PT.mint, blur: 40),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: PT.gradMint,
-                    shape: BoxShape.circle,
-                    boxShadow: PT.glow(PT.mint, blur: 30),
-                  ),
-                  child: const Icon(Icons.add_photo_alternate_rounded,
-                      size: 40, color: Colors.black),
-                ),
-                const SizedBox(height: PT.s24),
-                ShaderMask(
-                  shaderCallback: (b) => PT.gradMint.createShader(b),
-                  child: Text(
-                    widget.t.of('tap_to_open'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900),
-                  ),
-                ),
-                const SizedBox(height: PT.s12),
-                Text(
-                  widget.t.of('welcome_sub'),
-                  textAlign: TextAlign.center,
-                  style:
-                      const TextStyle(color: PT.t2, fontSize: 13, height: 1.5),
-                ),
-                const SizedBox(height: PT.s24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _Badge(
-                      label:
-                          '${widget.totalLooks} ${widget.t.of('looks_label')}',
-                      color: PT.mint,
-                    ),
-                    const SizedBox(width: PT.s8),
-                    _Badge(label: widget.t.of('ai_manual'), color: PT.purple),
-                    const SizedBox(width: PT.s8),
-                    _Badge(label: widget.t.of('pro_pack'), color: PT.gold),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  final String label;
-  final Color color;
-  const _Badge({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(PT.rFull),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1)),
-    );
-  }
-}
-
-class _StudioHudCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final String status;
-
-  const _StudioHudCard({
-    required this.title,
-    required this.value,
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(PT.r20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          padding: const EdgeInsets.all(PT.s12),
-          decoration: BoxDecoration(
-            color: PT.surface.withOpacity(0.72),
-            borderRadius: BorderRadius.circular(PT.r20),
-            border: Border.all(color: Colors.white.withOpacity(0.07)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: PT.t3,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: PT.s4),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: PT.t1,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: PT.s6),
-              Text(
-                status,
-                style: const TextStyle(
-                  color: PT.mint,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StudioHudPill extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _StudioHudPill({
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: PT.s10, vertical: PT.s7),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(PT.rFull),
-        border: Border.all(color: color.withOpacity(0.24)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────
-// TOP BAR
-// ─────────────────────────────────────────────────────────────────
-class _PreviewQuickDock extends StatelessWidget {
-  final T t;
-  final bool canUndo;
-  final bool canRedo;
-  final VoidCallback onUndo;
-  final VoidCallback onRedo;
-  final VoidCallback onCompareStart;
-  final VoidCallback onCompareEnd;
-  final VoidCallback onAiAuto;
-  final VoidCallback onCinematic;
-  final VoidCallback onRandom;
-  final VoidCallback onDepthBlur;
-
-  const _PreviewQuickDock({
-    required this.t,
-    required this.canUndo,
-    required this.canRedo,
-    required this.onUndo,
-    required this.onRedo,
-    required this.onCompareStart,
-    required this.onCompareEnd,
-    required this.onAiAuto,
-    required this.onCinematic,
-    required this.onRandom,
-    required this.onDepthBlur,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(PT.r20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          padding: const EdgeInsets.all(PT.s12),
-          decoration: BoxDecoration(
-            color: PT.surface.withOpacity(0.82),
-            borderRadius: BorderRadius.circular(PT.r20),
-            border: Border.all(color: Colors.white.withOpacity(0.07)),
-            boxShadow: PT.elevation,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                t.of('preview_tools'),
-                style: const TextStyle(
-                  color: PT.t1,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: PT.s10),
-              Wrap(
-                spacing: PT.s8,
-                runSpacing: PT.s8,
-                children: [
-                  _PreviewDockBtn(
-                    icon: Icons.auto_awesome_rounded,
-                    label: t.of('ai_auto_fix'),
-                    color: PT.cyan,
-                    onTap: onAiAuto,
-                  ),
-                  _HoldPreviewDockBtn(
-                    icon: Icons.compare_arrows_rounded,
-                    label: t.of('compare_hold'),
-                    color: PT.mint,
-                    onStart: onCompareStart,
-                    onEnd: onCompareEnd,
-                  ),
-                  _PreviewDockBtn(
-                    icon: Icons.movie_creation_outlined,
-                    label: t.of('cinematic_look'),
-                    color: PT.gold,
-                    onTap: onCinematic,
-                  ),
-                  _PreviewDockBtn(
-                    icon: Icons.blur_on_rounded,
-                    label: t.of('depth_blur'),
-                    color: PT.purple,
-                    onTap: onDepthBlur,
-                  ),
-                  _PreviewDockBtn(
-                    icon: Icons.shuffle_rounded,
-                    label: t.of('random_mix'),
-                    color: PT.mint,
-                    onTap: onRandom,
-                  ),
-                  _PreviewDockBtn(
-                    icon: Icons.undo_rounded,
-                    label: t.of('undo'),
-                    color: canUndo ? PT.mint : PT.t3,
-                    onTap: canUndo ? onUndo : null,
-                  ),
-                  _PreviewDockBtn(
-                    icon: Icons.redo_rounded,
-                    label: t.of('redo'),
-                    color: canRedo ? PT.mint : PT.t3,
-                    onTap: canRedo ? onRedo : null,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PreviewDockBtn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback? onTap;
-
-  const _PreviewDockBtn({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = onTap != null;
-    return GestureDetector(
-      onTap: enabled
-          ? () {
-              HapticFeedback.selectionClick();
-              onTap!();
-            }
-          : null,
-      child: AnimatedOpacity(
-        duration: PT.fast,
-        opacity: enabled ? 1 : 0.45,
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 92),
-          padding: const EdgeInsets.symmetric(
-            horizontal: PT.s12,
-            vertical: PT.s10,
-          ),
-          decoration: BoxDecoration(
-            color: color.withOpacity(enabled ? 0.12 : 0.05),
-            borderRadius: BorderRadius.circular(PT.r16),
-            border: Border.all(color: color.withOpacity(enabled ? 0.26 : 0.10)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 15, color: color),
-              const SizedBox(width: PT.s6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HoldPreviewDockBtn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onStart;
-  final VoidCallback onEnd;
-
-  const _HoldPreviewDockBtn({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onStart,
-    required this.onEnd,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        HapticFeedback.selectionClick();
-        onStart();
-      },
-      onTapUp: (_) => onEnd(),
-      onTapCancel: onEnd,
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 108),
-        padding: const EdgeInsets.symmetric(
-          horizontal: PT.s12,
-          vertical: PT.s10,
-        ),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(PT.r16),
-          border: Border.all(color: color.withOpacity(0.26)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15, color: color),
-            const SizedBox(width: PT.s6),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  final T t;
-  final bool isSaving;
-  final bool hasImage;
-  final Lang currentLang; // ← separate field avoids t.lang dependency
-  final VoidCallback onPick;
-  final VoidCallback? onAiApply;
-  final String aiButtonLabel;
-  final bool isAiBusy;
-  final bool hasAiInsight;
-  final VoidCallback? onSave;
-  final VoidCallback onBack;
-  final VoidCallback onLangToggle;
-  final bool isDesktop;
-
-  const _TopBar({
-    required this.t,
-    required this.isSaving,
-    required this.hasImage,
-    required this.currentLang,
-    required this.onPick,
-    required this.onAiApply,
-    required this.aiButtonLabel,
-    required this.isAiBusy,
-    required this.hasAiInsight,
-    required this.onSave,
-    required this.onBack,
-    required this.onLangToggle,
-    this.isDesktop = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Show the OPPOSITE language as label (what user will switch TO)
-    final langLabel = currentLang == Lang.ar ? 'EN' : 'AR';
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(PT.r32),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: PT.s8),
-          decoration: BoxDecoration(
-            color: PT.surface.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(PT.r32),
-            border: Border.all(color: Colors.white.withOpacity(0.06)),
-          ),
-          child: Row(children: [
-            _GlassBtn(
-              icon: hasImage
-                  ? Icons.arrow_back_ios_new_rounded
-                  : Icons.close_rounded,
-              onTap: onBack,
-            ),
-            const SizedBox(width: PT.s8),
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                gradient: PT.gradPurple,
-                borderRadius: BorderRadius.circular(PT.r8),
-              ),
-              child: const Icon(Icons.movie_filter_rounded,
-                  color: Colors.white, size: 16),
-            ),
-            const SizedBox(width: PT.s8),
-            ShaderMask(
-              shaderCallback: (b) => PT.gradPurple.createShader(b),
-              child: Text(
-                t.of('pro_studio'),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
-                    fontSize: 13),
-              ),
-            ),
-            const Spacer(),
-            _GlassBtn(
-              icon: Icons.language_rounded,
-              onTap: onLangToggle,
-              label: langLabel,
-            ),
-            const SizedBox(width: PT.s8),
-            if (!hasImage || isDesktop)
-              _GlassBtn(icon: Icons.add_photo_alternate_rounded, onTap: onPick),
-            if (hasImage) ...[
-              const SizedBox(width: PT.s8),
-              GestureDetector(
-                onTap: isAiBusy || onAiApply == null ? null : onAiApply,
-                child: AnimatedContainer(
-                  duration: PT.fast,
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: PT.s12),
-                  decoration: BoxDecoration(
-                    color: hasAiInsight
-                        ? PT.cyan.withOpacity(0.14)
-                        : Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(PT.rFull),
-                    border: Border.all(
-                      color: hasAiInsight
-                          ? PT.cyan.withOpacity(0.34)
-                          : Colors.white.withOpacity(0.08),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      if (isAiBusy)
-                        const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: PT.cyan,
-                          ),
-                        )
-                      else
-                        Icon(
-                          Icons.auto_awesome_rounded,
-                          size: 16,
-                          color: hasAiInsight ? PT.cyan : PT.t3,
-                        ),
-                      const SizedBox(width: PT.s6),
-                      Text(
-                        aiButtonLabel,
-                        style: TextStyle(
-                          color: hasAiInsight ? PT.cyan : PT.t3,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            if (hasImage && onSave != null) ...[
-              const SizedBox(width: PT.s8),
-              GestureDetector(
-                onTap: isSaving ? null : onSave,
-                child: AnimatedContainer(
-                  duration: PT.fast,
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: PT.s16),
-                  decoration: BoxDecoration(
-                    gradient: isSaving ? null : PT.gradMint,
-                    color: isSaving ? PT.card : null,
-                    borderRadius: BorderRadius.circular(PT.rFull),
-                    boxShadow: isSaving ? [] : PT.glow(PT.mint, blur: 14),
-                  ),
-                  child: Center(
-                    child: isSaving
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.black),
-                          )
-                        : Text(
-                            t.of('save'),
-                            style: const TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 13),
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
-class _GlassBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final String? label;
-
-  const _GlassBtn({
-    required this.icon,
-    required this.onTap,
-    this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Container(
-        height: 36,
-        padding:
-            EdgeInsets.symmetric(horizontal: label != null ? PT.s12 : PT.s8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
-          borderRadius: BorderRadius.circular(PT.r12),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: PT.t2, size: 16),
-            if (label != null) ...[
-              const SizedBox(width: 4),
-              Text(label!,
-                  style: const TextStyle(
-                      color: PT.t2, fontSize: 11, fontWeight: FontWeight.w800)),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────
-// DESKTOP TOOLBAR
-// ─────────────────────────────────────────────────────────────────
-class _DesktopToolbar extends StatelessWidget {
-  final VoidCallback onPick;
-  final VoidCallback? onAiApply;
-  final VoidCallback onEditorial;
-  final VoidCallback onHalo;
-
-  const _DesktopToolbar({
-    required this.onPick,
-    required this.onAiApply,
-    required this.onEditorial,
-    required this.onHalo,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 76,
-      color: PT.surface,
-      padding: const EdgeInsets.symmetric(vertical: PT.s24),
-      child: Column(children: [
-        const SizedBox(height: 60),
-        _DesktopToolbarBtn(
-          icon: Icons.add_photo_alternate_rounded,
-          color: PT.mint,
-          onTap: onPick,
-        ),
-        const SizedBox(height: PT.s10),
-        _DesktopToolbarBtn(
-          icon: Icons.auto_awesome_rounded,
-          color: PT.cyan,
-          onTap: onAiApply,
-        ),
-        const SizedBox(height: PT.s10),
-        _DesktopToolbarBtn(
-          icon: Icons.auto_fix_high_rounded,
-          color: PT.gold,
-          onTap: onEditorial,
-        ),
-        const SizedBox(height: PT.s10),
-        _DesktopToolbarBtn(
-          icon: Icons.wb_iridescent_rounded,
-          color: PT.purple,
-          onTap: onHalo,
-        ),
-      ]),
-    );
-  }
-}
-
-class _DesktopToolbarBtn extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-
-  const _DesktopToolbarBtn({
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap == null
-          ? null
-          : () {
-              HapticFeedback.selectionClick();
-              onTap!();
-            },
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(PT.r12),
-          border: Border.all(color: color.withOpacity(0.24)),
-        ),
-        child: Icon(icon, color: color, size: 20),
-      ),
-    );
-  }
-}

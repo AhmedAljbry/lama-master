@@ -128,78 +128,78 @@ extension _EditorPageMaskQA on _EditorPageState {
                   _qaSectionTitle('1) Stroke Analysis'),
                   _qaLine('STROKES', strokeStats.pretty()),
 
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   _qaSectionTitle('2) Geometry Diagnosis'),
                   _qaLine('GEOMETRY', geometryDiagnosis),
 
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14),
                   _qaSectionTitle('3) RAW Mask'),
                   _qaLine('RAW', rawStats.pretty()),
                   _qaLine('RAW POLARITY', rawPolarity.pretty()),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _qaImageBox(
                     label: 'RAW MASK',
                     borderColor: Colors.blueAccent,
                     child: Image.memory(rawMask, fit: BoxFit.contain),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _qaImageBox(
                     label: 'RAW OVERLAY',
                     borderColor: Colors.blueGrey,
                     child: Image.memory(overlayRaw, fit: BoxFit.contain),
                   ),
 
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14),
                   _qaSectionTitle('4) FINAL Mask (الذي يذهب للسيرفر)'),
                   _qaLine('FINAL', finalStats.pretty()),
                   _qaLine('FINAL POLARITY', finalPolarity.pretty()),
                   _qaLine('SERVER RISK (NORMAL)', serverRiskNormal),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _qaImageBox(
                     label: 'FINAL MASK',
                     borderColor: Colors.greenAccent,
                     child: Image.memory(finalMask, fit: BoxFit.contain),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _qaImageBox(
                     label: 'FINAL OVERLAY',
                     borderColor: Colors.purpleAccent,
                     child: Image.memory(overlayFinal, fit: BoxFit.contain),
                   ),
 
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14),
                   _qaSectionTitle('5) FINAL INVERTED (تشخيص فقط)'),
                   _qaLine('FINAL INVERTED', invertedFinalStats.pretty()),
                   _qaLine('INVERTED POLARITY', invertedPolarity.pretty()),
                   _qaLine('SERVER RISK (INVERTED)', serverRiskInverted),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _qaImageBox(
                     label: 'FINAL INVERTED MASK',
                     borderColor: Colors.orangeAccent,
                     child: Image.memory(invertedFinalMask, fit: BoxFit.contain),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _qaImageBox(
                     label: 'FINAL INVERTED OVERLAY',
                     borderColor: Colors.deepOrangeAccent,
                     child: Image.memory(invertedOverlay, fit: BoxFit.contain),
                   ),
 
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14),
                   _qaSectionTitle('6) RAW vs FINAL Difference'),
                   _qaLine('DIFF', diffStats.pretty()),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _qaImageBox(
                     label: 'DIFF OVERLAY (أبيض = تغيّر)',
                     borderColor: Colors.amber,
                     child: Image.memory(diffOverlay, fit: BoxFit.contain),
                   ),
 
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14),
                   _qaSectionTitle('7) Diagnosis'),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.orange.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(14),
@@ -207,7 +207,7 @@ extension _EditorPageMaskQA on _EditorPageState {
                     ),
                     child: Text(
                       diagnosis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 12.5,
                         height: 1.45,
@@ -221,7 +221,7 @@ extension _EditorPageMaskQA on _EditorPageState {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text(
+              child: Text(
                 'إغلاق',
                 style: TextStyle(color: Color(0xFF2EE59D)),
               ),
@@ -351,7 +351,7 @@ extension _EditorPageMaskQA on _EditorPageState {
   Widget _qaSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         color: Colors.orangeAccent,
         fontSize: 13,
         fontWeight: FontWeight.w700,
@@ -369,9 +369,9 @@ extension _EditorPageMaskQA on _EditorPageState {
       children: [
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
+          style: TextStyle(color: Colors.white70, fontSize: 12),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Container(
           width: double.infinity,
           decoration: BoxDecoration(

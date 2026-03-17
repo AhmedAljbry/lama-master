@@ -33,7 +33,7 @@ class FixedBrushMagnifier extends StatelessWidget {
       child: Container(
         width: diameter,
         height: diameter,
-        padding: const EdgeInsets.all(7),
+        padding: EdgeInsets.all(7),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(

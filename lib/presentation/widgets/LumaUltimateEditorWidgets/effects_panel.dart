@@ -20,9 +20,9 @@ class EffectsPanel {
           height: 350,
           decoration: BoxDecoration(
             color: surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -36,9 +36,9 @@ class EffectsPanel {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Text("تأثيرات احترافية", style: TextStyle(color: text, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -76,7 +76,7 @@ class EffectsPanel {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.auto_awesome, color: effect['color']),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             Text(
                               effect['name'],
                               style: TextStyle(color: text, fontSize: 12, fontWeight: FontWeight.bold),

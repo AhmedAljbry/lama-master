@@ -32,11 +32,11 @@ class TestHubPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0F1720),
       appBar: AppBar(
-        title: const Text('Test Hub'),
+        title: Text('Test Hub'),
         backgroundColor: Colors.transparent,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         child: Column(
           children: [
             _NavCard(
@@ -48,7 +48,7 @@ class TestHubPage extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const TestAutoMaskPage()),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             _NavCard(
               title: '2) Server Integration Test (SAM + LaMa) - Mock',
               subtitle: 'انقر لتوليد ماسك → زر تنفيذ يظهر → محاكاة مسح',
@@ -58,8 +58,8 @@ class TestHubPage extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const ServerTestPage()),
               ),
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: 24),
+            Text(
               'ملاحظة: الآن كل شيء Mock. لاحقًا تستبدل دوال mock بطلبات API حقيقية.',
               style: TextStyle(color: Colors.white70),
               textAlign: TextAlign.center,
@@ -91,7 +91,7 @@ class _NavCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFF161D27),
           borderRadius: BorderRadius.circular(16),
@@ -108,18 +108,18 @@ class _NavCard extends StatelessWidget {
               ),
               child: Icon(icon, color: Colors.white),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 6),
+                  Text(title, style: TextStyle(fontWeight: FontWeight.w700)),
+                  SizedBox(height: 6),
                   Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.7))),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right),
+            Icon(Icons.chevron_right),
           ],
         ),
       ),
@@ -199,11 +199,11 @@ class _TestAutoMaskPageState extends State<TestAutoMaskPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0F14),
       appBar: AppBar(
-        title: const Text('Test Auto Select (SAM)'),
+        title: Text('Test Auto Select (SAM)'),
         actions: [
           IconButton(
             onPressed: _loadSampleImage,
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh),
           ),
         ],
       ),
@@ -211,9 +211,9 @@ class _TestAutoMaskPageState extends State<TestAutoMaskPage> {
         child: _isLoadingImage
             ? const CircularProgressIndicator()
             : _testImage == null
-            ? const Text('فشل تحميل الصورة', style: TextStyle(color: Colors.white))
+            ? Text('فشل تحميل الصورة', style: TextStyle(color: Colors.white))
             : Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: AspectRatio(
@@ -316,7 +316,7 @@ class _AutoMaskCanvasState extends State<AutoMaskCanvas> {
                   ),
                 ),
               if (_isLoading)
-                const Center(
+                Center(
                   child: CircularProgressIndicator(color: Colors.purpleAccent),
                 ),
             ],
@@ -484,14 +484,14 @@ class _ServerTestPageState extends State<ServerTestPage> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: const Text("Server Integration Test"),
+        title: Text("Server Integration Test"),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh),
             onPressed: _isProcessing ? null : _loadInitialImage,
           ),
         ],
@@ -505,7 +505,7 @@ class _ServerTestPageState extends State<ServerTestPage> {
                   child: _currentImage == null
                       ? const CircularProgressIndicator(color: Color(0xFF2EE59D))
                       : Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(16.0),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: AspectRatio(
@@ -522,7 +522,7 @@ class _ServerTestPageState extends State<ServerTestPage> {
                 if (_isProcessing)
                   Container(
                     color: Colors.black.withOpacity(0.7),
-                    child: const Center(
+                    child: Center(
                       child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
                     ),
                   ),
@@ -530,7 +530,7 @@ class _ServerTestPageState extends State<ServerTestPage> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 22),
             decoration: const BoxDecoration(
               color: Color(0xFF161D27),
               borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
@@ -543,7 +543,7 @@ class _ServerTestPageState extends State<ServerTestPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 14),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 Row(
                   children: [
                     Expanded(
@@ -551,14 +551,14 @@ class _ServerTestPageState extends State<ServerTestPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2EE59D),
                           foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
                           ),
                         ),
                         onPressed: canRun ? _processInpainting : null,
-                        icon: const Icon(Icons.auto_fix_high),
-                        label: const Text(
+                        icon: Icon(Icons.auto_fix_high),
+                        label: Text(
                           "تنفيذ المسح السحري",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
@@ -566,7 +566,7 @@ class _ServerTestPageState extends State<ServerTestPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Text(
                   "serverUrl (لاحقًا): $serverUrl",
                   style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 12),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:lama/core/i18n/t.dart';
+
+
 import 'package:lama/core/ui/tokens.dart';
 import 'package:lama/core/utils/Responsive.dart';
 import 'package:lama/domain/filter_item.dart';
@@ -103,7 +104,7 @@ class _BottomPanelState extends State<BottomPanel>
     final card = isDark ? AppTokens.card : const Color(0xFFF2F5F7);
     final text = isDark ? AppTokens.text : Colors.black87;
     final text2 = isDark ? AppTokens.text2 : Colors.black54;
-    final t = T(widget.currentLang);
+    final t = T.from(context);
 
     final baseFilters =
         widget.filtersSorted.where((filter) => !filter.isCustom);
@@ -124,14 +125,14 @@ class _BottomPanelState extends State<BottomPanel>
         height: Responsive.bottomPanelHeight(context),
         decoration: BoxDecoration(
           color: surface.withOpacity(0.98),
-          borderRadius: const BorderRadius.vertical(
+          borderRadius: BorderRadius.vertical(
             top: Radius.circular(AppTokens.r24),
           ),
           boxShadow: AppTokens.defaultShadow,
         ),
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Container(
               width: 40,
               height: 4,
@@ -140,7 +141,7 @@ class _BottomPanelState extends State<BottomPanel>
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             _PanelTabBar(
               controller: _tabs,
               primary: AppTokens.primary,
@@ -268,9 +269,9 @@ class _PanelTabBar extends StatelessWidget {
       indicatorColor: primary,
       indicatorWeight: 2.2,
       dividerColor: Colors.transparent,
-      labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+      labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
       unselectedLabelStyle:
-          const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
       tabs: tabs.map((label) => Tab(height: 36, child: Text(label))).toList(),
     );
   }
@@ -324,7 +325,7 @@ class _FiltersTab extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          padding: EdgeInsets.fromLTRB(16, 10, 16, 0),
           child: Row(
             children: [
               Expanded(
@@ -364,7 +365,7 @@ class _FiltersTab extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               _SquareActionButton(
                 icon: Icons.playlist_add_rounded,
                 color: primary,
@@ -375,7 +376,7 @@ class _FiltersTab extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: SizedBox(
             height: 34,
             child: ListView(
@@ -429,11 +430,11 @@ class _FiltersTab extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: Row(
             children: [
               Icon(Icons.tune_rounded, color: text2, size: 16),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 '${t.of('filters')} ${t.of('advanced')}',
                 style: TextStyle(
@@ -455,7 +456,7 @@ class _FiltersTab extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: 12),
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: primary,
@@ -487,7 +488,7 @@ class _FiltersTab extends StatelessWidget {
                 )
               : ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(10, 4, 10, 12),
+                  padding: EdgeInsets.fromLTRB(10, 4, 10, 12),
                   itemCount: filters.length,
                   itemBuilder: (context, index) {
                     final filter = filters[index];
@@ -547,7 +548,7 @@ class _AdjustTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: Column(
         children: [
           _AdjustSlider(
@@ -600,7 +601,7 @@ class _AdjustTab extends StatelessWidget {
             text2: text2,
             onChanged: (value) => onChanged(fade: value),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           TextButton.icon(
             onPressed: onReset,
             icon: Icon(
@@ -653,7 +654,7 @@ class _ToolsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       child: Column(
         children: [
           Row(
@@ -666,7 +667,7 @@ class _ToolsTab extends StatelessWidget {
                 text: text,
                 onTap: onCopy,
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               _ToolButton(
                 icon: Icons.content_paste_rounded,
                 label: t.of('paste'),
@@ -675,7 +676,7 @@ class _ToolsTab extends StatelessWidget {
                 text: text,
                 onTap: onPaste,
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               _ToolButton(
                 icon: Icons.restart_alt_rounded,
                 label: t.of('reset_all'),
@@ -686,7 +687,7 @@ class _ToolsTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             children: [
               _ToolButton(
@@ -699,7 +700,7 @@ class _ToolsTab extends StatelessWidget {
                 text: text,
                 onTap: onCompare,
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               _ToolButton(
                 icon: Icons.playlist_add_rounded,
                 label: t.of('add_filter'),
@@ -748,7 +749,7 @@ class _CustomStylesTab extends StatelessWidget {
     if (customFilters.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -757,7 +758,7 @@ class _CustomStylesTab extends StatelessWidget {
                 size: 36,
                 color: text2.withOpacity(0.28),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 t.of('no_styles'),
                 textAlign: TextAlign.center,
@@ -767,10 +768,10 @@ class _CustomStylesTab extends StatelessWidget {
                   height: 1.6,
                 ),
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
               FilledButton.icon(
                 onPressed: onCreateStyle,
-                icon: const Icon(Icons.playlist_add_rounded, size: 18),
+                icon: Icon(Icons.playlist_add_rounded, size: 18),
                 label: Text(t.of('save_current_style')),
                 style: FilledButton.styleFrom(
                   backgroundColor: primary,
@@ -786,7 +787,7 @@ class _CustomStylesTab extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Row(
             children: [
               Text(
@@ -800,7 +801,7 @@ class _CustomStylesTab extends StatelessWidget {
               const Spacer(),
               TextButton.icon(
                 onPressed: onCreateStyle,
-                icon: const Icon(Icons.playlist_add_rounded, size: 18),
+                icon: Icon(Icons.playlist_add_rounded, size: 18),
                 label: Text(t.of('add_filter')),
                 style: TextButton.styleFrom(foregroundColor: primary),
               ),
@@ -809,7 +810,7 @@ class _CustomStylesTab extends StatelessWidget {
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             itemCount: customFilters.length,
             itemBuilder: (context, index) {
               final filter = customFilters[index];
@@ -820,13 +821,13 @@ class _CustomStylesTab extends StatelessWidget {
                 direction: DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 16),
-                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.only(right: 16),
+                  margin: EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
                     color: AppTokens.danger.withOpacity(0.16),
                     borderRadius: BorderRadius.circular(AppTokens.r12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.delete_rounded,
                     color: AppTokens.danger,
                   ),
@@ -834,7 +835,7 @@ class _CustomStylesTab extends StatelessWidget {
                 onDismissed: (_) => onDelete(filter),
                 child: AnimatedContainer(
                   duration: AppTokens.fast,
-                  margin: const EdgeInsets.only(bottom: 8),
+                  margin: EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
                     color: isSelected ? primary.withOpacity(0.08) : card,
                     borderRadius: BorderRadius.circular(AppTokens.r12),
@@ -930,7 +931,7 @@ class _FilterCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: AppTokens.fast,
-        margin: const EdgeInsets.symmetric(horizontal: 5),
+        margin: EdgeInsets.symmetric(horizontal: 5),
         width: isSelected ? 92 : 80,
         decoration: BoxDecoration(
           color: isSelected ? primary.withOpacity(0.09) : card,
@@ -956,7 +957,7 @@ class _FilterCard extends StatelessWidget {
                 children: [
                   Positioned.fill(
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
+                      borderRadius: BorderRadius.vertical(
                         top: Radius.circular(AppTokens.r16 - 2),
                       ),
                       child: imageBytes == null
@@ -989,7 +990,7 @@ class _FilterCard extends StatelessWidget {
                       duration: AppTokens.fast,
                       opacity: isAiPick ? 1 : 0,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 3,
                         ),
@@ -1036,7 +1037,7 @@ class _FilterCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(6, 5, 6, 7),
+              padding: EdgeInsets.fromLTRB(6, 5, 6, 7),
               child: Text(
                 filter.name,
                 maxLines: 1,
@@ -1084,11 +1085,11 @@ class _AdjustSlider extends StatelessWidget {
         : (value * 100).round();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Icon(icon, size: 14, color: text2.withOpacity(0.75)),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           SizedBox(
             width: 82,
             child: Text(
@@ -1165,7 +1166,7 @@ class _ToolButton extends StatelessWidget {
               },
         child: AnimatedContainer(
           duration: AppTokens.fast,
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: card,
             borderRadius: BorderRadius.circular(AppTokens.r16),
@@ -1174,7 +1175,7 @@ class _ToolButton extends StatelessWidget {
           child: Column(
             children: [
               Icon(icon, color: color, size: 22),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
@@ -1209,13 +1210,13 @@ class _SegmentChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsetsDirectional.only(end: 8),
+      padding: EdgeInsetsDirectional.only(end: 8),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: AnimatedContainer(
           duration: AppTokens.fast,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: isSelected
                 ? selectedColor.withOpacity(0.12)
@@ -1290,12 +1291,12 @@ class _EmptyListState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 28, color: color.withOpacity(0.35)),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -1305,7 +1306,7 @@ class _EmptyListState extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               subtitle,
               textAlign: TextAlign.center,

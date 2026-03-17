@@ -58,7 +58,7 @@ class ProcessingOverlay extends StatelessWidget {
                     .read<InpaintingBloc>()
                     .add(InpaintingCancel()),
           )
-              : const SizedBox.shrink(key: ValueKey('hidden')),
+              : SizedBox.shrink(key: ValueKey('hidden')),
         );
       },
     );
@@ -109,8 +109,8 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin:  const EdgeInsets.symmetric(horizontal: 36),
-      padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
+      margin:  EdgeInsets.symmetric(horizontal: 36),
+      padding: EdgeInsets.fromLTRB(28, 32, 28, 24),
       decoration: BoxDecoration(
         color:        _surface,
         borderRadius: BorderRadius.circular(28),
@@ -132,13 +132,13 @@ class _Card extends StatelessWidget {
         children: [
           // ── Progress indicator ──────────────────────────
           _ProgressRing(state: state),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // ── Stage label ─────────────────────────────────
           Text(
             _stageLabel(state, t),
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color:      _text1,
               fontSize:   17,
               fontWeight: FontWeight.w800,
@@ -148,11 +148,11 @@ class _Card extends StatelessWidget {
 
           // ── Server message ──────────────────────────────
           if ((state.serverMessage ?? '').isNotEmpty) ...[
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               state.serverMessage!,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color:    _text2,
                 fontSize: 13,
                 height:   1.4,
@@ -162,9 +162,9 @@ class _Card extends StatelessWidget {
 
           // ── Poll / elapsed ──────────────────────────────
           if (state.pollCount > 0) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.symmetric(
+              padding: EdgeInsets.symmetric(
                   horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.04),
@@ -172,22 +172,22 @@ class _Card extends StatelessWidget {
               ),
               child: Text(
                 'Poll #${state.pollCount}',
-                style: const TextStyle(
+                style: TextStyle(
                     color: _text2, fontSize: 11),
               ),
             ),
           ],
 
-          const SizedBox(height: 28),
+          SizedBox(height: 28),
           const Divider(color: _border, height: 1),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // ── Cancel button ───────────────────────────────
           GestureDetector(
             onTap: onCancel,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 13),
+              padding: EdgeInsets.symmetric(vertical: 13),
               decoration: BoxDecoration(
                 color: _danger.withOpacity(0.07),
                 borderRadius: BorderRadius.circular(14),
@@ -198,7 +198,7 @@ class _Card extends StatelessWidget {
                 children: [
                   Icon(Icons.stop_circle_outlined,
                       color: _danger.withOpacity(0.85), size: 18),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     t.of('cancel'),
                     style: TextStyle(
@@ -304,7 +304,7 @@ class _ProgressRingState extends State<_ProgressRing>
             child: hasProgress
                 ? Text(
               '$progress%',
-              style: const TextStyle(
+              style: TextStyle(
                 color:      _text1,
                 fontSize:   15,
                 fontWeight: FontWeight.w900,

@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/i18n/t.dart';
+import '../../../../core/ui/AppL10n.dart';
 import '../../application/drawing/drawing_cubit.dart';
 import '../../application/drawing/drawing_state.dart';
 import '../../application/drawing/stroke.dart';
@@ -36,7 +36,7 @@ double _w01ToPx(double w01) {
 }
 
 class ProToolPanel extends StatelessWidget {
-  final T t;
+  final AppL10n l10n;
   final VoidCallback onMagic;
   final VoidCallback onResetViewport;
   final double currentZoom;
@@ -44,7 +44,7 @@ class ProToolPanel extends StatelessWidget {
 
   const ProToolPanel({
     super.key,
-    required this.t,
+    required this.l10n,
     required this.onMagic,
     required this.onResetViewport,
     required this.currentZoom,
@@ -58,7 +58,7 @@ class ProToolPanel extends StatelessWidget {
         final brushPx = _w01ToPx(state.brush.width01);
         final isEraser = state.brush.kind == BrushKind.eraser;
         final content = _ToolPanelContent(
-          t: t,
+          l10n: l10n,
           state: state,
           brushPx: brushPx,
           isEraser: isEraser,
@@ -71,7 +71,7 @@ class ProToolPanel extends StatelessWidget {
           return _ToolPanelShell(
             layout: layout,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: EdgeInsets.fromLTRB(18, 18, 18, 24),
               child: content,
             ),
           );
@@ -88,9 +88,9 @@ class ProToolPanel extends StatelessWidget {
               layout: layout,
               child: ListView(
                 controller: scrollController,
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 38),
+                padding: EdgeInsets.fromLTRB(18, 0, 18, 38),
                 children: [
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Center(
                     child: Container(
                       width: 42,
@@ -101,7 +101,7 @@ class ProToolPanel extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   content,
                 ],
               ),
@@ -126,7 +126,7 @@ class _ToolPanelShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = layout == ToolPanelLayout.sideDock
         ? BorderRadius.circular(30)
-        : const BorderRadius.vertical(top: Radius.circular(30));
+        : BorderRadius.vertical(top: Radius.circular(30));
 
     return ClipRRect(
       borderRadius: radius,
@@ -146,7 +146,7 @@ class _ToolPanelShell extends StatelessWidget {
 }
 
 class _ToolPanelContent extends StatelessWidget {
-  final T t;
+  final AppL10n l10n;
   final DrawingState state;
   final double brushPx;
   final bool isEraser;
@@ -155,7 +155,7 @@ class _ToolPanelContent extends StatelessWidget {
   final VoidCallback onResetViewport;
 
   const _ToolPanelContent({
-    required this.t,
+    required this.l10n,
     required this.state,
     required this.brushPx,
     required this.isEraser,
@@ -172,32 +172,33 @@ class _ToolPanelContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _PanelHeader(
-          title: t.of('magic_title'),
+          title: l10n.get('magic_title'),
+          l10n: l10n,
           zoomLabel: 'x${currentZoom.toStringAsFixed(currentZoom < 2 ? 1 : 2)}',
           strokeCount: state.strokes.length,
           isMaskReady: state.strokes.isNotEmpty,
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         _MagicCTA(
-          label: state.strokes.isEmpty ? t.of('workflow_mask') : t.of('magic'),
+          label: state.strokes.isEmpty ? l10n.get('workflow_mask') : l10n.get('magic'),
           hasStrokes: state.strokes.isNotEmpty,
           onTap: onMagic,
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         Row(
           children: [
             Expanded(
               child: _ModeToggle(
                 isBrush: !isEraser,
-                brushLabel: t.of('brush'),
-                eraserLabel: t.of('eraser'),
+                brushLabel: l10n.get('brush'),
+                eraserLabel: l10n.get('eraser'),
                 onBrush: () =>
                     context.read<DrawingCubit>().setBrushKind(BrushKind.solid),
                 onEraser: () =>
                     context.read<DrawingCubit>().setBrushKind(BrushKind.eraser),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             _UndoRedo(
               canUndo: state.canUndo,
               canRedo: state.canRedo,
@@ -206,9 +207,9 @@ class _ToolPanelContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         _InfoSection(
-          title: t.of('brush_size'),
+          title: l10n.get('brush_size'),
           child: _BrushPresetWrap(
             selectedPx: brushPx,
             accent: brushAccent,
@@ -216,40 +217,40 @@ class _ToolPanelContent extends StatelessWidget {
             onSelect: (value) => context.read<DrawingCubit>().setBrush(value),
           ),
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         _InfoSection(
-          title: t.of('brush_size'),
+          title: l10n.get('brush_size'),
           child: _BrushSizeRow(
-            label: t.of('brush_size'),
+            label: l10n.get('brush_size'),
             px: brushPx,
             isEraser: isEraser,
             onChanged: (value) =>
                 context.read<DrawingCubit>().setBrushWidth01(_pxToW01(value)),
           ),
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         _InfoSection(
-          title: t.of('editor_workspace_fit'),
+          title: l10n.get('editor_workspace_fit'),
           child: _ViewportTools(
             zoomLabel:
                 'x${currentZoom.toStringAsFixed(currentZoom < 2 ? 1 : 2)}',
             onResetViewport: onResetViewport,
-            t: t,
+            l10n: l10n,
           ),
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         _InfoSection(
-          title: t.of('studio_quality'),
+          title: l10n.get('studio_quality'),
           child: _WorkspaceNotes(
             isEraser: isEraser,
             strokeCount: state.strokes.length,
-            t: t,
+            l10n: l10n,
           ),
         ),
         if (state.strokes.isNotEmpty) ...[
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           _ClearButton(
-            label: t.of('clear'),
+            label: l10n.get('clear'),
             onTap: () => context.read<DrawingCubit>().clear(),
           ),
         ],
@@ -263,9 +264,11 @@ class _PanelHeader extends StatelessWidget {
   final String zoomLabel;
   final int strokeCount;
   final bool isMaskReady;
+  final AppL10n l10n;
 
   const _PanelHeader({
     required this.title,
+    required this.l10n,
     required this.zoomLabel,
     required this.strokeCount,
     required this.isMaskReady,
@@ -285,17 +288,17 @@ class _PanelHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 gradient: InpaintingStudioTheme.primaryGradient,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.auto_awesome_rounded,
                 color: Colors.black,
                 size: 20,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   color: _textPri,
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -304,7 +307,7 @@ class _PanelHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -316,13 +319,13 @@ class _PanelHeader extends StatelessWidget {
             ),
             _MiniBadge(
               icon: Icons.gesture_rounded,
-              label: '$strokeCount strokes',
+              label: '$strokeCount ${l10n.get('strokes')}',
               color: InpaintingStudioTheme.violet,
             ),
             _MiniBadge(
               icon:
                   isMaskReady ? Icons.check_circle_rounded : Icons.edit_rounded,
-              label: isMaskReady ? 'Ready' : 'Mask',
+              label: isMaskReady ? l10n.get('ready') : l10n.get('mask'),
               color: isMaskReady ? _accent : InpaintingStudioTheme.amber,
             ),
           ],
@@ -346,7 +349,7 @@ class _MiniBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
@@ -356,7 +359,7 @@ class _MiniBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 15, color: color),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
@@ -383,7 +386,7 @@ class _InfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _surface2.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(20),
@@ -394,13 +397,13 @@ class _InfoSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: _textSec,
               fontWeight: FontWeight.w700,
               fontSize: 12.5,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           child,
         ],
       ),
@@ -500,18 +503,18 @@ class _MagicCTAState extends State<_MagicCTA>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.auto_fix_high_rounded,
                         color: Colors.black,
                         size: 22,
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Flexible(
                         child: Text(
                           widget.label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.black,
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
@@ -602,7 +605,7 @@ class _Seg extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.all(4),
+        margin: EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: active ? accent.withValues(alpha: 0.16) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
@@ -613,7 +616,7 @@ class _Seg extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 15, color: active ? accent : _textSec),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
@@ -651,7 +654,7 @@ class _UndoRedo extends StatelessWidget {
           enabled: canUndo,
           onTap: onUndo,
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         _HistoryBtn(
           icon: Icons.redo_rounded,
           enabled: canRedo,
@@ -719,7 +722,7 @@ class _BrushPresetWrap extends StatelessWidget {
           onTap: () => onSelect(preset.toDouble()),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: isSelected
                   ? accent.withValues(alpha: 0.16)
@@ -768,14 +771,14 @@ class _BrushSizeRow extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: _textSec,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
@@ -792,7 +795,7 @@ class _BrushSizeRow extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             trackHeight: 3.0,
@@ -811,7 +814,7 @@ class _BrushSizeRow extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
@@ -830,12 +833,12 @@ class _BrushSizeRow extends StatelessWidget {
 class _ViewportTools extends StatelessWidget {
   final String zoomLabel;
   final VoidCallback onResetViewport;
-  final T t;
+  final AppL10n l10n;
 
   const _ViewportTools({
     required this.zoomLabel,
     required this.onResetViewport,
-    required this.t,
+    required this.l10n,
   });
 
   @override
@@ -844,7 +847,7 @@ class _ViewportTools extends StatelessWidget {
       children: [
         Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: _surface1.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(14),
@@ -852,15 +855,15 @@ class _ViewportTools extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.fit_screen_rounded,
                   size: 18,
                   color: _accent,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Text(
                   zoomLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: _textPri,
                     fontWeight: FontWeight.w800,
                   ),
@@ -869,7 +872,7 @@ class _ViewportTools extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         SizedBox(
           height: 44,
           child: OutlinedButton.icon(
@@ -882,8 +885,8 @@ class _ViewportTools extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            icon: const Icon(Icons.center_focus_strong_rounded, size: 18),
-            label: Text(t.of('editor_workspace_fit')),
+            icon: Icon(Icons.center_focus_strong_rounded, size: 18),
+            label: Text(l10n.get('editor_workspace_fit')),
           ),
         ),
       ],
@@ -894,19 +897,19 @@ class _ViewportTools extends StatelessWidget {
 class _WorkspaceNotes extends StatelessWidget {
   final bool isEraser;
   final int strokeCount;
-  final T t;
+  final AppL10n l10n;
 
   const _WorkspaceNotes({
     required this.isEraser,
     required this.strokeCount,
-    required this.t,
+    required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
     final accent = isEraser ? _eraser : _accent;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
@@ -920,13 +923,13 @@ class _WorkspaceNotes extends StatelessWidget {
             size: 18,
             color: accent,
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               strokeCount == 0
-                  ? t.of('editor_tip_run')
-                  : t.of('editor_tip_precision'),
-              style: const TextStyle(
+                  ? l10n.get('editor_tip_run')
+                  : l10n.get('editor_tip_precision'),
+              style: TextStyle(
                 color: _textPri,
                 fontSize: 12.5,
                 height: 1.4,
@@ -953,7 +956,7 @@ class _ClearButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: _danger.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(14),
@@ -967,7 +970,7 @@ class _ClearButton extends StatelessWidget {
               color: _danger.withValues(alpha: 0.8),
               size: 18,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(

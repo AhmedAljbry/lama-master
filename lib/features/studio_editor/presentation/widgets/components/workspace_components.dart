@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:lama/core/ui/AppL10n.dart';
 import 'package:lama/core/ui/AppTokens.dart';
 
-class EmptyWorkspaceState extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────
+// Empty Workspace State — 3-step onboarding with animated prompt
+// ─────────────────────────────────────────────────────────────
+class EmptyWorkspaceState extends StatefulWidget {
   final VoidCallback onTap;
   final String label;
   final String subtitle;
@@ -18,57 +21,175 @@ class EmptyWorkspaceState extends StatelessWidget {
   });
 
   @override
+  State<EmptyWorkspaceState> createState() => _EmptyWorkspaceStateState();
+}
+
+class _EmptyWorkspaceStateState extends State<EmptyWorkspaceState>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseCtrl;
+  late Animation<double> _pulseAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.93, end: 1.07).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
+            constraints: const BoxConstraints(maxWidth: 320),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Container(
-                  width: 108,
-                  height: 108,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppTokens.card2,
-                    border: Border.all(color: AppTokens.border, width: 2),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: AppTokens.primary.withValues(alpha: 0.16),
-                        blurRadius: 40,
-                        spreadRadius: 10,
+                AnimatedBuilder(
+                  animation: _pulseAnim,
+                  builder: (context, child) => Transform.scale(
+                    scale: _pulseAnim.value,
+                    child: child,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: <Widget>[
+                      // Outer glow ring
+                      Container(
+                        width: 128,
+                        height: 128,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTokens.primary.withValues(alpha: 0.12),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      // Inner circle
+                      Container(
+                        width: 98,
+                        height: 98,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTokens.card2,
+                          border: Border.all(
+                            color: AppTokens.primary.withValues(alpha: 0.28),
+                            width: 1.5,
+                          ),
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color: AppTokens.primary.withValues(alpha: 0.16),
+                              blurRadius: 36,
+                              spreadRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.add_photo_alternate_outlined,
+                          size: 42,
+                          color: AppTokens.primary,
+                        ),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 46,
-                    color: AppTokens.primary,
-                  ),
                 ),
-                Flexible(child: const SizedBox(height: AppTokens.s24)),
+                const SizedBox(height: AppTokens.s20),
                 Text(
-                  label,
+                  widget.label,
                   style: AppTokens.headingM.copyWith(
                     color: AppTokens.text,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                    fontSize: 16,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Flexible(child: const SizedBox(height: AppTokens.s12)),
+                const SizedBox(height: AppTokens.s8),
                 Text(
-                  subtitle,
+                  widget.subtitle,
                   textAlign: TextAlign.center,
                   style: AppTokens.bodyM.copyWith(
                     color: AppTokens.text2,
-                    height: 1.6,
+                    height: 1.55,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s20),
+                // ── 3-step workflow mini-guide ──────────────
+                Container(
+                  padding: const EdgeInsets.all(AppTokens.s14),
+                  decoration: BoxDecoration(
+                    color: AppTokens.card.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(AppTokens.r16),
+                    border: Border.all(
+                      color: AppTokens.border.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Column(
+                    children: <Widget>[
+                      _WorkflowMiniStep(
+                        number: '①',
+                        label: 'Pick your photo & a reference',
+                        isDone: false,
+                      ),
+                      const _StepConnector(),
+                      _WorkflowMiniStep(
+                        number: '②',
+                        label: 'Choose a style or preset',
+                        isDone: false,
+                      ),
+                      const _StepConnector(),
+                      _WorkflowMiniStep(
+                        number: '③',
+                        label: 'Apply AI & save your result',
+                        isDone: false,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s20),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTokens.s20,
+                    vertical: AppTokens.s12,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: AppTokens.primaryGradient,
+                    borderRadius: BorderRadius.circular(AppTokens.rFull),
+                    boxShadow: AppTokens.primaryGlow(0.18),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      const Icon(Icons.upload_rounded,
+                          color: Colors.black, size: 16),
+                      const SizedBox(width: AppTokens.s8),
+                      const Text(
+                        'Tap to select photo',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -80,6 +201,82 @@ class EmptyWorkspaceState extends StatelessWidget {
   }
 }
 
+class _WorkflowMiniStep extends StatelessWidget {
+  final String number;
+  final String label;
+  final bool isDone;
+  const _WorkflowMiniStep({
+    required this.number,
+    required this.label,
+    required this.isDone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            color: isDone
+                ? AppTokens.success.withValues(alpha: 0.18)
+                : AppTokens.primary.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isDone
+                  ? AppTokens.success.withValues(alpha: 0.4)
+                  : AppTokens.primary.withValues(alpha: 0.25),
+            ),
+          ),
+          child: Center(
+            child: Text(
+              isDone ? '✓' : number,
+              style: TextStyle(
+                color: isDone ? AppTokens.success : AppTokens.primary,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppTokens.s10),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTokens.caption.copyWith(
+              color: isDone ? AppTokens.success : AppTokens.text2,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StepConnector extends StatelessWidget {
+  const _StepConnector();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, top: 3, bottom: 3),
+      child: Container(
+        width: 2,
+        height: 12,
+        decoration: BoxDecoration(
+          color: AppTokens.border.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppTokens.rFull),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Reference Thumbnail — corner badge on canvas
+// ─────────────────────────────────────────────────────────────
 class ReferenceThumbnail extends StatelessWidget {
   final String refPath;
 
@@ -88,12 +285,18 @@ class ReferenceThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      height: 80,
+      width: 72,
+      height: 72,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTokens.r16),
-        border: Border.all(color: AppTokens.info, width: 2.2),
-        boxShadow: AppTokens.primaryGlow(0.16),
+        borderRadius: BorderRadius.circular(AppTokens.r14),
+        border: Border.all(color: AppTokens.info, width: 2.0),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: AppTokens.info.withValues(alpha: 0.28),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
         image: DecorationImage(
           image: FileImage(File(refPath)),
           fit: BoxFit.cover,
@@ -101,25 +304,23 @@ class ReferenceThumbnail extends StatelessWidget {
       ),
       child: Stack(
         children: <Widget>[
+          // Top-right corner REF badge
           Positioned(
-            top: AppTokens.s6,
-            left: AppTokens.s6,
+            top: 4,
+            right: 4,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTokens.s8,
-                vertical: AppTokens.s4,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
-                color: AppTokens.surface.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(AppTokens.rFull),
+                color: AppTokens.info.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(AppTokens.r8),
               ),
               child: Text(
-                'REF',
-                style: AppTokens.caption.copyWith(
-                  color: AppTokens.info,
-                  fontSize: 9,
+                AppL10n.of(context).get('ref_short'),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 7,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
+                  letterSpacing: 0.8,
                 ),
               ),
             ),
@@ -130,6 +331,9 @@ class ReferenceThumbnail extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Floating Context Toolbar — frosted pill on canvas
+// ─────────────────────────────────────────────────────────────
 class FloatingContextToolbar extends StatelessWidget {
   final bool isComparing;
   final ValueChanged<bool> onCompareToggle;
@@ -151,15 +355,15 @@ class FloatingContextToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
       decoration: BoxDecoration(
-        color: AppTokens.surface.withValues(alpha: 0.86),
+        color: AppTokens.surface.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(AppTokens.rFull),
-        border: Border.all(color: AppTokens.border.withValues(alpha: 0.55)),
+        border: Border.all(color: AppTokens.border.withValues(alpha: 0.5)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 20,
+            blurRadius: 28,
             offset: const Offset(0, 8),
           ),
         ],
@@ -167,38 +371,42 @@ class FloatingContextToolbar extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          // Compare hold button — fills on active
           GestureDetector(
             onTapDown: (_) => onCompareToggle(true),
             onTapUp: (_) => onCompareToggleEnd(),
             onTapCancel: onCompareToggleEnd,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: isComparing
                     ? AppTokens.primary.withValues(alpha: 0.2)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(AppTokens.rFull),
+                border: isComparing
+                    ? Border.all(
+                        color: AppTokens.primary.withValues(alpha: 0.4),
+                        width: 1,
+                      )
+                    : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Icon(
                     Icons.compare_rounded,
-                    size: 18,
+                    size: 16,
                     color: isComparing ? AppTokens.primary : AppTokens.text,
                   ),
-                  const SizedBox(width: AppTokens.s8),
+                  const SizedBox(width: AppTokens.s6),
                   Text(
                     isComparing
                         ? l10n.get('original_label')
                         : l10n.get('compare_hold'),
                     style: AppTokens.caption.copyWith(
                       color: isComparing ? AppTokens.primary : AppTokens.text,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -206,28 +414,26 @@ class FloatingContextToolbar extends StatelessWidget {
             ),
           ),
           Container(
-            height: 20,
+            height: 18,
             width: 1,
-            margin: const EdgeInsets.symmetric(horizontal: AppTokens.s12),
-            color: AppTokens.border,
+            margin: const EdgeInsets.symmetric(horizontal: AppTokens.s8),
+            color: AppTokens.border.withValues(alpha: 0.6),
           ),
+          // Fullscreen button
           Tooltip(
             message: l10n.get('fullscreen_label'),
             child: InkWell(
               onTap: onTapFullScreen,
               borderRadius: BorderRadius.circular(AppTokens.rFull),
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    const Icon(
-                      Icons.fullscreen_rounded,
-                      size: 20,
-                      color: AppTokens.text,
-                    ),
+                    Icon(Icons.fullscreen_rounded,
+                        size: 18, color: AppTokens.text),
                     if (isDesktop) ...<Widget>[
-                      const SizedBox(width: AppTokens.s8),
+                      const SizedBox(width: AppTokens.s6),
                       Text(
                         l10n.get('fullscreen_label'),
                         style: AppTokens.caption.copyWith(
@@ -247,6 +453,9 @@ class FloatingContextToolbar extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Workspace Badge
+// ─────────────────────────────────────────────────────────────
 class WorkspaceBadge extends StatelessWidget {
   final String label;
   final Color color;
@@ -262,18 +471,15 @@ class WorkspaceBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: AppTokens.surface.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(AppTokens.r12),
-        border: Border.all(color: color.withValues(alpha: 0.55)),
+        color: AppTokens.surface.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(AppTokens.r10),
+        border: Border.all(color: color.withValues(alpha: 0.48)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
           ),
         ],
       ),
@@ -281,16 +487,16 @@ class WorkspaceBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           if (icon != null) ...<Widget>[
-            Icon(icon, color: color, size: 14),
-            const SizedBox(width: 6),
+            Icon(icon, color: color, size: 12),
+            const SizedBox(width: 5),
           ],
           Text(
             label.toUpperCase(),
             style: TextStyle(
               color: color,
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.w900,
-              letterSpacing: 1.1,
+              letterSpacing: 1.0,
             ),
           ),
         ],
@@ -299,6 +505,9 @@ class WorkspaceBadge extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Workspace Guidance Card — contextual helper overlay
+// ─────────────────────────────────────────────────────────────
 class WorkspaceGuidanceCard extends StatelessWidget {
   final IconData icon;
   final Color accent;
@@ -320,83 +529,97 @@ class WorkspaceGuidanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppTokens.s14),
+      padding: const EdgeInsets.all(AppTokens.s12),
       decoration: BoxDecoration(
-        color: AppTokens.surface.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(AppTokens.r18),
-        border: Border.all(color: accent.withValues(alpha: 0.34)),
+        color: AppTokens.surface.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(AppTokens.r16),
+        border: Border.all(color: accent.withValues(alpha: 0.32)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.26),
+            color: Colors.black.withValues(alpha: 0.32),
+            blurRadius: 24,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: accent.withValues(alpha: 0.06),
             blurRadius: 16,
-            offset: const Offset(0, 8),
+            spreadRadius: 1,
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(AppTokens.r12),
+              color: accent.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(AppTokens.r10),
             ),
-            child: Icon(icon, color: accent, size: 20),
+            child: Icon(icon, color: accent, size: 18),
           ),
-          const SizedBox(width: AppTokens.s12),
+          const SizedBox(width: AppTokens.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text(
                   title,
-                  style: AppTokens.labelBold.copyWith(color: AppTokens.text),
+                  style: AppTokens.labelBold.copyWith(
+                    color: AppTokens.text,
+                    fontSize: 12,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: AppTokens.caption.copyWith(
                     color: AppTokens.text2,
-                    height: 1.45,
+                    height: 1.4,
+                    fontSize: 10,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                if (actionLabel != null && onAction != null) ...<Widget>[
-                  const SizedBox(height: AppTokens.s10),
-                  InkWell(
-                    onTap: onAction,
-                    borderRadius: BorderRadius.circular(AppTokens.r12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTokens.s12,
-                        vertical: AppTokens.s10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(AppTokens.r12),
-                        border:
-                            Border.all(color: accent.withValues(alpha: 0.24)),
-                      ),
-                      child: Text(
-                        actionLabel!,
-                        style: AppTokens.caption.copyWith(
-                          color: accent,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
+          if (actionLabel != null && onAction != null) ...<Widget>[
+            const SizedBox(width: AppTokens.s8),
+            GestureDetector(
+              onTap: onAction,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.s10,
+                  vertical: AppTokens.s8,
+                ),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(AppTokens.r10),
+                  border: Border.all(color: accent.withValues(alpha: 0.28)),
+                ),
+                child: Text(
+                  actionLabel!,
+                  style: AppTokens.caption.copyWith(
+                    color: accent,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Grid Painter — subtle canvas background
+// ─────────────────────────────────────────────────────────────
 class GridPainter extends CustomPainter {
   final Color color;
   final double spacing;
@@ -407,7 +630,7 @@ class GridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 1;
+      ..strokeWidth = 0.5;
 
     for (double x = 0; x < size.width; x += spacing) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);

@@ -1,10 +1,100 @@
 import 'package:flutter/material.dart';
-import 'package:lama/core/i18n/t.dart';
+import 'package:lama/core/ui/AppL10n.dart';
 import 'package:lama/core/ui/tokens.dart';
-import 'package:lama/presentation/widgets/luma_editor/luma_editor_components.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LumaColorAppBar — slim top bar replacing the oversized card-style header.
+//
+// Layout (56 dp height):
+//   [pick icon]  "Color"  subtitle  ···  [Reset]  [Save ✓]
+// ─────────────────────────────────────────────────────────────────────────────
+
+class LumaColorAppBar extends StatelessWidget {
+  final AppL10n l10n;
+  final bool hasImage;
+  final bool saving;
+  final String? currentFilter;
+  final VoidCallback onPick;
+  final VoidCallback? onReset;
+  final VoidCallback? onSave;
+
+  const LumaColorAppBar({
+    super.key,
+    required this.l10n,
+    required this.hasImage,
+    required this.saving,
+    this.currentFilter,
+    required this.onPick,
+    this.onReset,
+    this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          // ── Pick image button ──────────────────────────────────────────
+          _BarIconBtn(
+            icon: Icons.photo_library_outlined,
+            onTap: onPick,
+            tooltip: l10n.get('tap_to_open'),
+          ),
+          const SizedBox(width: 6),
+          // ── Title + subtitle ───────────────────────────────────────────
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.get('color_title'),
+                  style: const TextStyle(
+                    color: AppTokens.text,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                if (currentFilter != null)
+                  Text(
+                    currentFilter!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppTokens.primary.withValues(alpha: .85),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // ── Reset ─────────────────────────────────────────────────────
+          if (hasImage)
+            _BarTextBtn(
+              label: l10n.get('reset'),
+              onTap: onReset,
+              color: AppTokens.text2,
+            ),
+          const SizedBox(width: 6),
+          // ── Save ──────────────────────────────────────────────────────
+          _SaveButton(saving: saving, onTap: onSave, l10n: l10n),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Legacy LumaAppBar — preserved so other callers are not broken.
+// New code should use LumaColorAppBar.
+// ─────────────────────────────────────────────────────────────────────────────
 
 class LumaAppBar extends StatelessWidget {
-  final T t;
+  final AppL10n l10n;
   final bool hasImage;
   final bool saving;
   final bool aiLoading;
@@ -19,7 +109,7 @@ class LumaAppBar extends StatelessWidget {
 
   const LumaAppBar({
     super.key,
-    required this.t,
+    required this.l10n,
     required this.hasImage,
     required this.saving,
     required this.aiLoading,
@@ -34,161 +124,19 @@ class LumaAppBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final statusText = aiLoading
-        ? t.of('ai_loading')
-        : hasInsight
-            ? t.of('ai_ready')
-            : t.of('ai_idle');
-    final statusColor = aiLoading
-        ? AppTokens.info
-        : hasInsight
-            ? AppTokens.primary
-            : AppTokens.warning;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          gradient: LinearGradient(colors: [
-            Colors.white.withValues(alpha: .06),
-            AppTokens.surface.withValues(alpha: .94),
-            AppTokens.info.withValues(alpha: .08)
-          ], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          border: Border.all(color: Colors.white.withValues(alpha: .08))),
-      child: LayoutBuilder(
-        builder: (context, c) {
-          final compact = c.maxWidth < 820;
-          final intro =
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                const Text('Luma Color',
-                    style: TextStyle(
-                        color: AppTokens.text,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900)),
-                LumaTag(
-                    icon: aiLoading
-                        ? Icons.hourglass_top_rounded
-                        : hasInsight
-                            ? Icons.bolt_rounded
-                            : Icons.motion_photos_pause_rounded,
-                    label: hasInsight ? t.of('ai_ready_short') : t.of('ai_tab'),
-                    color: statusColor),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(t.of('luma_desc'),
-                style: const TextStyle(color: AppTokens.text2, fontSize: 13)),
-            const SizedBox(height: 12),
-            Wrap(spacing: 10, runSpacing: 10, children: [
-              LumaTag(
-                  icon: Icons.auto_awesome_rounded,
-                  label: t.of('control_center'),
-                  color: AppTokens.primary),
-              LumaTag(
-                  icon: Icons.visibility_rounded,
-                  label: t.of('live_preview'),
-                  color: AppTokens.info),
-              if (currentLook != null)
-                LumaTag(
-                    icon: Icons.palette_outlined,
-                    label: currentLook!,
-                    color: AppTokens.warning),
-              if (autoAi)
-                LumaTag(
-                    icon: Icons.bolt_rounded,
-                    label: t.of('auto_ai'),
-                    color: AppTokens.primary),
-            ]),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: .10),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: statusColor.withValues(alpha: .18)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.insights_rounded, color: statusColor, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(statusText,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: AppTokens.text2,
-                            fontSize: 12,
-                            height: 1.45)),
-                  ),
-                ],
-              ),
-            ),
-          ]);
-          
-          final actions = Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              LumaHeaderButton(
-                  icon: Icons.translate_rounded,
-                  label: t.langLabel,
-                  onTap: onToggleLang),
-              LumaHeaderButton(
-                  icon: autoAi ? Icons.bolt_rounded : Icons.bolt_outlined,
-                  label: t.of('auto_ai'),
-                  onTap: onToggleAutoAi,
-                  active: autoAi),
-              LumaHeaderButton(
-                  icon: Icons.photo_library_rounded,
-                  label: t.of('tap_to_open'),
-                  onTap: onPick),
-              LumaHeaderButton(
-                  icon: aiLoading
-                      ? Icons.hourglass_top_rounded
-                      : Icons.play_circle_fill_rounded,
-                  label: t.of('run_ai'),
-                  onTap: onRunAi,
-                  active: hasImage),
-              LumaHeaderButton(
-                  icon: saving
-                      ? Icons.hourglass_top_rounded
-                      : Icons.save_alt_rounded,
-                  label: t.of('save'),
-                  onTap: onSave,
-                  active: onSave != null,
-                  filled: true),
-            ],
-          );
-          
-          if (compact) {
-            return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  intro,
-                  const SizedBox(height: 16),
-                  actions,
-                ]);
-          }
-          return Row(children: [
-            Expanded(child: intro),
-            const SizedBox(width: 16),
-            ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: actions),
-          ]);
-        },
-      ),
-    );
-  }
+  Widget build(BuildContext context) => LumaColorAppBar(
+        l10n: l10n,
+        hasImage: hasImage,
+        saving: saving,
+        currentFilter: currentLook,
+        onPick: onPick,
+        onSave: onSave,
+      );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub-widgets
+// ─────────────────────────────────────────────────────────────────────────────
 
 class LumaHeaderButton extends StatelessWidget {
   final IconData icon;
@@ -196,16 +144,16 @@ class LumaHeaderButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool active;
   final bool filled;
-  
+
   const LumaHeaderButton({
     super.key,
     required this.icon,
     required this.onTap,
     this.label,
     this.active = false,
-    this.filled = false
+    this.filled = false,
   });
-  
+
   @override
   Widget build(BuildContext context) => InkWell(
         onTap: onTap,
@@ -247,9 +195,106 @@ class LumaHeaderButton extends StatelessWidget {
                               ? Colors.black
                               : AppTokens.text,
                       fontSize: 11,
-                      fontWeight: FontWeight.w800))
+                      fontWeight: FontWeight.w800)),
             ]
           ]),
+        ),
+      );
+}
+
+// ── Private helpers ────────────────────────────────────────────────────────
+
+class _BarIconBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  const _BarIconBtn({
+    required this.icon,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tooltip,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .06),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: .10)),
+            ),
+            child: Icon(icon, size: 20, color: AppTokens.text2),
+          ),
+        ),
+      );
+}
+
+class _BarTextBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  final Color color;
+
+  const _BarTextBtn({
+    required this.label,
+    required this.onTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) => TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          foregroundColor: color,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Text(label,
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w700)),
+      );
+}
+
+class _SaveButton extends StatelessWidget {
+  final bool saving;
+  final VoidCallback? onTap;
+  final AppL10n l10n;
+
+  const _SaveButton(
+      {required this.saving, required this.onTap, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) => AnimatedContainer(
+        duration: AppTokens.normal,
+        child: FilledButton.icon(
+          onPressed: saving ? null : onTap,
+          icon: Icon(
+            saving ? Icons.hourglass_top_rounded : Icons.check_rounded,
+            size: 16,
+          ),
+          label: Text(
+            saving ? l10n.get('loading') : l10n.get('save'),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+          ),
+          style: FilledButton.styleFrom(
+            backgroundColor: onTap != null ? AppTokens.primary : AppTokens.card,
+            foregroundColor: onTap != null ? Colors.black : AppTokens.text3,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+            minimumSize: const Size(0, 40),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
         ),
       );
 }

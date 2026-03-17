@@ -3,43 +3,127 @@ import 'package:flutter/services.dart';
 
 import 'package:lama/core/ui/AppTokens.dart';
 
-class CustomTabBar extends StatelessWidget {
-  final TabController controller;
+// ─────────────────────────────────────────────────────────────
+// Workflow Progress Strip — top of tool panel
+// ─────────────────────────────────────────────────────────────
+class WorkflowProgressStrip extends StatelessWidget {
+  final bool sourceReady;
+  final bool styleSelected;
+  final bool refineActive;
 
-  const CustomTabBar({super.key, required this.controller});
+  const WorkflowProgressStrip({
+    super.key,
+    required this.sourceReady,
+    required this.styleSelected,
+    required this.refineActive,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return TabBar(
-      controller: controller,
-      indicatorColor: AppTokens.primary,
-      indicatorWeight: 3,
-      labelColor: AppTokens.primary,
-      unselectedLabelColor: AppTokens.text2,
-      labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-      unselectedLabelStyle:
-          const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-      tabs: const <Tab>[
-        Tab(
-          text: 'Setup',
-          iconMargin: EdgeInsets.only(bottom: 4),
-          icon: Icon(Icons.settings_suggest_rounded, size: 20),
+    return Row(
+      children: <Widget>[
+        _StripStep(label: 'Photos', icon: Icons.photo_library_rounded,
+            isDone: sourceReady, number: '①'),
+        _StripConnector(filled: sourceReady),
+        _StripStep(label: 'Style', icon: Icons.auto_awesome_motion_rounded,
+            isDone: styleSelected, number: '②'),
+        _StripConnector(filled: styleSelected),
+        _StripStep(label: 'Apply', icon: Icons.auto_awesome_rounded,
+            isDone: refineActive, number: '③'),
+      ],
+    );
+  }
+}
+
+class _StripStep extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isDone;
+  final String number;
+  const _StripStep({
+    required this.label,
+    required this.icon,
+    required this.isDone,
+    required this.number,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isDone ? AppTokens.success : AppTokens.text2;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: isDone
+                ? AppTokens.success.withValues(alpha: 0.16)
+                : AppTokens.card2,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isDone
+                  ? AppTokens.success.withValues(alpha: 0.5)
+                  : AppTokens.border.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+          ),
+          child: Center(
+            child: isDone
+                ? Icon(Icons.check_rounded, size: 15, color: AppTokens.success)
+                : Text(
+                    number,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+          ),
         ),
-        Tab(
-          text: 'Theme',
-          iconMargin: EdgeInsets.only(bottom: 4),
-          icon: Icon(Icons.style_rounded, size: 20),
-        ),
-        Tab(
-          text: 'Adjust',
-          iconMargin: EdgeInsets.only(bottom: 4),
-          icon: Icon(Icons.tune_rounded, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: isDone ? AppTokens.success : AppTokens.text2,
+            fontWeight: isDone ? FontWeight.w800 : FontWeight.w500,
+            fontSize: 9,
+            letterSpacing: 0.3,
+          ),
         ),
       ],
     );
   }
 }
 
+class _StripConnector extends StatelessWidget {
+  final bool filled;
+  const _StripConnector({required this.filled});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 350),
+          height: 2,
+          decoration: BoxDecoration(
+            color: filled
+                ? AppTokens.success.withValues(alpha: 0.5)
+                : AppTokens.border.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(AppTokens.rFull),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Section Header
+// ─────────────────────────────────────────────────────────────
 class SectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -59,15 +143,23 @@ class SectionHeader extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            Icon(icon, size: 16, color: AppTokens.text2),
-            const SizedBox(width: AppTokens.s8),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTokens.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTokens.r8),
+              ),
+              child: Icon(icon, size: 14, color: AppTokens.primary),
+            ),
+            const SizedBox(width: AppTokens.s10),
             Expanded(
               child: Text(
                 title.toUpperCase(),
                 style: AppTokens.caption.copyWith(
-                  color: AppTokens.text2,
-                  letterSpacing: 1.2,
+                  color: AppTokens.text,
+                  letterSpacing: 1.4,
                   fontWeight: FontWeight.w900,
+                  fontSize: 11,
                 ),
               ),
             ),
@@ -78,8 +170,8 @@ class SectionHeader extends StatelessWidget {
           Text(
             subtitle!,
             style: AppTokens.caption.copyWith(
-              color: AppTokens.text2.withValues(alpha: 0.9),
-              height: 1.4,
+              color: AppTokens.text2.withValues(alpha: 0.85),
+              height: 1.45,
             ),
           ),
         ],
@@ -88,6 +180,9 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Source Picker Card — horizontal row layout
+// ─────────────────────────────────────────────────────────────
 class SourcePickerCard extends StatelessWidget {
   final String label;
   final String? statusLabel;
@@ -117,60 +212,77 @@ class SourcePickerCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         padding: const EdgeInsets.symmetric(
-          vertical: AppTokens.s18,
-          horizontal: AppTokens.s12,
+          vertical: AppTokens.s14,
+          horizontal: AppTokens.s16,
         ),
         decoration: BoxDecoration(
-          color: isReady ? color.withValues(alpha: 0.12) : AppTokens.card,
+          color: isReady ? color.withValues(alpha: 0.1) : AppTokens.card,
           borderRadius: BorderRadius.circular(AppTokens.r16),
           border: Border.all(
-            color: isReady ? color.withValues(alpha: 0.5) : AppTokens.border,
+            color: isReady ? color.withValues(alpha: 0.48) : AppTokens.border,
             width: isReady ? 1.5 : 1.0,
           ),
           boxShadow: isReady
               ? <BoxShadow>[
                   BoxShadow(
-                    color: color.withValues(alpha: 0.12),
-                    blurRadius: 18,
+                    color: color.withValues(alpha: 0.1),
+                    blurRadius: 14,
                     spreadRadius: 1,
                   ),
                 ]
               : null,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: <Widget>[
             Container(
-              padding: const EdgeInsets.all(AppTokens.s10),
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isReady ? color.withValues(alpha: 0.2) : AppTokens.card2,
+                color: isReady ? color.withValues(alpha: 0.18) : AppTokens.card2,
               ),
               child: Icon(
                 icon,
                 color: isReady ? color : AppTokens.text2,
-                size: 24,
+                size: 20,
               ),
             ),
-            const SizedBox(height: AppTokens.s12),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: AppTokens.labelBold.copyWith(
-                color: isReady ? color : AppTokens.text,
+            const SizedBox(width: AppTokens.s12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    label,
+                    style: AppTokens.labelBold.copyWith(
+                      color: isReady ? color : AppTokens.text,
+                      fontSize: 13,
+                    ),
+                  ),
+                  if (statusLabel != null) ...<Widget>[
+                    const SizedBox(height: 2),
+                    Text(
+                      statusLabel!,
+                      style: AppTokens.caption.copyWith(
+                        color: isReady
+                            ? color.withValues(alpha: 0.85)
+                            : AppTokens.text2,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-            if (statusLabel != null) ...<Widget>[
-              const SizedBox(height: AppTokens.s6),
-              Text(
-                statusLabel!,
-                textAlign: TextAlign.center,
-                style: AppTokens.caption.copyWith(
-                  color: isReady ? color : AppTokens.text2,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+            Icon(
+              isReady
+                  ? Icons.check_circle_rounded
+                  : Icons.add_circle_outline_rounded,
+              color: isReady ? color : AppTokens.text2.withValues(alpha: 0.5),
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -178,6 +290,9 @@ class SourcePickerCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// AI Mode Toggle Card
+// ─────────────────────────────────────────────────────────────
 class AiModeToggleCard extends StatelessWidget {
   final bool useAI;
   final ValueChanged<bool>? onToggle;
@@ -195,20 +310,31 @@ class AiModeToggleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 260),
       padding: const EdgeInsets.symmetric(
         horizontal: AppTokens.s14,
         vertical: AppTokens.s12,
       ),
       decoration: BoxDecoration(
-        color:
-            useAI ? AppTokens.primary.withValues(alpha: 0.1) : AppTokens.card,
+        color: useAI
+            ? AppTokens.primary.withValues(alpha: 0.09)
+            : AppTokens.card,
         borderRadius: BorderRadius.circular(AppTokens.r16),
         border: Border.all(
           color: useAI
               ? AppTokens.primary.withValues(alpha: 0.4)
               : AppTokens.border,
+          width: useAI ? 1.5 : 1.0,
         ),
+        boxShadow: useAI
+            ? <BoxShadow>[
+                BoxShadow(
+                  color: AppTokens.primary.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: <Widget>[
@@ -224,6 +350,7 @@ class AiModeToggleCard extends StatelessWidget {
             child: Icon(
               Icons.psychology_alt_rounded,
               color: useAI ? AppTokens.primary : AppTokens.text2,
+              size: 20,
             ),
           ),
           const SizedBox(width: AppTokens.s12),
@@ -235,6 +362,7 @@ class AiModeToggleCard extends StatelessWidget {
                   label,
                   style: AppTokens.labelBold.copyWith(
                     color: useAI ? AppTokens.primary : AppTokens.text,
+                    fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -249,10 +377,12 @@ class AiModeToggleCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: AppTokens.s8),
           Switch(
             value: useAI,
             activeColor: AppTokens.primary,
             onChanged: onToggle,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
       ),
@@ -260,6 +390,9 @@ class AiModeToggleCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Manual Mask Card
+// ─────────────────────────────────────────────────────────────
 class ManualMaskCard extends StatelessWidget {
   final bool isReady;
   final bool isLocked;
@@ -282,7 +415,7 @@ class ManualMaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isReady ? AppTokens.warning : AppTokens.text2;
+    final Color color = isReady ? AppTokens.warning : AppTokens.text2;
     return InkWell(
       onTap: isLocked ? null : onTap,
       borderRadius: BorderRadius.circular(AppTokens.r16),
@@ -291,30 +424,32 @@ class ManualMaskCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppTokens.s14),
         decoration: BoxDecoration(
           color: isLocked
-              ? AppTokens.card.withValues(alpha: 0.55)
+              ? AppTokens.card.withValues(alpha: 0.5)
               : AppTokens.card,
           borderRadius: BorderRadius.circular(AppTokens.r16),
           border: Border.all(
             color: isReady
-                ? AppTokens.warning.withValues(alpha: 0.45)
-                : AppTokens.border,
+                ? AppTokens.warning.withValues(alpha: 0.4)
+                : AppTokens.border.withValues(alpha: isLocked ? 0.4 : 1.0),
           ),
         ),
         child: Row(
           children: <Widget>[
-            Container(
-              width: 42,
-              height: 42,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: isLocked
-                    ? AppTokens.card2.withValues(alpha: 0.6)
+                    ? AppTokens.card2.withValues(alpha: 0.5)
                     : color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 isLocked ? Icons.lock_rounded : Icons.brush_rounded,
                 color:
-                    isLocked ? AppTokens.text2.withValues(alpha: 0.6) : color,
+                    isLocked ? AppTokens.text2.withValues(alpha: 0.5) : color,
+                size: 18,
               ),
             ),
             const SizedBox(width: AppTokens.s12),
@@ -326,16 +461,19 @@ class ManualMaskCard extends StatelessWidget {
                     title,
                     style: AppTokens.labelBold.copyWith(
                       color: isLocked
-                          ? AppTokens.text2.withValues(alpha: 0.65)
+                          ? AppTokens.text2.withValues(alpha: 0.60)
                           : AppTokens.text,
+                      fontSize: 13,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    isLocked ? lockedLabel : (isReady ? readyLabel : idleLabel),
+                    isLocked
+                        ? lockedLabel
+                        : (isReady ? readyLabel : idleLabel),
                     style: AppTokens.caption.copyWith(
                       color: isLocked
-                          ? AppTokens.text2.withValues(alpha: 0.55)
+                          ? AppTokens.text2.withValues(alpha: 0.50)
                           : AppTokens.text2,
                       fontSize: 11,
                     ),
@@ -344,9 +482,11 @@ class ManualMaskCard extends StatelessWidget {
               ),
             ),
             if (!isLocked && !isReady)
-              Icon(Icons.chevron_right_rounded, color: AppTokens.text2),
+              Icon(Icons.chevron_right_rounded,
+                  color: AppTokens.text2, size: 20),
             if (isReady)
-              Icon(Icons.check_circle_rounded, color: AppTokens.warning),
+              Icon(Icons.check_circle_rounded,
+                  color: AppTokens.warning, size: 20),
           ],
         ),
       ),
@@ -354,7 +494,10 @@ class ManualMaskCard extends StatelessWidget {
   }
 }
 
-class EnterpriseApplyBtn extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────
+// Enterprise Apply Button — premium gradient CTA with pulse shimmer
+// ─────────────────────────────────────────────────────────────
+class EnterpriseApplyBtn extends StatefulWidget {
   final String label;
   final IconData icon;
   final bool isReady;
@@ -371,60 +514,125 @@ class EnterpriseApplyBtn extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final enabled = isReady && !isBusy;
+  State<EnterpriseApplyBtn> createState() => _EnterpriseApplyBtnState();
+}
 
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          gradient: enabled ? AppTokens.primaryGradient : null,
-          color: enabled ? null : AppTokens.card2,
-          borderRadius: BorderRadius.circular(AppTokens.r16),
-          boxShadow: enabled ? AppTokens.primaryGlow(0.26) : null,
-          border: enabled ? null : Border.all(color: AppTokens.border),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTokens.s16,
-          vertical: AppTokens.s14,
-        ),
-        child: Center(
-          child: isBusy
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.2,
-                    color: AppTokens.text,
-                  ),
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Icon(
-                      icon,
-                      color: enabled ? Colors.black : AppTokens.text2,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      label.toUpperCase(),
-                      style: TextStyle(
-                        color: enabled ? Colors.black : AppTokens.text2,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 14,
-                        letterSpacing: 1.2,
+class _EnterpriseApplyBtnState extends State<EnterpriseApplyBtn>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _glowCtrl;
+  late Animation<double> _glowAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _glowCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _glowAnim = Tween<double>(begin: 0.18, end: 0.38).animate(
+      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut),
+    );
+    _updateAnimation();
+  }
+
+  @override
+  void didUpdateWidget(covariant EnterpriseApplyBtn oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isReady != widget.isReady ||
+        oldWidget.isBusy != widget.isBusy) {
+      _updateAnimation();
+    }
+  }
+
+  void _updateAnimation() {
+    if (widget.isReady && !widget.isBusy) {
+      _glowCtrl.repeat(reverse: true);
+    } else {
+      _glowCtrl.stop();
+      _glowCtrl.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _glowCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.isReady && !widget.isBusy;
+
+    return AnimatedBuilder(
+      animation: _glowAnim,
+      builder: (context, child) {
+        return GestureDetector(
+          onTap: enabled ? widget.onTap : null,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: enabled ? AppTokens.primaryGradient : null,
+              color: enabled ? null : AppTokens.card2,
+              borderRadius: BorderRadius.circular(AppTokens.r16),
+              boxShadow: enabled
+                  ? <BoxShadow>[
+                      BoxShadow(
+                        color: AppTokens.primary
+                            .withValues(alpha: _glowAnim.value),
+                        blurRadius: 28,
+                        spreadRadius: 2,
                       ),
+                    ]
+                  : null,
+              border: enabled
+                  ? null
+                  : Border.all(
+                      color: AppTokens.border.withValues(alpha: 0.5)),
+            ),
+            child: Center(
+              child: widget.isBusy
+                  ? SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.0,
+                        color: AppTokens.text,
+                      ),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Icon(
+                          widget.icon,
+                          color: enabled ? Colors.black : AppTokens.text2,
+                          size: 20,
+                        ),
+                        const SizedBox(width: AppTokens.s8),
+                        Text(
+                          widget.label.toUpperCase(),
+                          style: TextStyle(
+                            color:
+                                enabled ? Colors.black : AppTokens.text2,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                            letterSpacing: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Ergonomic Inline Slider (used in refine scrollable list)
+// ─────────────────────────────────────────────────────────────
 class ErgonomicSlider extends StatelessWidget {
   final String label;
   final double value;
@@ -448,13 +656,8 @@ class ErgonomicSlider extends StatelessWidget {
     final progress = ((value - min) / (max - min) * 100).clamp(0, 100).round();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTokens.s12),
-      padding: const EdgeInsets.fromLTRB(
-        AppTokens.s12,
-        AppTokens.s12,
-        AppTokens.s12,
-        AppTokens.s4,
-      ),
+      margin: const EdgeInsets.only(bottom: AppTokens.s10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
       decoration: BoxDecoration(
         color: AppTokens.card,
         borderRadius: BorderRadius.circular(AppTokens.r16),
@@ -464,19 +667,19 @@ class ErgonomicSlider extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Icon(icon, size: 16, color: AppTokens.text2),
+              Icon(icon, size: 15, color: AppTokens.text2),
               const SizedBox(width: AppTokens.s8),
               Expanded(
                 child: Text(
                   label,
                   style: AppTokens.labelBold.copyWith(
                     color: AppTokens.text,
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppTokens.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppTokens.r8),
@@ -486,6 +689,7 @@ class ErgonomicSlider extends StatelessWidget {
                   style: AppTokens.caption.copyWith(
                     color: AppTokens.primary,
                     fontWeight: FontWeight.w900,
+                    fontSize: 10,
                   ),
                 ),
               ),
@@ -493,12 +697,15 @@ class ErgonomicSlider extends StatelessWidget {
           ),
           SliderTheme(
             data: SliderThemeData(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+              trackHeight: 3.5,
+              thumbShape:
+                  const RoundSliderThumbShape(enabledThumbRadius: 7),
+              overlayShape:
+                  const RoundSliderOverlayShape(overlayRadius: 14),
               activeTrackColor: AppTokens.primary,
               inactiveTrackColor: AppTokens.border,
               thumbColor: AppTokens.primary,
+              overlayColor: AppTokens.primary.withValues(alpha: 0.12),
             ),
             child: Slider(
               value: value,
@@ -514,6 +721,9 @@ class ErgonomicSlider extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Inspector Hero Card
+// ─────────────────────────────────────────────────────────────
 class InspectorHeroCard extends StatelessWidget {
   final String eyebrow;
   final String title;
@@ -539,14 +749,14 @@ class InspectorHeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            accent.withValues(alpha: 0.18),
+            accent.withValues(alpha: 0.16),
             AppTokens.card2.withValues(alpha: 0.96),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppTokens.r20),
-        border: Border.all(color: accent.withValues(alpha: 0.28)),
+        border: Border.all(color: accent.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,13 +764,13 @@ class InspectorHeroCard extends StatelessWidget {
           Row(
             children: <Widget>[
               Container(
-                width: 42,
-                height: 42,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(AppTokens.r14),
                 ),
-                child: Icon(icon, color: accent),
+                child: Icon(icon, color: accent, size: 20),
               ),
               const SizedBox(width: AppTokens.s12),
               Expanded(
@@ -581,6 +791,7 @@ class InspectorHeroCard extends StatelessWidget {
                       style: AppTokens.headingM.copyWith(
                         color: AppTokens.text,
                         height: 1.2,
+                        fontSize: 15,
                       ),
                     ),
                   ],
@@ -607,6 +818,9 @@ class InspectorHeroCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Workflow Status Card
+// ─────────────────────────────────────────────────────────────
 class WorkflowStatusCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -631,24 +845,21 @@ class WorkflowStatusCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            title,
-            style: AppTokens.labelBold.copyWith(color: AppTokens.text),
-          ),
+          Text(title,
+              style: AppTokens.labelBold.copyWith(color: AppTokens.text)),
           const SizedBox(height: AppTokens.s4),
           Text(
             subtitle,
-            style: AppTokens.caption.copyWith(
-              color: AppTokens.text2,
-              height: 1.4,
-            ),
+            style:
+                AppTokens.caption.copyWith(color: AppTokens.text2, height: 1.4),
           ),
           const SizedBox(height: AppTokens.s12),
           Wrap(
             spacing: AppTokens.s8,
             runSpacing: AppTokens.s8,
-            children:
-                steps.map((step) => _WorkflowStepChip(item: step)).toList(),
+            children: steps
+                .map((s) => _WorkflowStepChip(item: s))
+                .toList(),
           ),
         ],
       ),
@@ -670,18 +881,14 @@ class WorkflowStatusItem {
 
 class _WorkflowStepChip extends StatelessWidget {
   final WorkflowStatusItem item;
-
   const _WorkflowStepChip({required this.item});
 
   @override
   Widget build(BuildContext context) {
-    final color = item.ready ? AppTokens.success : AppTokens.text2;
-
+    final Color color = item.ready ? AppTokens.success : AppTokens.text2;
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTokens.s10,
-        vertical: AppTokens.s8,
-      ),
+          horizontal: AppTokens.s10, vertical: AppTokens.s8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: item.ready ? 0.12 : 0.08),
         borderRadius: BorderRadius.circular(AppTokens.rFull),
@@ -690,14 +897,12 @@ class _WorkflowStepChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(item.icon, size: 12, color: color),
+          Icon(item.icon, size: 11, color: color),
           const SizedBox(width: AppTokens.s6),
           Text(
             item.label,
-            style: AppTokens.caption.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
+            style: AppTokens.caption
+                .copyWith(color: color, fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -705,23 +910,20 @@ class _WorkflowStepChip extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Status Info Pill
+// ─────────────────────────────────────────────────────────────
 class StatusInfoPill extends StatelessWidget {
   final String label;
   final Color color;
 
-  const StatusInfoPill({
-    super.key,
-    required this.label,
-    required this.color,
-  });
+  const StatusInfoPill({super.key, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTokens.s10,
-        vertical: AppTokens.s7,
-      ),
+          horizontal: AppTokens.s10, vertical: AppTokens.s7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppTokens.rFull),
@@ -729,15 +931,16 @@ class StatusInfoPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppTokens.caption.copyWith(
-          color: color,
-          fontWeight: FontWeight.w900,
-        ),
+        style: AppTokens.caption
+            .copyWith(color: color, fontWeight: FontWeight.w900),
       ),
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Inspector Hint Card
+// ─────────────────────────────────────────────────────────────
 class InspectorHintCard extends StatelessWidget {
   final IconData icon;
   final Color accent;
@@ -758,37 +961,34 @@ class InspectorHintCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppTokens.s14),
       decoration: BoxDecoration(
         color: AppTokens.card,
-        borderRadius: BorderRadius.circular(AppTokens.r18),
+        borderRadius: BorderRadius.circular(AppTokens.r16),
         border: Border.all(color: AppTokens.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Container(
-            width: 36,
-            height: 36,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppTokens.r12),
+              borderRadius: BorderRadius.circular(AppTokens.r10),
             ),
-            child: Icon(icon, color: accent, size: 18),
+            child: Icon(icon, color: accent, size: 17),
           ),
           const SizedBox(width: AppTokens.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  title,
-                  style: AppTokens.labelBold.copyWith(color: AppTokens.text),
-                ),
+                Text(title,
+                    style: AppTokens.labelBold
+                        .copyWith(color: AppTokens.text, fontSize: 12)),
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: AppTokens.caption.copyWith(
-                    color: AppTokens.text2,
-                    height: 1.45,
-                  ),
+                  style: AppTokens.caption
+                      .copyWith(color: AppTokens.text2, height: 1.45),
                 ),
               ],
             ),
@@ -799,6 +999,9 @@ class InspectorHintCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Style Spotlight Card
+// ─────────────────────────────────────────────────────────────
 class StyleSpotlightCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -819,10 +1022,7 @@ class StyleSpotlightCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppTokens.s16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: <Color>[
-            accent.withValues(alpha: 0.14),
-            AppTokens.card2,
-          ],
+          colors: <Color>[accent.withValues(alpha: 0.14), AppTokens.card2],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -832,13 +1032,13 @@ class StyleSpotlightCard extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.14),
+              color: accent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTokens.r14),
             ),
-            child: Icon(icon, color: accent),
+            child: Icon(icon, color: accent, size: 22),
           ),
           const SizedBox(width: AppTokens.s12),
           Expanded(
@@ -847,15 +1047,14 @@ class StyleSpotlightCard extends StatelessWidget {
               children: <Widget>[
                 Text(
                   title,
-                  style: AppTokens.headingM.copyWith(color: AppTokens.text),
+                  style: AppTokens.labelBold
+                      .copyWith(color: AppTokens.text, fontSize: 13),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: AppTokens.caption.copyWith(
-                    color: AppTokens.text2,
-                    height: 1.4,
-                  ),
+                  style: AppTokens.caption
+                      .copyWith(color: AppTokens.text2, height: 1.4),
                 ),
               ],
             ),
@@ -866,6 +1065,9 @@ class StyleSpotlightCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Style Option Card — filmstrip / grid variant
+// ─────────────────────────────────────────────────────────────
 class StyleOptionCard extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -882,55 +1084,88 @@ class StyleOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final Color accent = AppTokens.primary;
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTokens.r14),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTokens.s12,
-          vertical: AppTokens.s12,
-        ),
+        curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppTokens.info.withValues(alpha: 0.12)
-              : AppTokens.card.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(AppTokens.r14),
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: <Color>[
+                    accent.withValues(alpha: 0.2),
+                    accent.withValues(alpha: 0.08),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : AppTokens.card,
+          borderRadius: BorderRadius.circular(AppTokens.r16),
           border: Border.all(
-            color: isSelected ? AppTokens.info : AppTokens.border,
+            color:
+                isSelected ? accent.withValues(alpha: 0.55) : AppTokens.border,
             width: isSelected ? 1.5 : 1.0,
           ),
+          boxShadow: isSelected
+              ? <BoxShadow>[
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.18),
+                    blurRadius: 14,
+                    spreadRadius: 0,
+                  )
+                ]
+              : null,
         ),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Container(
-              width: 36,
-              height: 36,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTokens.info.withValues(alpha: 0.14)
+                    ? accent.withValues(alpha: 0.2)
                     : AppTokens.card2,
-                borderRadius: BorderRadius.circular(AppTokens.r12),
+                borderRadius: BorderRadius.circular(AppTokens.r14),
               ),
               child: Icon(
                 icon,
-                size: 18,
-                color: isSelected ? AppTokens.info : AppTokens.text2,
+                color: isSelected ? accent : AppTokens.text2,
+                size: 22,
               ),
             ),
-            const SizedBox(width: AppTokens.s10),
-            Expanded(
+            const SizedBox(height: AppTokens.s8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Text(
                 label,
+                textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: AppTokens.caption.copyWith(
-                  color: isSelected ? AppTokens.info : AppTokens.text,
-                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                  fontSize: 12,
+                style: TextStyle(
+                  color: isSelected ? accent : AppTokens.text,
+                  fontWeight:
+                      isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 11,
+                  height: 1.3,
                 ),
               ),
             ),
+            if (isSelected) ...<Widget>[
+              const SizedBox(height: 5),
+              Container(
+                width: 22,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(AppTokens.rFull),
+                ),
+              ),
+              const SizedBox(height: 2),
+            ],
           ],
         ),
       ),

@@ -93,7 +93,7 @@ class _CinematicProcessingOverlayState extends State<CinematicProcessingOverlay>
                   builder: (_, child) => Transform.scale(scale: _pulseAnim.value, child: child),
                   child: Container(
                     width: 240,
-                    padding: const EdgeInsets.all(AppTokens.s28),
+                    padding: EdgeInsets.all(AppTokens.s28),
                     decoration: BoxDecoration(
                       color: AppTokens.surface.withOpacity(0.75),
                       borderRadius: BorderRadius.circular(AppTokens.r24),
@@ -110,7 +110,7 @@ class _CinematicProcessingOverlayState extends State<CinematicProcessingOverlay>
                             backgroundColor: AppTokens.primary.withOpacity(0.15),
                           ),
                         ),
-                        const SizedBox(height: AppTokens.s20),
+                        SizedBox(height: AppTokens.s20),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 400),
                           transitionBuilder: (child, anim) => FadeTransition(
@@ -124,7 +124,7 @@ class _CinematicProcessingOverlayState extends State<CinematicProcessingOverlay>
                             phrases[_phraseIdx],
                             key: ValueKey(_phraseIdx),
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 13,
                               fontWeight: FontWeight.w700,

@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
+import 'package:lama/core/ui/AppL10n.dart';
+
 import 'inpainting_studio_chrome.dart';
 
+/// Slim single-row top bar for the Magic Eraser editor.
+///
+/// Contains: back ← | title + breadcrumb | undo ↩ | redo ↪ | help ?
+///
+/// All previous action-chips (undo/redo/clear/compare rows) have been removed
+/// from the top bar — those controls now live exclusively in the brush-controls
+/// panel to avoid duplication and reclaim vertical space.
 class InpaintingEditorToolbar extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -44,120 +53,80 @@ class InpaintingEditorToolbar extends StatelessWidget {
     required this.clearLabel,
     required this.compareLabel,
     required this.compareActiveLabel,
+    required this.l10n,
   });
+
+  final AppL10n l10n;
+
+  /// Current workflow step derived from editor state:
+  /// 1 = draw mask, 2 = AI processing (not shown here), 3 = done
+  int get _currentStep => hasMask ? 2 : 1;
 
   @override
   Widget build(BuildContext context) {
-    final statusAccent = compareEnabled
-        ? InpaintingStudioTheme.cyan
-        : hasMask
-            ? InpaintingStudioTheme.mint
-            : InpaintingStudioTheme.amber;
-    final shouldShowStatus = !compact || compareEnabled || hasMask;
+    final hPad = compact ? 12.0 : 16.0;
+    final vPad = compact ? 10.0 : 13.0;
 
     return StudioGlassPanel(
-      radius: 30,
-      padding: EdgeInsets.fromLTRB(
-        compact ? 12 : 16,
-        compact ? 12 : 14,
-        compact ? 12 : 16,
-        compact ? 12 : 14,
-      ),
+      radius: 26,
+      padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
       fillColor: InpaintingStudioTheme.surfaceSoft,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _ToolbarIconButton(
-                icon: Icons.arrow_back_ios_new_rounded,
-                onTap: onBack,
-              ),
-              SizedBox(width: compact ? 10 : 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: InpaintingStudioTheme.textPrimary,
-                        fontSize: compact ? 17 : 19,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      maxLines: compact ? 2 : 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: InpaintingStudioTheme.textSecondary,
-                        fontSize: compact ? 12 : 13,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (shouldShowStatus) ...[
-                const SizedBox(width: 10),
-                Flexible(
-                  child: StudioPill(
-                    icon: compareEnabled
-                        ? Icons.compare_rounded
-                        : hasMask
-                            ? Icons.check_circle_rounded
-                            : Icons.gesture_rounded,
-                    label: compareEnabled ? compareActiveLabel : statusLabel,
-                    accent: statusAccent,
-                    filled: compareEnabled || hasMask,
+          // ── Back button ─────────────────────────────────────────
+          _TopBarIconButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            onTap: onBack,
+          ),
+          SizedBox(width: compact ? 10 : 14),
+
+          // ── Title + breadcrumb ──────────────────────────────────
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: InpaintingStudioTheme.textPrimary,
+                    fontSize: compact ? 16.0 : 18.0,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.2,
                   ),
                 ),
+                SizedBox(height: 5),
+                StudioStepBreadcrumb(
+                  l10n: l10n,
+                  currentStep: _currentStep,
+                ),
               ],
-              const SizedBox(width: 8),
-              _ToolbarIconButton(
-                icon: Icons.help_outline_rounded,
-                onTap: onHelp,
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _ToolbarActionChip(
-                icon: Icons.undo_rounded,
-                label: undoLabel,
-                onTap: canUndo ? onUndo : null,
-                accent: InpaintingStudioTheme.textPrimary,
-              ),
-              _ToolbarActionChip(
-                icon: Icons.redo_rounded,
-                label: redoLabel,
-                onTap: canRedo ? onRedo : null,
-                accent: InpaintingStudioTheme.textPrimary,
-              ),
-              _ToolbarActionChip(
-                icon: Icons.delete_outline_rounded,
-                label: clearLabel,
-                onTap: hasMask ? onClear : null,
-                accent: InpaintingStudioTheme.danger,
-              ),
-              _ToolbarActionChip(
-                icon: compareEnabled
-                    ? Icons.visibility_rounded
-                    : Icons.compare_rounded,
-                label: compareLabel,
-                onTap: onToggleCompare,
-                accent: InpaintingStudioTheme.cyan,
-                selected: compareEnabled,
-              ),
-            ],
+
+          SizedBox(width: 10),
+
+          // ── Undo / Redo icon buttons ────────────────────────────
+          _TopBarIconButton(
+            icon: Icons.undo_rounded,
+            onTap: canUndo ? onUndo : null,
+            tooltip: undoLabel,
+          ),
+          SizedBox(width: 6),
+          _TopBarIconButton(
+            icon: Icons.redo_rounded,
+            onTap: canRedo ? onRedo : null,
+            tooltip: redoLabel,
+          ),
+          SizedBox(width: 6),
+
+          // ── Help button ─────────────────────────────────────────
+          _TopBarIconButton(
+            icon: Icons.help_outline_rounded,
+            onTap: onHelp,
           ),
         ],
       ),
@@ -165,96 +134,51 @@ class InpaintingEditorToolbar extends StatelessWidget {
   }
 }
 
-class _ToolbarIconButton extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TopBarIconButton extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onTap;
-
-  const _ToolbarIconButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: InpaintingStudioTheme.textPrimary,
-        ),
-      ),
-    );
-  }
-}
-
-class _ToolbarActionChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
   final VoidCallback? onTap;
-  final Color accent;
-  final bool selected;
+  final String? tooltip;
 
-  const _ToolbarActionChip({
+  const _TopBarIconButton({
     required this.icon,
-    required this.label,
     required this.onTap,
-    required this.accent,
-    this.selected = false,
+    this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
-    final background = selected
-        ? accent.withValues(alpha: 0.18)
-        : Colors.white.withValues(alpha: 0.05);
-    final borderColor = selected
-        ? accent.withValues(alpha: 0.28)
-        : Colors.white.withValues(alpha: 0.08);
 
-    return Opacity(
-      opacity: enabled ? 1 : 0.38,
+    Widget button = Opacity(
+      opacity: enabled ? 1.0 : 0.35,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: borderColor),
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 17,
-                color: selected ? accent : InpaintingStudioTheme.textPrimary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: selected ? accent : InpaintingStudioTheme.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12.5,
-                ),
-              ),
-            ],
+          child: Icon(
+            icon,
+            size: 18,
+            color: enabled
+                ? InpaintingStudioTheme.textPrimary
+                : InpaintingStudioTheme.textSecondary,
           ),
         ),
       ),
     );
+
+    if (tooltip != null) {
+      button = Tooltip(message: tooltip!, child: button);
+    }
+
+    return button;
   }
 }

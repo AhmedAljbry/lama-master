@@ -20,14 +20,14 @@ class SliderRow extends StatelessWidget {
     final safeValue = value.clamp(min, max);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           SizedBox(
             width: 70,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white70,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,

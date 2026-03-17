@@ -2,7 +2,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:lama/presentation/pages/PT.dart';
+import 'package:lama/core/ui/AppTokens.dart';
+import 'package:lama/core/ui/app_theme.dart';
 
 
 
@@ -83,7 +84,7 @@ class _ProcessingOverlayState extends State<ProcessingOverlay>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.visible) return const SizedBox.shrink();
+    if (!widget.visible) return SizedBox.shrink();
 
     return AnimatedBuilder(
       animation: _enterCtrl,
@@ -95,7 +96,7 @@ class _ProcessingOverlayState extends State<ProcessingOverlay>
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: Container(color: PT.bg.withOpacity(0.75)),
+              child: Container(color: AppTokens.bg.withOpacity(0.75)),
             ),
           ),
 
@@ -111,62 +112,62 @@ class _ProcessingOverlayState extends State<ProcessingOverlay>
               child: Container(
                 width: math.min(
                     MediaQuery.sizeOf(context).width - 48, 340),
-                padding: const EdgeInsets.all(PT.s32),
+                padding: EdgeInsets.all(AppTokens.s32),
                 decoration: BoxDecoration(
-                  color: PT.surface,
-                  borderRadius: BorderRadius.circular(PT.r24),
+                  color: AppTokens.surface,
+                  borderRadius: BorderRadius.circular(AppTokens.r24),
                   border: Border.all(
-                      color: PT.mint.withOpacity(0.15)),
-                  boxShadow: PT.glow(PT.mint, blur: 60),
+                      color: AppTokens.border.withOpacity(0.3)),
+                  boxShadow: AppTokens.cardShadow,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _RingSpinner(ctrl: _spinCtrl, pulse: _pulse),
-                    const SizedBox(height: PT.s24),
+                    SizedBox(height: AppTokens.s24),
                     Text(
                       widget.title,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: PT.t1,
+                      style: TextStyle(
+                        color: AppTokens.text,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                     if (widget.subtitle != null) ...[
-                      const SizedBox(height: PT.s8),
+                      SizedBox(height: AppTokens.s8),
                       Text(
                         widget.subtitle!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: PT.t2,
+                        style: TextStyle(
+                          color: AppTokens.text2,
                           fontSize: 13,
                           height: 1.5,
                         ),
                       ),
                     ],
-                    const SizedBox(height: PT.s24),
+                    SizedBox(height: AppTokens.s24),
                     _ProgressBar(progress: widget.progress),
                     if (widget.steps.isNotEmpty) ...[
-                      const SizedBox(height: PT.s20),
+                      SizedBox(height: AppTokens.s20),
                       ...widget.steps.map((s) => _StepRow(step: s)),
                     ],
                     if (widget.onCancel != null) ...[
-                      const SizedBox(height: PT.s20),
+                      SizedBox(height: AppTokens.s20),
                       GestureDetector(
                         onTap: widget.onCancel,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: PT.s24, vertical: PT.s12),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: AppTokens.s24, vertical: AppTokens.s12),
                           decoration: BoxDecoration(
-                            border: Border.all(color: PT.t3),
+                            border: Border.all(color: (AppTokens.text2.withOpacity(0.7))),
                             borderRadius:
-                            BorderRadius.circular(PT.rFull),
+                            BorderRadius.circular(AppTokens.rFull),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Cancel',
                             style: TextStyle(
-                                color: PT.t2,
+                                color: AppTokens.text2,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700),
                           ),
@@ -205,7 +206,7 @@ class _RingSpinner extends StatelessWidget {
               height: 70 * pulse.value,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: PT.mint.withOpacity(0.07 * pulse.value),
+                color: AppTokens.primary.withOpacity(0.07 * pulse.value),
               ),
             ),
             Transform.rotate(
@@ -219,12 +220,12 @@ class _RingSpinner extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: PT.mint.withOpacity(0.1),
+                color: AppTokens.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: PT.mint.withOpacity(0.2)),
+                border: Border.all(color: AppTokens.primary.withOpacity(0.2)),
               ),
-              child: const Icon(Icons.auto_awesome_rounded,
-                  color: PT.mint, size: 22),
+              child: Icon(Icons.auto_awesome_rounded,
+                  color: AppTokens.primary, size: 22),
             ),
           ],
         ),
@@ -243,7 +244,7 @@ class _ArcPainter extends CustomPainter {
       center,
       radius,
       Paint()
-        ..color = PT.mint.withOpacity(0.1)
+        ..color = AppTokens.primary.withOpacity(0.1)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
@@ -256,9 +257,9 @@ class _ArcPainter extends CustomPainter {
       false,
       Paint()
         ..shader = LinearGradient(colors: [
-          PT.mint,
-          PT.cyan,
-          PT.mint.withOpacity(0),
+          AppTokens.primary,
+          AppTokens.info,
+          AppTokens.primary.withOpacity(0),
         ]).createShader(rect)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
@@ -281,21 +282,21 @@ class _ProgressBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(PT.rFull),
+          borderRadius: BorderRadius.circular(AppTokens.rFull),
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 3,
-            backgroundColor: PT.t3.withOpacity(0.2),
+            backgroundColor: (AppTokens.text2.withOpacity(0.7)).withOpacity(0.2),
             valueColor:
-            const AlwaysStoppedAnimation<Color>(PT.mint),
+            const AlwaysStoppedAnimation<Color>(AppTokens.primary),
           ),
         ),
         if (progress != null) ...[
-          const SizedBox(height: PT.s8),
+          SizedBox(height: AppTokens.s8),
           Text(
             '${(progress! * 100).toInt()}%',
-            style: const TextStyle(
-                color: PT.t3,
+            style: TextStyle(
+                color: (AppTokens.text2.withOpacity(0.7)),
                 fontSize: 11,
                 fontWeight: FontWeight.w700),
           ),
@@ -316,45 +317,45 @@ class _StepRow extends StatelessWidget {
     final active = step.progress > 0 && step.progress < 1.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: PT.s4),
+      padding: EdgeInsets.symmetric(vertical: AppTokens.s4),
       child: Row(
         children: [
           AnimatedContainer(
-            duration: PT.medium,
+            duration: const Duration(milliseconds: 280),
             width: 18,
             height: 18,
             decoration: BoxDecoration(
               color: done
-                  ? PT.mint.withOpacity(0.2)
+                  ? AppTokens.primary.withOpacity(0.2)
                   : active
-                  ? PT.mint.withOpacity(0.08)
-                  : PT.t3.withOpacity(0.1),
+                  ? AppTokens.primary.withOpacity(0.08)
+                  : (AppTokens.text2.withOpacity(0.7)).withOpacity(0.1),
               shape: BoxShape.circle,
               border: Border.all(
                 color: done
-                    ? PT.mint
+                    ? AppTokens.primary
                     : active
-                    ? PT.mint.withOpacity(0.5)
-                    : PT.t3.withOpacity(0.3),
+                    ? AppTokens.primary.withOpacity(0.5)
+                    : (AppTokens.text2.withOpacity(0.7)).withOpacity(0.3),
               ),
             ),
             child: done
-                ? const Icon(Icons.check_rounded,
-                color: PT.mint, size: 11)
+                ? Icon(Icons.check_rounded,
+                color: AppTokens.primary, size: 11)
                 : active
-                ? const Padding(
+                ? Padding(
               padding: EdgeInsets.all(3),
               child: CircularProgressIndicator(
-                  strokeWidth: 1.5, color: PT.mint),
+                  strokeWidth: 1.5, color: AppTokens.primary),
             )
                 : null,
           ),
-          const SizedBox(width: PT.s12),
+          SizedBox(width: AppTokens.s12),
           Expanded(
             child: Text(
               step.label,
               style: TextStyle(
-                color: done ? PT.t2 : active ? PT.t1 : PT.t3,
+                color: done ? AppTokens.text2 : active ? AppTokens.text : (AppTokens.text2.withOpacity(0.7)),
                 fontSize: 12,
                 fontWeight:
                 active ? FontWeight.w700 : FontWeight.w500,
@@ -364,8 +365,8 @@ class _StepRow extends StatelessWidget {
           if (active)
             Text(
               '${(step.progress * 100).toInt()}%',
-              style: const TextStyle(
-                  color: PT.mint,
+              style: TextStyle(
+                  color: AppTokens.primary,
                   fontSize: 10,
                   fontWeight: FontWeight.w800),
             ),
@@ -391,12 +392,12 @@ class _GlowOrbs extends StatelessWidget {
             Positioned(
               top: -50 + 30 * v,
               left: -60 + 20 * v,
-              child: _orb(PT.mint.withOpacity(0.04), 250),
+              child: _orb(AppTokens.primary.withOpacity(0.04), 250),
             ),
             Positioned(
               bottom: -40 + 20 * v,
               right: -50 + 25 * v,
-              child: _orb(PT.purple.withOpacity(0.04), 200),
+              child: _orb(AppTokens.accent.withOpacity(0.04), 200),
             ),
           ],
         );

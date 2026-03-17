@@ -42,12 +42,8 @@ class StudioCanvasWorkspace extends StatelessWidget {
   });
 
   Uint8List? get _displayBytes {
-    if (targetBytes == null) {
-      return null;
-    }
-    if (isComparing) {
-      return targetBytes;
-    }
+    if (targetBytes == null) return null;
+    if (isComparing) return targetBytes;
     return outputBytes ?? targetBytes;
   }
 
@@ -62,22 +58,17 @@ class StudioCanvasWorkspace extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black87,
+        color: const Color(0xFF090C10),
         borderRadius: BorderRadius.circular(AppTokens.r24),
         border: Border.all(
-          color: AppTokens.border.withValues(alpha: 0.5),
-          width: 1.5,
+          color: AppTokens.border.withValues(alpha: 0.32),
+          width: 1.0,
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
-            blurRadius: 40,
-            offset: const Offset(0, 15),
-          ),
-          BoxShadow(
-            color: AppTokens.primary.withValues(alpha: 0.05),
-            blurRadius: 80,
-            spreadRadius: 10,
+            color: Colors.black.withValues(alpha: 0.55),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -86,17 +77,20 @@ class StudioCanvasWorkspace extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: <Widget>[
+            // Subtle grid background
             Positioned.fill(
               child: CustomPaint(
                 painter: GridPainter(
-                  color: Colors.white.withValues(alpha: 0.03),
-                  spacing: 24,
+                  color: Colors.white.withValues(alpha: 0.02),
+                  spacing: 32,
                 ),
               ),
             ),
+
+            // Main image display
             if (displayBytes != null)
               AnimatedSwitcher(
-                duration: const Duration(milliseconds: 350),
+                duration: const Duration(milliseconds: 400),
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: (child, animation) =>
@@ -104,7 +98,8 @@ class StudioCanvasWorkspace extends StatelessWidget {
                 child: InteractiveViewer(
                   key: ValueKey<int>(displayBytes.hashCode),
                   minScale: 0.5,
-                  maxScale: 5.0,
+                  maxScale: 6.0,
+                  clipBehavior: Clip.none,
                   child: GestureDetector(
                     onDoubleTap: onTapFullScreen,
                     child: Hero(
@@ -125,41 +120,83 @@ class StudioCanvasWorkspace extends StatelessWidget {
                 label: l10n.get('add_photo_hint'),
                 subtitle: l10n.get('workspace_hero_sub'),
               ),
+
+            // Edge vignette
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
                       center: Alignment.center,
-                      radius: 1.45,
+                      radius: 1.2,
                       colors: <Color>[
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.38),
+                        Colors.black.withValues(alpha: 0.22),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
+
+            // Top gradient behind reference thumbnail
             if (refPath != null && state != EditorState.processing)
               Positioned(
-                top: AppTokens.s16,
-                right: AppTokens.s16,
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 100,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: <Color>[
+                          Colors.black.withValues(alpha: 0.35),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Reference thumbnail
+            if (refPath != null && state != EditorState.processing)
+              Positioned(
+                top: AppTokens.s12,
+                right: AppTokens.s12,
                 child: ReferenceThumbnail(refPath: refPath!),
               ),
+
+            // BEFORE badge when comparing
+            if (isComparing)
+              Positioned(
+                top: AppTokens.s12,
+                left: AppTokens.s12,
+                child: WorkspaceBadge(
+                  label: l10n.get('original_label'),
+                  color: AppTokens.warning,
+                  icon: Icons.history_rounded,
+                ),
+              ),
+
+            // Guidance card — positioned above the floating toolbar
             if (guidance != null)
               Positioned(
                 left: AppTokens.s16,
-                right: isDesktop ? null : AppTokens.s16,
-                bottom: targetBytes != null ? 108 : AppTokens.s24,
+                bottom: targetBytes != null ? 120 : AppTokens.s20,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
+                  constraints: const BoxConstraints(maxWidth: 300),
                   child: guidance,
                 ),
               ),
+
+            // Floating context toolbar at the bottom
             if (targetBytes != null && state != EditorState.processing)
               Positioned(
-                bottom: AppTokens.s28,
+                bottom: AppTokens.s20,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -174,6 +211,7 @@ class StudioCanvasWorkspace extends StatelessWidget {
                 ),
               ),
 
+            // Processing overlay
             if (state == EditorState.processing)
               const CinematicProcessingOverlay(),
           ],
@@ -189,7 +227,7 @@ class StudioCanvasWorkspace extends StatelessWidget {
 
     if (refPath == null) {
       return WorkspaceGuidanceCard(
-        icon: Icons.image_search_rounded,
+        icon: Icons.add_photo_alternate_rounded,
         accent: AppTokens.info,
         title: l10n.get('workspace_need_reference_title'),
         subtitle: l10n.get('workspace_need_reference_desc'),
@@ -200,7 +238,7 @@ class StudioCanvasWorkspace extends StatelessWidget {
 
     if (_hasResult) {
       return WorkspaceGuidanceCard(
-        icon: Icons.check_circle_rounded,
+        icon: Icons.verified_rounded,
         accent: AppTokens.success,
         title: l10n.get('workspace_result_ready_title'),
         subtitle: l10n.get('workspace_result_ready_desc'),
@@ -208,7 +246,7 @@ class StudioCanvasWorkspace extends StatelessWidget {
     }
 
     return WorkspaceGuidanceCard(
-      icon: Icons.style_rounded,
+      icon: Icons.auto_awesome_mosaic_rounded,
       accent: AppTokens.primary,
       title: selectedStyle,
       subtitle: l10n.get('workspace_style_hint'),

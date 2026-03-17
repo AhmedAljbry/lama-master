@@ -58,7 +58,7 @@ class _BrushCursorState extends State<BrushCursor>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.visible || widget.point == null) return const SizedBox.shrink();
+    if (!widget.visible || widget.point == null) return SizedBox.shrink();
 
     final r = (widget.size / 2).clamp(5.0, 130.0);
     final accent = widget.kind == BrushKind.eraser ? _kEraser : _kAccent;

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/i18n/t.dart';
+import '../../../../core/ui/AppL10n.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../application/image_pick_cubit.dart';
 import '../../application/inpainting_bloc/inpainting_bloc.dart';
@@ -41,7 +41,7 @@ class _ProcessingPageState extends State<ProcessingPage>
 
   @override
   Widget build(BuildContext context) {
-    final t = context.read<T>();
+     final l10n = context.read<AppL10n>();
     final pickState = context.watch<ImagePickCubit>().state;
     final rawImage = pickState is ImagePickReady ? pickState.uiImage : null;
 
@@ -73,7 +73,7 @@ class _ProcessingPageState extends State<ProcessingPage>
 
           final progress = _progressValueFromServerOrFallback(state);
           final activeStep = _stepFromStatus(state.status);
-          final headline = _primaryMessage(t, state);
+           final headline = _primaryMessage(l10n, state);
           final elapsed = _elapsedText(state.startedAt);
 
           return StudioGlowBackground(
@@ -103,8 +103,8 @@ class _ProcessingPageState extends State<ProcessingPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildTopBar(context, t, state),
-                            const SizedBox(height: 22),
+                             _buildTopBar(context, l10n, state),
+                            SizedBox(height: 22),
                             isWide
                                 ? Row(
                                     crossAxisAlignment:
@@ -112,8 +112,8 @@ class _ProcessingPageState extends State<ProcessingPage>
                                     children: [
                                       Expanded(
                                         flex: 5,
-                                        child: _buildPreviewCard(
-                                          t: t,
+                                         child: _buildPreviewCard(
+                                          l10n: l10n,
                                           rawImage: rawImage,
                                           state: state,
                                           isFailed: isFailed,
@@ -121,11 +121,11 @@ class _ProcessingPageState extends State<ProcessingPage>
                                           isQueued: isQueued,
                                         ),
                                       ),
-                                      const SizedBox(width: 20),
-                                      Expanded(
+                                      SizedBox(width: 20),
+                                       Expanded(
                                         flex: 6,
                                         child: _buildStatusCard(
-                                          t: t,
+                                          l10n: l10n,
                                           state: state,
                                           headline: headline,
                                           progress: progress,
@@ -140,17 +140,17 @@ class _ProcessingPageState extends State<ProcessingPage>
                                   )
                                 : Column(
                                     children: [
-                                      _buildPreviewCard(
-                                        t: t,
+                                       _buildPreviewCard(
+                                        l10n: l10n,
                                         rawImage: rawImage,
                                         state: state,
                                         isFailed: isFailed,
                                         isCancelled: isCancelled,
                                         isQueued: isQueued,
                                       ),
-                                      const SizedBox(height: 18),
-                                      _buildStatusCard(
-                                        t: t,
+                                      SizedBox(height: 18),
+                                       _buildStatusCard(
+                                        l10n: l10n,
                                         state: state,
                                         headline: headline,
                                         progress: progress,
@@ -176,10 +176,10 @@ class _ProcessingPageState extends State<ProcessingPage>
     );
   }
 
-  Widget _buildTopBar(BuildContext context, T t, InpaintingState state) {
+   Widget _buildTopBar(BuildContext context, AppL10n l10n, InpaintingState state) {
     return StudioGlassPanel(
       radius: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       fillColor: InpaintingStudioTheme.surfaceSoft,
       child: Row(
         children: [
@@ -190,23 +190,23 @@ class _ProcessingPageState extends State<ProcessingPage>
               context.pop();
             },
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  t.of('processing'),
-                  style: const TextStyle(
+                 Text(
+                  l10n.get('processing'),
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  t.of('processing_body'),
-                  style: const TextStyle(
+                SizedBox(height: 2),
+                 Text(
+                  l10n.get('processing_body'),
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textSecondary,
                     fontSize: 12.5,
                   ),
@@ -216,7 +216,7 @@ class _ProcessingPageState extends State<ProcessingPage>
           ),
           StudioPill(
             icon: Icons.memory_rounded,
-            label: state.serverStage ?? t.of('processing'),
+             label: state.serverStage ?? l10n.get('processing'),
             accent: InpaintingStudioTheme.cyan,
           ),
         ],
@@ -224,8 +224,8 @@ class _ProcessingPageState extends State<ProcessingPage>
     );
   }
 
-  Widget _buildPreviewCard({
-    required T t,
+   Widget _buildPreviewCard({
+    required AppL10n l10n,
     required ui.Image? rawImage,
     required InpaintingState state,
     required bool isFailed,
@@ -238,17 +238,17 @@ class _ProcessingPageState extends State<ProcessingPage>
 
     return StudioGlassPanel(
       radius: 34,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       gradient: InpaintingStudioTheme.heroGradient,
       borderColor: accent.withValues(alpha: 0.2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StudioSectionLabel(
-            title: t.of('processing_headline'),
-            subtitle: t.of('processing_body'),
+           StudioSectionLabel(
+            title: l10n.get('processing_headline'),
+            subtitle: l10n.get('processing_body'),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           AspectRatio(
             aspectRatio: 0.9,
             child: ClipRRect(
@@ -326,7 +326,7 @@ class _ProcessingPageState extends State<ProcessingPage>
                     start: 16,
                     child: StudioPill(
                       icon: Icons.bolt_rounded,
-                      label: t.of('compare_live'),
+                       label: l10n.get('compare_live'),
                       accent: accent,
                       filled: true,
                     ),
@@ -340,8 +340,8 @@ class _ProcessingPageState extends State<ProcessingPage>
     );
   }
 
-  Widget _buildStatusCard({
-    required T t,
+   Widget _buildStatusCard({
+    required AppL10n l10n,
     required InpaintingState state,
     required String headline,
     required double progress,
@@ -363,7 +363,7 @@ class _ProcessingPageState extends State<ProcessingPage>
 
     return StudioGlassPanel(
       radius: 34,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       fillColor: InpaintingStudioTheme.surfaceSoft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,47 +372,47 @@ class _ProcessingPageState extends State<ProcessingPage>
             spacing: 12,
             runSpacing: 12,
             children: [
-              StudioStatTile(
-                label: t.of('elapsed'),
+               StudioStatTile(
+                label: l10n.get('elapsed'),
                 value: elapsed,
                 accent: InpaintingStudioTheme.textPrimary,
               ),
               StudioStatTile(
-                label: t.of('job_id'),
+                label: l10n.get('job_id'),
                 value: jobLabel,
                 accent: InpaintingStudioTheme.cyan,
               ),
               StudioStatTile(
-                label: t.of('queue_position'),
+                label: l10n.get('queue_position'),
                 value: state.queuePosition?.toString() ?? '--',
                 accent: InpaintingStudioTheme.amber,
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: 22),
           Text(
             headline,
-            style: const TextStyle(
+            style: TextStyle(
               color: InpaintingStudioTheme.textPrimary,
               fontSize: 26,
               fontWeight: FontWeight.w900,
               height: 1.1,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             state.serverMessage?.trim().isNotEmpty == true
-                ? state.serverMessage!.trim()
-                : t.of('processing_body'),
-            style: const TextStyle(
+                 ? state.serverMessage!.trim()
+                : l10n.get('processing_body'),
+            style: TextStyle(
               color: InpaintingStudioTheme.textSecondary,
               fontSize: 14,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: 22),
           _ProgressDial(progress: progress, accent: accent),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
@@ -423,29 +423,29 @@ class _ProcessingPageState extends State<ProcessingPage>
             ),
           ),
           if (isQueued) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _InfoBanner(
               icon: Icons.queue_rounded,
-              accent: InpaintingStudioTheme.amber,
-              text: '${t.of('queue_position')}: ${state.queuePosition ?? '--'}',
+               accent: InpaintingStudioTheme.amber,
+              text: '${l10n.get('queue_position')}: ${state.queuePosition ?? '--'}',
             ),
           ],
           if (isFailed || isCancelled) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _InfoBanner(
               icon: Icons.warning_amber_rounded,
-              accent: InpaintingStudioTheme.rose,
-              text: _errorText(t, state),
+               accent: InpaintingStudioTheme.rose,
+              text: _errorText(l10n, state),
             ),
           ],
-          const SizedBox(height: 22),
-          _buildTimeline(t, activeStep, accent),
-          const SizedBox(height: 22),
+          SizedBox(height: 22),
+           _buildTimeline(l10n, activeStep, accent),
+          SizedBox(height: 22),
           if (isFailed)
             StudioPrimaryButton(
               onPressed: () => context.pop(),
-              icon: Icons.refresh_rounded,
-              label: t.of('retry'),
+               icon: Icons.refresh_rounded,
+              label: l10n.get('retry'),
             )
           else
             StudioSecondaryButton(
@@ -453,8 +453,8 @@ class _ProcessingPageState extends State<ProcessingPage>
                 context.read<InpaintingBloc>().add(InpaintingCancel());
                 context.go(AppRoutes.editor);
               },
-              icon: Icons.arrow_back_rounded,
-              label: t.of('return_editor'),
+               icon: Icons.arrow_back_rounded,
+              label: l10n.get('return_editor'),
               accent: InpaintingStudioTheme.textPrimary,
             ),
         ],
@@ -462,12 +462,12 @@ class _ProcessingPageState extends State<ProcessingPage>
     );
   }
 
-  Widget _buildTimeline(T t, int activeStep, Color accent) {
+   Widget _buildTimeline(AppL10n l10n, int activeStep, Color accent) {
     final items = [
-      t.of('queued'),
-      t.of('uploading'),
-      t.of('processing'),
-      t.of('downloading'),
+      l10n.get('queued'),
+      l10n.get('uploading'),
+      l10n.get('processing'),
+      l10n.get('downloading'),
     ];
 
     return Column(
@@ -481,7 +481,7 @@ class _ProcessingPageState extends State<ProcessingPage>
                 : Colors.white.withValues(alpha: 0.08);
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: EdgeInsets.only(bottom: 12),
           child: Row(
             children: [
               AnimatedContainer(
@@ -497,7 +497,7 @@ class _ProcessingPageState extends State<ProcessingPage>
                   ),
                 ),
                 child: done
-                    ? const Icon(Icons.check_rounded,
+                    ? Icon(Icons.check_rounded,
                         size: 14, color: Colors.black)
                     : active
                         ? Center(
@@ -512,7 +512,7 @@ class _ProcessingPageState extends State<ProcessingPage>
                           )
                         : null,
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Text(
                   items[index],
@@ -532,15 +532,15 @@ class _ProcessingPageState extends State<ProcessingPage>
     );
   }
 
-  String _errorText(T t, InpaintingState state) {
+   String _errorText(AppL10n l10n, InpaintingState state) {
     final messageKey = state.failure?.messageKey;
     if (messageKey != null) {
-      return t.of(messageKey);
+      return l10n.get(messageKey);
     }
     if (state.serverMessage?.trim().isNotEmpty == true) {
       return state.serverMessage!.trim();
     }
-    return t.of('failed');
+    return l10n.get('failed');
   }
 
   int _stepFromStatus(InpaintingStatus status) {
@@ -554,21 +554,21 @@ class _ProcessingPageState extends State<ProcessingPage>
     };
   }
 
-  String _primaryMessage(T t, InpaintingState state) {
+   String _primaryMessage(AppL10n l10n, InpaintingState state) {
     final serverMsg = state.serverMessage;
     if (serverMsg != null && serverMsg.trim().isNotEmpty) {
       return serverMsg.trim();
     }
-
+ 
     return switch (state.status) {
-      InpaintingStatus.queued => t.of('queued'),
-      InpaintingStatus.uploading => t.of('uploading'),
-      InpaintingStatus.processing => t.of('processing'),
-      InpaintingStatus.downloading => t.of('downloading'),
-      InpaintingStatus.timeout => t.of('timeout'),
-      InpaintingStatus.failed => t.of('failed'),
-      InpaintingStatus.cancelled => t.of('cancelled'),
-      _ => t.of('processing'),
+      InpaintingStatus.queued => l10n.get('queued'),
+      InpaintingStatus.uploading => l10n.get('uploading'),
+      InpaintingStatus.processing => l10n.get('processing'),
+      InpaintingStatus.downloading => l10n.get('downloading'),
+      InpaintingStatus.timeout => l10n.get('timeout'),
+      InpaintingStatus.failed => l10n.get('failed'),
+      InpaintingStatus.cancelled => l10n.get('cancelled'),
+      _ => l10n.get('processing'),
     };
   }
 
@@ -663,14 +663,14 @@ class _ProgressDial extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: InpaintingStudioTheme.textPrimary,
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
+                  SizedBox(height: 2),
+                  Text(
                     'AI',
                     style: TextStyle(
                       color: InpaintingStudioTheme.textSecondary,
@@ -702,7 +702,7 @@ class _InfoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(18),
@@ -712,11 +712,11 @@ class _InfoBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: accent, size: 18),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 color: InpaintingStudioTheme.textPrimary,
                 fontSize: 13,
                 height: 1.45,

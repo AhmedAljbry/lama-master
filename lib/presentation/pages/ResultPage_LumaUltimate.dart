@@ -134,11 +134,11 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
             color: AppTokens.surface,
             child: Column(
               children: [
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
                 _buildResultInfo(context, t),
                 const Spacer(),
                 Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24),
                   child: _buildVerticalActions(context, t),
                 ),
               ],
@@ -152,21 +152,21 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
   // ─── Top Bar ──────────────────────────────────────────────────
   Widget _buildTopBar(BuildContext context, T t) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           _GlassIconButton(
             icon: Icons.arrow_back_ios_new_rounded,
             onTap: widget.onEditAgain,
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   t.of('result_title'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTokens.text,
                     fontWeight: FontWeight.w900,
                     fontSize: 20,
@@ -174,7 +174,7 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
                 ),
                 Text(
                   t.of('result_subtitle'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTokens.text2,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -196,7 +196,7 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
   // ─── Image Area ───────────────────────────────────────────────
   Widget _buildImageArea(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -250,7 +250,7 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
   // ─── Action Bar (Phone) ───────────────────────────────────────
   Widget _buildActionBar(BuildContext context, T t) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 20),
       decoration: const BoxDecoration(
         color: AppTokens.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppTokens.r24)),
@@ -265,7 +265,7 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
             child: ElevatedButton.icon(
               onPressed: _isSaving ? null : _handleSave,
               icon: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
@@ -273,10 +273,10 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
                   color: Colors.black,
                 ),
               )
-                  : const Icon(Icons.download_rounded, size: 20),
+                  : Icon(Icons.download_rounded, size: 20),
               label: Text(
                 _isSaving ? widget.t.of('loading') : t.of('result_save'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
                 ),
@@ -291,7 +291,7 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
             ),
           ),
 
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
 
           // Secondary buttons row
           Row(
@@ -303,7 +303,7 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
                   onTap: widget.onEditAgain,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: _SecondaryButton(
                   icon: Icons.add_photo_alternate_rounded,
@@ -325,19 +325,19 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
       children: [
         ElevatedButton.icon(
           onPressed: _isSaving ? null : _handleSave,
-          icon: const Icon(Icons.download_rounded),
+          icon: Icon(Icons.download_rounded),
           label: Text(t.of('result_save')),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: widget.onEditAgain,
-          icon: const Icon(Icons.edit_rounded),
+          icon: Icon(Icons.edit_rounded),
           label: Text(t.of('result_edit')),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         TextButton.icon(
           onPressed: widget.onNewImage,
-          icon: const Icon(Icons.add_photo_alternate_rounded),
+          icon: Icon(Icons.add_photo_alternate_rounded),
           label: Text(t.of('result_new')),
         ),
       ],
@@ -350,19 +350,19 @@ class _ResultpageLumaultimateState extends State<ResultpageLumaultimate>
     final sizeKB = (file.lengthSync() / 1024).toStringAsFixed(0);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             t.of('result_title'),
-            style: const TextStyle(
+            style: TextStyle(
               color: AppTokens.primary,
               fontWeight: FontWeight.w900,
               fontSize: 24,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           _InfoRow(label: 'File Size', value: '$sizeKB KB'),
           _InfoRow(label: 'Format', value: 'JPEG'),
           _InfoRow(label: 'Filter Applied', value: '✓'),
@@ -431,10 +431,10 @@ class _SecondaryButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 18, color: AppTokens.text2),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTokens.text2,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
@@ -454,7 +454,7 @@ class _HoldCompareBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.black54,
         borderRadius: BorderRadius.circular(20),
@@ -463,11 +463,11 @@ class _HoldCompareBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.compare, color: Colors.white54, size: 14),
-          const SizedBox(width: 6),
+          Icon(Icons.compare, color: Colors.white54, size: 14),
+          SizedBox(width: 6),
           Text(
             t.of('compare_hold'),
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white54,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -510,12 +510,12 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppTokens.text2, fontSize: 13)),
-          Text(value, style: const TextStyle(color: AppTokens.text, fontWeight: FontWeight.w700, fontSize: 13)),
+          Text(label, style: TextStyle(color: AppTokens.text2, fontSize: 13)),
+          Text(value, style: TextStyle(color: AppTokens.text, fontWeight: FontWeight.w700, fontSize: 13)),
         ],
       ),
     );

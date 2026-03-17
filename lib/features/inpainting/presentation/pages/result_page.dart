@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/i18n/t.dart';
+import '../../../../core/ui/AppL10n.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../application/image_pick_cubit.dart';
 import '../../application/inpainting_bloc/inpainting_bloc.dart';
@@ -35,15 +35,15 @@ class _ResultPageState extends State<ResultPage>
 
   @override
   Widget build(BuildContext context) {
-    final t = context.read<T>();
+     final l10n = context.read<AppL10n>();
     final inpaintingState = context.watch<InpaintingBloc>().state;
     final pickState = context.watch<ImagePickCubit>().state;
     final resultBytes = inpaintingState.result;
     final sourceBytes = pickState is ImagePickReady ? pickState.bytes : null;
     final sourceImage = pickState is ImagePickReady ? pickState.uiImage : null;
 
-    if (resultBytes == null) {
-      return _buildErrorState(context, t);
+     if (resultBytes == null) {
+      return _buildErrorState(context, l10n);
     }
 
     return Scaffold(
@@ -71,26 +71,26 @@ class _ResultPageState extends State<ResultPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildTopBar(context, t),
-                        const SizedBox(height: 22),
+                         _buildTopBar(context, l10n),
+                        SizedBox(height: 22),
                         isWide
                             ? Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(
                                     flex: 7,
-                                    child: _buildCompareCard(
-                                      t: t,
+                                     child: _buildCompareCard(
+                                      l10n: l10n,
                                       sourceBytes: sourceBytes,
                                       resultBytes: resultBytes,
                                       sourceImage: sourceImage,
                                     ),
                                   ),
-                                  const SizedBox(width: 20),
+                                  SizedBox(width: 20),
                                   Expanded(
                                     flex: 5,
-                                    child: _buildSummaryPanel(
-                                      t: t,
+                                     child: _buildSummaryPanel(
+                                      l10n: l10n,
                                       sourceImage: sourceImage,
                                       state: inpaintingState,
                                       resultBytes: resultBytes,
@@ -100,23 +100,23 @@ class _ResultPageState extends State<ResultPage>
                               )
                             : Column(
                                 children: [
-                                  _buildCompareCard(
-                                    t: t,
+                                   _buildCompareCard(
+                                    l10n: l10n,
                                     sourceBytes: sourceBytes,
                                     resultBytes: resultBytes,
                                     sourceImage: sourceImage,
                                   ),
-                                  const SizedBox(height: 18),
-                                  _buildSummaryPanel(
-                                    t: t,
+                                  SizedBox(height: 18),
+                                   _buildSummaryPanel(
+                                    l10n: l10n,
                                     sourceImage: sourceImage,
                                     state: inpaintingState,
                                     resultBytes: resultBytes,
                                   ),
                                 ],
                               ),
-                        const SizedBox(height: 18),
-                        _buildActionDock(context, t, resultBytes),
+                        SizedBox(height: 18),
+                         _buildActionDock(context, l10n, resultBytes),
                       ],
                     ),
                   ),
@@ -129,10 +129,10 @@ class _ResultPageState extends State<ResultPage>
     );
   }
 
-  Widget _buildTopBar(BuildContext context, T t) {
+   Widget _buildTopBar(BuildContext context, AppL10n l10n) {
     return StudioGlassPanel(
       radius: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       fillColor: InpaintingStudioTheme.surfaceSoft,
       child: Row(
         children: [
@@ -140,23 +140,23 @@ class _ResultPageState extends State<ResultPage>
             icon: Icons.arrow_back_ios_new_rounded,
             onTap: () => context.go(AppRoutes.editor),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  t.of('result_title'),
-                  style: const TextStyle(
+                 Text(
+                  l10n.get('result_title'),
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  t.of('result_body'),
-                  style: const TextStyle(
+                SizedBox(height: 2),
+                 Text(
+                  l10n.get('result_body'),
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textSecondary,
                     fontSize: 12.5,
                   ),
@@ -166,7 +166,7 @@ class _ResultPageState extends State<ResultPage>
           ),
           StudioPill(
             icon: Icons.download_done_rounded,
-            label: t.of('studio_quality'),
+             label: l10n.get('studio_quality'),
             accent: InpaintingStudioTheme.mint,
             filled: true,
           ),
@@ -175,8 +175,8 @@ class _ResultPageState extends State<ResultPage>
     );
   }
 
-  Widget _buildCompareCard({
-    required T t,
+   Widget _buildCompareCard({
+    required AppL10n l10n,
     required Uint8List? sourceBytes,
     required Uint8List resultBytes,
     required dynamic sourceImage,
@@ -186,17 +186,17 @@ class _ResultPageState extends State<ResultPage>
 
     return StudioGlassPanel(
       radius: 34,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       gradient: InpaintingStudioTheme.heroGradient,
       borderColor: InpaintingStudioTheme.cyan.withValues(alpha: 0.16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StudioSectionLabel(
-            title: t.of('result_headline'),
-            subtitle: t.of('result_body'),
+           StudioSectionLabel(
+            title: l10n.get('result_headline'),
+            subtitle: l10n.get('result_body'),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           AspectRatio(
             aspectRatio: aspectRatio.clamp(0.65, 1.4).toDouble(),
             child: ClipRRect(
@@ -206,8 +206,8 @@ class _ResultPageState extends State<ResultPage>
                   : BeforeAfterSlider(
                       before: Image.memory(sourceBytes, fit: BoxFit.cover),
                       after: Image.memory(resultBytes, fit: BoxFit.cover),
-                      beforeLabel: t.of('original_label'),
-                      afterLabel: t.of('result_title'),
+                       beforeLabel: l10n.get('original_label'),
+                      afterLabel: l10n.get('result_title'),
                     ),
             ),
           ),
@@ -216,8 +216,8 @@ class _ResultPageState extends State<ResultPage>
     );
   }
 
-  Widget _buildSummaryPanel({
-    required T t,
+   Widget _buildSummaryPanel({
+    required AppL10n l10n,
     required dynamic sourceImage,
     required InpaintingState state,
     required Uint8List resultBytes,
@@ -229,7 +229,7 @@ class _ResultPageState extends State<ResultPage>
 
     return StudioGlassPanel(
       radius: 34,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       fillColor: InpaintingStudioTheme.surfaceSoft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,7 +239,7 @@ class _ResultPageState extends State<ResultPage>
             runSpacing: 12,
             children: [
               StudioStatTile(
-                label: t.of('resolution'),
+                label: l10n.get('resolution'),
                 value: resolution,
                 accent: InpaintingStudioTheme.cyan,
               ),
@@ -249,46 +249,46 @@ class _ResultPageState extends State<ResultPage>
                 accent: InpaintingStudioTheme.mint,
               ),
               StudioStatTile(
-                label: t.of('processing'),
-                value: state.serverStage ?? t.of('ai_ready_short'),
+                label: l10n.get('processing'),
+                value: state.serverStage ?? l10n.get('ai_ready_short'),
                 accent: InpaintingStudioTheme.amber,
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           _SummaryBlock(
             icon: Icons.compare_arrows_rounded,
             accent: InpaintingStudioTheme.cyan,
-            title: t.of('compare_live'),
-            body: t.of('result_compare_body'),
+            title: l10n.get('compare_live'),
+            body: l10n.get('result_compare_body'),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           _SummaryBlock(
             icon: Icons.auto_fix_high_rounded,
             accent: InpaintingStudioTheme.mint,
-            title: t.of('studio_quality'),
-            body: t.of('magic_pick_feature_quality'),
+            title: l10n.get('studio_quality'),
+            body: l10n.get('magic_pick_feature_quality'),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           _SummaryBlock(
             icon: Icons.edit_rounded,
             accent: InpaintingStudioTheme.violet,
-            title: t.of('edit_again'),
-            body: t.of('editor_tip_precision'),
+            title: l10n.get('edit_again'),
+            body: l10n.get('editor_tip_precision'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionDock(BuildContext context, T t, Uint8List resultBytes) {
+  Widget _buildActionDock(BuildContext context, AppL10n l10n, Uint8List resultBytes) {
     return BlocConsumer<ResultCubit, ResultState>(
       listener: (context, state) {
         if (state is ResultSaved) {
-          _toast(context, t.of('saved_ok'), isSuccess: true);
+          _toast(context, l10n.get('saved_ok'), isSuccess: true);
         }
         if (state is ResultError) {
-          _toast(context, t.of(state.messageKey), isSuccess: false);
+          _toast(context, l10n.get(state.messageKey), isSuccess: false);
         }
       },
       builder: (context, state) {
@@ -296,7 +296,7 @@ class _ResultPageState extends State<ResultPage>
 
         return StudioGlassPanel(
           radius: 32,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           fillColor: InpaintingStudioTheme.surfaceSoft,
           child: Wrap(
             spacing: 12,
@@ -307,7 +307,7 @@ class _ResultPageState extends State<ResultPage>
                 child: StudioSecondaryButton(
                   onPressed: () => context.go(AppRoutes.editor),
                   icon: Icons.edit_rounded,
-                  label: t.of('edit_again'),
+                  label: l10n.get('edit_again'),
                   accent: InpaintingStudioTheme.textPrimary,
                 ),
               ),
@@ -317,7 +317,7 @@ class _ResultPageState extends State<ResultPage>
                   onPressed: () =>
                       context.read<ResultCubit>().shareBytes(resultBytes),
                   icon: Icons.ios_share_rounded,
-                  label: t.of('share'),
+                  label: l10n.get('share'),
                   accent: InpaintingStudioTheme.textPrimary,
                 ),
               ),
@@ -326,7 +326,7 @@ class _ResultPageState extends State<ResultPage>
                 child: StudioSecondaryButton(
                   onPressed: () => context.go(AppRoutes.magicEraser),
                   icon: Icons.add_photo_alternate_outlined,
-                  label: t.of('new_project'),
+                  label: l10n.get('new_project'),
                   accent: InpaintingStudioTheme.textPrimary,
                 ),
               ),
@@ -339,7 +339,7 @@ class _ResultPageState extends State<ResultPage>
                   icon: saving
                       ? Icons.downloading_rounded
                       : Icons.download_rounded,
-                  label: saving ? t.of('loading') : t.of('save'),
+                  label: saving ? l10n.get('loading') : l10n.get('save'),
                 ),
               ),
             ],
@@ -349,46 +349,46 @@ class _ResultPageState extends State<ResultPage>
     );
   }
 
-  Widget _buildErrorState(BuildContext context, T t) {
+  Widget _buildErrorState(BuildContext context, AppL10n l10n) {
     return Scaffold(
       backgroundColor: InpaintingStudioTheme.background,
       body: Center(
         child: StudioGlassPanel(
           radius: 30,
-          padding: const EdgeInsets.all(26),
+          padding: EdgeInsets.all(26),
           fillColor: InpaintingStudioTheme.surfaceSoft,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.broken_image_rounded,
                 size: 52,
                 color: InpaintingStudioTheme.textSecondary,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
-                t.of('failed'),
-                style: const TextStyle(
+                l10n.get('failed'),
+                style: TextStyle(
                   color: InpaintingStudioTheme.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
-                t.of('result_body'),
+                l10n.get('result_body'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: InpaintingStudioTheme.textSecondary,
                   fontSize: 13.5,
                   height: 1.45,
                 ),
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
               StudioPrimaryButton(
                 onPressed: () => context.go(AppRoutes.home),
                 icon: Icons.home_rounded,
-                label: t.of('return_home'),
+                label: l10n.get('return_home'),
               ),
             ],
           ),
@@ -402,7 +402,7 @@ class _ResultPageState extends State<ResultPage>
       SnackBar(
         content: Text(
           msg,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w700,
           ),
@@ -413,7 +413,7 @@ class _ResultPageState extends State<ResultPage>
             .withValues(alpha: 0.95),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        margin: const EdgeInsets.all(20),
+        margin: EdgeInsets.all(20),
       ),
     );
   }
@@ -463,7 +463,7 @@ class _SummaryBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(22),
@@ -481,23 +481,23 @@ class _SummaryBlock extends StatelessWidget {
             ),
             child: Icon(icon, color: accent, size: 20),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 Text(
                   body,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textSecondary,
                     fontSize: 12.5,
                     height: 1.45,

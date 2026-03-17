@@ -1,6 +1,9 @@
 class AppRoutes {
   const AppRoutes._();
 
+  static const splash = '/splash';
+  static const onboarding = '/onboarding';
+  static const forcedUpdate = '/forced_update';
   static const home = '/';
   static const magicEraser = '/magic_eraser';
   static const lumaEditor = '/luma_editor';

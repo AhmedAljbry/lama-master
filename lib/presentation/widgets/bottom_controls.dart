@@ -4,13 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // ─── Project imports ──────────────────────────────────────────────
-import 'package:lama/core/i18n/t.dart'; // T, Lang
+import 'package:lama/core/ui/AppL10n.dart';
+import 'package:lama/core/i18n/t.dart';
+import 'package:lama/core/i18n/locale_controller.dart';
 import 'package:lama/features/filter_studio/domain/entities/app_preset.dart';
 import 'package:lama/features/filter_studio/domain/entities/preset_config.dart';
 import 'package:lama/features/filter_studio/domain/entities/filter_studio_ai_insight.dart';
 import 'package:lama/features/filter_studio/presentation/models/filter_studio_ai_style_match.dart';
 import 'package:lama/features/filter_studio/presentation/models/filter_studio_style_preset.dart';
-import 'package:lama/presentation/pages/PT.dart';
+import 'package:lama/core/ui/AppTokens.dart';
+import 'package:lama/core/ui/app_theme.dart';
 import 'package:lama/presentation/pages/Pro.dart'; // PresetConfig
 
 // ─── Pro design system (same folder — relative) ───────────────────
@@ -31,21 +34,19 @@ class ModernBottomSheet extends StatelessWidget {
   final int tabIndex;
   final ValueChanged<int> onTabChanged;
   final List<SheetTabModel> tabs;
-  final Lang currentLang;
 
   const ModernBottomSheet({
     super.key,
     required this.tabIndex,
     required this.onTabChanged,
     required this.tabs,
-    this.currentLang = Lang.en,
   });
 
   @override
   Widget build(BuildContext context) {
-    final t = T(currentLang);
+    final l10n = AppL10n.of(context);
     return Directionality(
-      textDirection: t.isRTL ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: l10n.isAr ? TextDirection.rtl : TextDirection.ltr,
       child: SafeArea(
         top: false,
         child: Padding(
@@ -56,33 +57,33 @@ class ModernBottomSheet extends StatelessWidget {
             Pro.sp(context, 10),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(PT.r24),
+            borderRadius: BorderRadius.circular(AppTokens.r24),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
                 decoration: BoxDecoration(
-                  color: PT.card.withOpacity(0.92),
-                  borderRadius: BorderRadius.circular(PT.r24),
+                  color: AppTokens.card.withOpacity(0.92),
+                  borderRadius: BorderRadius.circular(AppTokens.r24),
                   border: Border.all(color: Colors.white.withOpacity(0.07)),
-                  boxShadow: PT.elevation,
+                  boxShadow: AppTokens.cardShadow,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(height: PT.s12),
+                    SizedBox(height: AppTokens.s12),
                     Container(
                       width: 40,
                       height: 3.5,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(PT.rFull),
+                        borderRadius: BorderRadius.circular(AppTokens.rFull),
                       ),
                     ),
-                    const SizedBox(height: PT.s12),
+                    SizedBox(height: AppTokens.s12),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: PT.s12),
+                      padding: EdgeInsets.symmetric(horizontal: AppTokens.s12),
                       child: _SegmentedTabs(
-                        labels: tabs.map((tab) => t.of(tab.key)).toList(),
+                        labels: tabs.map((tab) => l10n.get(tab.key)).toList(),
                         index: tabIndex,
                         onChanged: onTabChanged,
                       ),
@@ -90,7 +91,7 @@ class ModernBottomSheet extends StatelessWidget {
                     SizedBox(
                       height: Pro.sheetH(context),
                       child: AnimatedSwitcher(
-                        duration: PT.medium,
+                        duration: const Duration(milliseconds: 280),
                         switchInCurve: Curves.easeOut,
                         switchOutCurve: Curves.easeIn,
                         transitionBuilder: (child, anim) => FadeTransition(
@@ -106,11 +107,11 @@ class ModernBottomSheet extends StatelessWidget {
                         child: KeyedSubtree(
                           key: ValueKey(tabIndex),
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              PT.s16,
-                              PT.s12,
-                              PT.s16,
-                              PT.s16,
+                            padding: EdgeInsets.fromLTRB(
+                              AppTokens.s16,
+                              AppTokens.s12,
+                              AppTokens.s16,
+                              AppTokens.s16,
                             ),
                             child: tabs[tabIndex].child,
                           ),
@@ -146,10 +147,10 @@ class _SegmentedTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRTL = Directionality.of(context) == TextDirection.rtl;
     return Container(
-      padding: const EdgeInsets.all(PT.s4),
+      padding: EdgeInsets.all(AppTokens.s4),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(PT.r16),
+        borderRadius: BorderRadius.circular(AppTokens.r16),
         border: Border.all(color: Colors.white.withOpacity(0.07)),
       ),
       child: LayoutBuilder(builder: (_, cons) {
@@ -157,7 +158,7 @@ class _SegmentedTabs extends StatelessWidget {
         return Stack(
           children: [
             AnimatedPositioned(
-              duration: PT.medium,
+              duration: const Duration(milliseconds: 280),
               curve: Curves.easeOutCubic,
               left: isRTL ? null : itemW * index,
               right: isRTL ? itemW * index : null,
@@ -166,9 +167,9 @@ class _SegmentedTabs extends StatelessWidget {
               width: itemW,
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: PT.gradMint,
-                  borderRadius: BorderRadius.circular(PT.r12),
-                  boxShadow: PT.glow(PT.mint, blur: 12),
+                  gradient: AppTokens.primaryGradient,
+                  borderRadius: BorderRadius.circular(AppTokens.r12),
+                  boxShadow: AppTokens.primaryGlow(0.35),
                 ),
               ),
             ),
@@ -181,15 +182,15 @@ class _SegmentedTabs extends StatelessWidget {
                       HapticFeedback.selectionClick();
                       onChanged(i);
                     },
-                    borderRadius: BorderRadius.circular(PT.r12),
+                    borderRadius: BorderRadius.circular(AppTokens.r12),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: PT.s10),
+                      padding: EdgeInsets.symmetric(vertical: AppTokens.s10),
                       child: AnimatedDefaultTextStyle(
-                        duration: PT.fast,
+                        duration: const Duration(milliseconds: 150),
                         style: TextStyle(
                           fontSize: Pro.sp(context, 12),
                           fontWeight: FontWeight.w800,
-                          color: sel ? Colors.black : PT.t2,
+                          color: sel ? Colors.black : AppTokens.text2,
                         ),
                         child: Text(
                           labels[i],
@@ -214,7 +215,7 @@ class _SegmentedTabs extends StatelessWidget {
 // PRESETS TAB
 // ─────────────────────────────────────────────────────────────────
 class AiStudioTab extends StatelessWidget {
-  final Lang lang;
+  final AppL10n l10n;
   final bool hasImage;
   final FilterStudioAiInsight? insight;
   final bool isLoading;
@@ -230,7 +231,7 @@ class AiStudioTab extends StatelessWidget {
 
   const AiStudioTab({
     super.key,
-    required this.lang,
+    required this.l10n,
     required this.hasImage,
     required this.insight,
     required this.isLoading,
@@ -247,16 +248,15 @@ class AiStudioTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = T(lang);
     final activeInsight = insight;
 
     if (isLoading) {
-      return _AiLoadingState(t: t);
+      return _AiLoadingState(l10n: l10n);
     }
 
     if (activeInsight == null) {
       return _AiEmptyState(
-        t: t,
+        l10n: l10n,
         hasImage: hasImage,
         onAnalyze: hasImage ? onAnalyze : null,
       );
@@ -264,7 +264,7 @@ class AiStudioTab extends StatelessWidget {
 
     final accent = presets[activeInsight.recommendedPreset]?.auraColor ??
         presets[activeInsight.recommendedPreset]?.colorOverlay ??
-        PT.cyan;
+        AppTokens.info;
     final quickActionWidth =
         Pro.val(context, phone: 104.0, tablet: 128.0, desktop: 146.0);
 
@@ -277,9 +277,9 @@ class AiStudioTab extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  t.of('ai_report'),
-                  style: const TextStyle(
-                    color: PT.t1,
+                  l10n.get('ai_report'),
+                  style: TextStyle(
+                    color: AppTokens.text,
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                   ),
@@ -287,27 +287,27 @@ class AiStudioTab extends StatelessWidget {
               ),
               _SecondaryActionBtn(
                 icon: Icons.auto_awesome_rounded,
-                label: t.of('rerun_ai'),
+                label: l10n.get('rerun_ai'),
                 color: accent,
                 onTap: onAnalyze,
               ),
             ],
           ),
-          const SizedBox(height: PT.s10),
+          SizedBox(height: AppTokens.s10),
           Container(
-            padding: const EdgeInsets.all(PT.s16),
+            padding: EdgeInsets.all(AppTokens.s16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   accent.withOpacity(0.18),
-                  PT.card2.withOpacity(0.86),
+                  AppTokens.card2.withOpacity(0.86),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(PT.r20),
+              borderRadius: BorderRadius.circular(AppTokens.r20),
               border: Border.all(color: accent.withOpacity(0.28)),
-              boxShadow: PT.glow(accent, blur: 24),
+              boxShadow: AppTokens.primaryGlow(0.35),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,36 +319,36 @@ class AiStudioTab extends StatelessWidget {
                       height: 42,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [accent, PT.mint],
+                          colors: [accent, AppTokens.primary],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(PT.r16),
+                        borderRadius: BorderRadius.circular(AppTokens.r16),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.auto_awesome_rounded,
                         color: Colors.black,
                         size: 20,
                       ),
                     ),
-                    const SizedBox(width: PT.s12),
+                    SizedBox(width: AppTokens.s12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            t.of('ai_director'),
-                            style: const TextStyle(
-                              color: PT.t1,
+                            l10n.get('ai_director'),
+                            style: TextStyle(
+                              color: AppTokens.text,
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const SizedBox(height: PT.s4),
+                          SizedBox(height: AppTokens.s4),
                           Text(
                             activeInsight.headline,
-                            style: const TextStyle(
-                              color: PT.t2,
+                            style: TextStyle(
+                              color: AppTokens.text2,
                               fontSize: 12,
                               height: 1.4,
                             ),
@@ -358,25 +358,25 @@ class AiStudioTab extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: PT.s12),
+                SizedBox(height: AppTokens.s12),
                 Wrap(
-                  spacing: PT.s8,
-                  runSpacing: PT.s8,
+                  spacing: AppTokens.s8,
+                  runSpacing: AppTokens.s8,
                   children: [
-                    _MetaChip(label: activeInsight.sceneLabel, color: PT.cyan),
-                    _MetaChip(label: activeInsight.moodLabel, color: PT.gold),
+                    _MetaChip(label: activeInsight.sceneLabel, color: AppTokens.info),
+                    _MetaChip(label: activeInsight.moodLabel, color: AppTokens.warning),
                     _MetaChip(
                       label:
-                          '${t.of('lighting')}: ${activeInsight.lightingLabel}',
+                          '${l10n.get('lighting')}: ${activeInsight.lightingLabel}',
                       color: accent,
                     ),
                   ],
                 ),
-                const SizedBox(height: PT.s12),
+                SizedBox(height: AppTokens.s12),
                 Text(
                   activeInsight.summary,
-                  style: const TextStyle(
-                    color: PT.t2,
+                  style: TextStyle(
+                    color: AppTokens.text2,
                     fontSize: 12,
                     height: 1.55,
                   ),
@@ -384,51 +384,51 @@ class AiStudioTab extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: PT.s12),
+          SizedBox(height: AppTokens.s12),
           Wrap(
-            spacing: PT.s10,
-            runSpacing: PT.s10,
+            spacing: AppTokens.s10,
+            runSpacing: AppTokens.s10,
             children: [
               _AiStatTile(
-                label: t.of('focus'),
+                label: l10n.get('focus'),
                 value: activeInsight.subjectFocus,
-                color: PT.mint,
+                color: AppTokens.primary,
               ),
               _AiStatTile(
-                label: t.of('energy'),
+                label: l10n.get('energy'),
                 value: activeInsight.colorEnergy,
-                color: PT.cyan,
+                color: AppTokens.info,
               ),
               _AiStatTile(
-                label: t.of('range'),
+                label: l10n.get('range'),
                 value: activeInsight.dynamicRange,
-                color: PT.gold,
+                color: AppTokens.warning,
               ),
               _AiStatTile(
-                label: t.of('ai_match'),
+                label: l10n.get('ai_match'),
                 value: activeInsight.confidence,
                 color: accent,
               ),
             ],
           ),
-          const SizedBox(height: PT.s14),
+          SizedBox(height: AppTokens.s14),
           GestureDetector(
             onTap: onApplyInsight,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: PT.s12,
-                vertical: PT.s12,
+              padding: EdgeInsets.symmetric(
+                horizontal: AppTokens.s12,
+                vertical: AppTokens.s12,
               ),
               decoration: BoxDecoration(
-                gradient: PT.gradMint,
-                borderRadius: BorderRadius.circular(PT.r16),
-                boxShadow: PT.glow(PT.mint, blur: 18),
+                gradient: AppTokens.primaryGradient,
+                borderRadius: BorderRadius.circular(AppTokens.r16),
+                boxShadow: AppTokens.primaryGlow(0.35),
               ),
               child: Text(
-                t.of('apply_direction'),
+                l10n.get('apply_direction'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w900,
                   fontSize: 12,
@@ -436,26 +436,26 @@ class AiStudioTab extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: PT.s14),
+          SizedBox(height: AppTokens.s14),
           Text(
-            t.of('quick_actions'),
-            style: const TextStyle(
-              color: PT.t1,
+            l10n.get('quick_actions'),
+            style: TextStyle(
+              color: AppTokens.text,
               fontSize: 12,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: PT.s8),
+          SizedBox(height: AppTokens.s8),
           Wrap(
-            spacing: PT.s8,
-            runSpacing: PT.s8,
+            spacing: AppTokens.s8,
+            runSpacing: AppTokens.s8,
             children: [
               SizedBox(
                 width: quickActionWidth,
                 child: _QuickActionBtn(
                   icon: Icons.center_focus_strong_rounded,
-                  label: t.of('smart_focus'),
-                  color: PT.cyan,
+                  label: l10n.get('smart_focus'),
+                  color: AppTokens.info,
                   onTap: onSmartFocus,
                 ),
               ),
@@ -463,8 +463,8 @@ class AiStudioTab extends StatelessWidget {
                 width: quickActionWidth,
                 child: _QuickActionBtn(
                   icon: Icons.movie_creation_outlined,
-                  label: t.of('cinema_boost'),
-                  color: PT.gold,
+                  label: l10n.get('cinema_boost'),
+                  color: AppTokens.warning,
                   onTap: onCinemaBoost,
                 ),
               ),
@@ -472,30 +472,30 @@ class AiStudioTab extends StatelessWidget {
                 width: quickActionWidth,
                 child: _QuickActionBtn(
                   icon: Icons.auto_fix_high_rounded,
-                  label: t.of('clean_pro'),
-                  color: PT.mint,
+                  label: l10n.get('clean_pro'),
+                  color: AppTokens.primary,
                   onTap: onCleanPro,
                 ),
               ),
             ],
           ),
           if (styleMatches.isNotEmpty) ...[
-            const SizedBox(height: PT.s14),
+            SizedBox(height: AppTokens.s14),
             Text(
-              t.of('ai_picks'),
-              style: const TextStyle(
-                color: PT.t1,
+              l10n.get('ai_picks'),
+              style: TextStyle(
+                color: AppTokens.text,
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
               ),
             ),
-            const SizedBox(height: PT.s8),
+            SizedBox(height: AppTokens.s8),
             SizedBox(
               height: 154,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: styleMatches.length,
-                separatorBuilder: (_, __) => const SizedBox(width: PT.s10),
+                separatorBuilder: (_, __) => SizedBox(width: AppTokens.s10),
                 itemBuilder: (_, index) {
                   final match = styleMatches[index];
                   return SizedBox(
@@ -506,7 +506,7 @@ class AiStudioTab extends StatelessWidget {
                       desktop: 248.0,
                     ),
                     child: _AiStyleMatchCard(
-                      lang: lang,
+                      l10n: l10n,
                       match: match,
                       onTap: () => onApplyStyle(match.style),
                     ),
@@ -515,19 +515,19 @@ class AiStudioTab extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: PT.s14),
+          SizedBox(height: AppTokens.s14),
           Text(
-            t.of('recommended_presets'),
-            style: const TextStyle(
-              color: PT.t1,
+            l10n.get('recommended_presets'),
+            style: TextStyle(
+              color: AppTokens.text,
               fontSize: 12,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: PT.s8),
+          SizedBox(height: AppTokens.s8),
           Wrap(
-            spacing: PT.s8,
-            runSpacing: PT.s8,
+            spacing: AppTokens.s8,
+            runSpacing: AppTokens.s8,
             children: activeInsight.alternatePresets.map((preset) {
               final config = presets[preset];
               final presetAccent =
@@ -547,35 +547,35 @@ class AiStudioTab extends StatelessWidget {
 }
 
 class _AiLoadingState extends StatelessWidget {
-  final T t;
+  final AppL10n l10n;
 
-  const _AiLoadingState({required this.t});
+  const _AiLoadingState({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(PT.s20),
+      padding: EdgeInsets.all(AppTokens.s20),
       decoration: BoxDecoration(
-        color: PT.card2,
-        borderRadius: BorderRadius.circular(PT.r20),
+        color: AppTokens.card2,
+        borderRadius: BorderRadius.circular(AppTokens.r20),
         border: Border.all(color: Colors.white.withOpacity(0.07)),
       ),
       child: Row(
         children: [
-          const SizedBox(
+          SizedBox(
             width: 22,
             height: 22,
             child: CircularProgressIndicator(
               strokeWidth: 2.2,
-              color: PT.mint,
+              color: AppTokens.primary,
             ),
           ),
-          const SizedBox(width: PT.s12),
+          SizedBox(width: AppTokens.s12),
           Expanded(
             child: Text(
-              t.of('ai_loading'),
-              style: const TextStyle(
-                color: PT.t2,
+              l10n.get('ai_loading'),
+              style: TextStyle(
+                color: AppTokens.text2,
                 fontSize: 12,
                 height: 1.45,
               ),
@@ -588,12 +588,12 @@ class _AiLoadingState extends StatelessWidget {
 }
 
 class _AiEmptyState extends StatelessWidget {
-  final T t;
+  final AppL10n l10n;
   final bool hasImage;
   final VoidCallback? onAnalyze;
 
   const _AiEmptyState({
-    required this.t,
+    required this.l10n,
     required this.hasImage,
     required this.onAnalyze,
   });
@@ -606,19 +606,19 @@ class _AiEmptyState extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(PT.s16),
+            padding: EdgeInsets.all(AppTokens.s16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  PT.purple.withOpacity(0.18),
-                  PT.card2.withOpacity(0.90),
+                  AppTokens.accent.withOpacity(0.18),
+                  AppTokens.card2.withOpacity(0.90),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(PT.r20),
+              borderRadius: BorderRadius.circular(AppTokens.r20),
               border: Border.all(color: Colors.white.withOpacity(0.08)),
-              boxShadow: PT.glow(PT.purple, blur: 28),
+              boxShadow: AppTokens.primaryGlow(0.35),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -629,44 +629,44 @@ class _AiEmptyState extends StatelessWidget {
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        gradient: PT.gradPurple,
-                        borderRadius: BorderRadius.circular(PT.r16),
+                        gradient: AppTokens.primaryGradient,
+                        borderRadius: BorderRadius.circular(AppTokens.r16),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.auto_awesome_rounded,
                         color: Colors.white,
                         size: 22,
                       ),
                     ),
-                    const SizedBox(width: PT.s12),
+                    SizedBox(width: AppTokens.s12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            t.of('ai_manual_title'),
-                            style: const TextStyle(
-                              color: PT.t1,
+                            l10n.get('ai_manual_title'),
+                            style: TextStyle(
+                              color: AppTokens.text,
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const SizedBox(height: PT.s4),
+                          SizedBox(height: AppTokens.s4),
                           Text(
                             hasImage
-                                ? t.of('ai_manual_desc')
-                                : t.of('ai_no_image_desc'),
-                            style: const TextStyle(
-                              color: PT.t2,
+                                ? l10n.get('ai_manual_desc')
+                                : l10n.get('ai_no_image_desc'),
+                            style: TextStyle(
+                              color: AppTokens.text2,
                               fontSize: 12,
                               height: 1.5,
                             ),
                           ),
-                          const SizedBox(height: PT.s6),
+                          SizedBox(height: AppTokens.s6),
                           Text(
-                            t.of('background_optional'),
-                            style: const TextStyle(
-                              color: PT.t3,
+                            l10n.get('background_optional'),
+                            style: TextStyle(
+                              color: (AppTokens.text2.withOpacity(0.7)),
                               fontSize: 11,
                               height: 1.4,
                             ),
@@ -676,43 +676,43 @@ class _AiEmptyState extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: PT.s14),
+                SizedBox(height: AppTokens.s14),
                 Wrap(
-                  spacing: PT.s8,
-                  runSpacing: PT.s8,
+                  spacing: AppTokens.s8,
+                  runSpacing: AppTokens.s8,
                   children: [
-                    _MetaChip(label: t.of('ai_manual'), color: PT.purple),
+                    _MetaChip(label: l10n.get('ai_manual'), color: AppTokens.accent),
                     _MetaChip(
-                        label: t.of('ai_recommendations'), color: PT.cyan),
-                    _MetaChip(label: t.of('quick_actions'), color: PT.gold),
+                        label: l10n.get('ai_recommendations'), color: AppTokens.info),
+                    _MetaChip(label: l10n.get('quick_actions'), color: AppTokens.warning),
                   ],
                 ),
-                const SizedBox(height: PT.s14),
+                SizedBox(height: AppTokens.s14),
                 SizedBox(
                   width: double.infinity,
                   child: GestureDetector(
                     onTap: onAnalyze,
                     child: AnimatedOpacity(
-                      duration: PT.fast,
+                      duration: const Duration(milliseconds: 150),
                       opacity: onAnalyze == null ? 0.45 : 1,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: PT.s12,
-                          vertical: PT.s12,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppTokens.s12,
+                          vertical: AppTokens.s12,
                         ),
                         decoration: BoxDecoration(
-                          gradient: onAnalyze == null ? null : PT.gradMint,
-                          color: onAnalyze == null ? PT.card : null,
-                          borderRadius: BorderRadius.circular(PT.r16),
+                          gradient: onAnalyze == null ? null : AppTokens.primaryGradient,
+                          color: onAnalyze == null ? AppTokens.card : null,
+                          borderRadius: BorderRadius.circular(AppTokens.r16),
                           boxShadow: onAnalyze == null
                               ? const []
-                              : PT.glow(PT.mint, blur: 18),
+                              : AppTokens.primaryGlow(0.35),
                         ),
                         child: Text(
-                          hasImage ? t.of('ai_auto_fix') : t.of('tap_to_open'),
+                          hasImage ? l10n.get('ai_auto_fix') : l10n.get('tap_to_open'),
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: onAnalyze == null ? PT.t3 : Colors.black,
+                            color: onAnalyze == null ? (AppTokens.text2.withOpacity(0.7)) : Colors.black,
                             fontWeight: FontWeight.w900,
                             fontSize: 12,
                           ),
@@ -724,28 +724,28 @@ class _AiEmptyState extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: PT.s12),
+          SizedBox(height: AppTokens.s12),
           Wrap(
-            spacing: PT.s10,
-            runSpacing: PT.s10,
+            spacing: AppTokens.s10,
+            runSpacing: AppTokens.s10,
             children: [
               _AiFeatureTile(
                 icon: Icons.landscape_rounded,
-                title: t.of('scene'),
-                body: t.of('ai_feature_scene'),
-                color: PT.cyan,
+                title: l10n.get('scene'),
+                body: l10n.get('ai_feature_scene'),
+                color: AppTokens.info,
               ),
               _AiFeatureTile(
                 icon: Icons.style_rounded,
-                title: t.of('recommended_presets'),
-                body: t.of('ai_feature_preset'),
-                color: PT.gold,
+                title: l10n.get('recommended_presets'),
+                body: l10n.get('ai_feature_preset'),
+                color: AppTokens.warning,
               ),
               _AiFeatureTile(
                 icon: Icons.tune_rounded,
-                title: t.of('quick_actions'),
-                body: t.of('ai_feature_finish'),
-                color: PT.mint,
+                title: l10n.get('quick_actions'),
+                body: l10n.get('ai_feature_finish'),
+                color: AppTokens.primary,
               ),
             ],
           ),
@@ -772,17 +772,17 @@ class _AiFeatureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: Pro.val(context, phone: 156.0, tablet: 178.0, desktop: 188.0),
-      padding: const EdgeInsets.all(PT.s14),
+      padding: EdgeInsets.all(AppTokens.s14),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(PT.r20),
+        borderRadius: BorderRadius.circular(AppTokens.r20),
         border: Border.all(color: color.withOpacity(0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 18, color: color),
-          const SizedBox(height: PT.s10),
+          SizedBox(height: AppTokens.s10),
           Text(
             title,
             style: TextStyle(
@@ -791,11 +791,11 @@ class _AiFeatureTile extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: PT.s6),
+          SizedBox(height: AppTokens.s6),
           Text(
             body,
-            style: const TextStyle(
-              color: PT.t2,
+            style: TextStyle(
+              color: AppTokens.text2,
               fontSize: 11,
               height: 1.45,
             ),
@@ -822,10 +822,10 @@ class _AiStatTile extends StatelessWidget {
     final pct = (value * 100).round().clamp(0, 100);
     return Container(
       width: Pro.val(context, phone: 132.0, tablet: 142.0, desktop: 150.0),
-      padding: const EdgeInsets.all(PT.s12),
+      padding: EdgeInsets.all(AppTokens.s12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(PT.r16),
+        borderRadius: BorderRadius.circular(AppTokens.r16),
         border: Border.all(color: color.withOpacity(0.22)),
       ),
       child: Column(
@@ -833,13 +833,13 @@ class _AiStatTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: PT.t2,
+            style: TextStyle(
+              color: AppTokens.text2,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: PT.s8),
+          SizedBox(height: AppTokens.s8),
           Text(
             '$pct%',
             style: TextStyle(
@@ -848,9 +848,9 @@ class _AiStatTile extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: PT.s8),
+          SizedBox(height: AppTokens.s8),
           ClipRRect(
-            borderRadius: BorderRadius.circular(PT.rFull),
+            borderRadius: BorderRadius.circular(AppTokens.rFull),
             child: LinearProgressIndicator(
               value: value.clamp(0.0, 1.0),
               minHeight: 4,
@@ -885,19 +885,19 @@ class _QuickActionBtn extends StatelessWidget {
         onTap();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: PT.s10,
-          vertical: PT.s12,
+        padding: EdgeInsets.symmetric(
+          horizontal: AppTokens.s10,
+          vertical: AppTokens.s12,
         ),
         decoration: BoxDecoration(
           color: color.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(PT.r16),
+          borderRadius: BorderRadius.circular(AppTokens.r16),
           border: Border.all(color: color.withOpacity(0.24)),
         ),
         child: Column(
           children: [
             Icon(icon, size: 18, color: color),
-            const SizedBox(height: PT.s6),
+            SizedBox(height: AppTokens.s6),
             Text(
               label,
               textAlign: TextAlign.center,
@@ -936,17 +936,17 @@ class _SecondaryActionBtn extends StatelessWidget {
       },
       child: Container(
         padding:
-            const EdgeInsets.symmetric(horizontal: PT.s12, vertical: PT.s8),
+            EdgeInsets.symmetric(horizontal: AppTokens.s12, vertical: AppTokens.s8),
         decoration: BoxDecoration(
           color: color.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(PT.rFull),
+          borderRadius: BorderRadius.circular(AppTokens.rFull),
           border: Border.all(color: color.withOpacity(0.24)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 14, color: color),
-            const SizedBox(width: PT.s6),
+            SizedBox(width: AppTokens.s6),
             Text(
               label,
               style: TextStyle(
@@ -983,23 +983,23 @@ class _AiPresetChip extends StatelessWidget {
         onTap();
       },
       child: AnimatedContainer(
-        duration: PT.fast,
+        duration: const Duration(milliseconds: 150),
         padding:
-            const EdgeInsets.symmetric(horizontal: PT.s12, vertical: PT.s10),
+            EdgeInsets.symmetric(horizontal: AppTokens.s12, vertical: AppTokens.s10),
         decoration: BoxDecoration(
           color: highlighted
               ? color.withOpacity(0.14)
               : Colors.white.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(PT.rFull),
+          borderRadius: BorderRadius.circular(AppTokens.rFull),
           border: Border.all(
             color: highlighted ? color : color.withOpacity(0.20),
           ),
-          boxShadow: highlighted ? PT.glow(color, blur: 14) : const [],
+          boxShadow: highlighted ? AppTokens.primaryGlow(0.35) : const [],
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: highlighted ? color : PT.t1,
+            color: highlighted ? color : AppTokens.text,
             fontSize: 11,
             fontWeight: FontWeight.w800,
           ),
@@ -1010,19 +1010,19 @@ class _AiPresetChip extends StatelessWidget {
 }
 
 class _AiStyleMatchCard extends StatelessWidget {
-  final Lang lang;
+  final AppL10n l10n;
   final FilterStudioAiStyleMatch match;
   final VoidCallback onTap;
 
   const _AiStyleMatchCard({
-    required this.lang,
+    required this.l10n,
     required this.match,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final t = T(lang);
+    final lang = l10n.locale.languageCode == 'ar' ? Lang.ar : Lang.en;
     final style = match.style;
     final accent = style.accent;
     final score = (match.score * 100).round().clamp(0, 100);
@@ -1033,19 +1033,19 @@ class _AiStyleMatchCard extends StatelessWidget {
         onTap();
       },
       child: Container(
-        padding: const EdgeInsets.all(PT.s14),
+        padding: EdgeInsets.all(AppTokens.s14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
               accent.withOpacity(0.18),
-              PT.card2.withOpacity(0.94),
+              AppTokens.card2.withOpacity(0.94),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(PT.r20),
+          borderRadius: BorderRadius.circular(AppTokens.r20),
           border: Border.all(color: accent.withOpacity(0.28)),
-          boxShadow: PT.glow(accent, blur: 18),
+          boxShadow: AppTokens.primaryGlow(0.35),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1057,11 +1057,11 @@ class _AiStyleMatchCard extends StatelessWidget {
                   height: 34,
                   decoration: BoxDecoration(
                     color: accent.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(PT.r12),
+                    borderRadius: BorderRadius.circular(AppTokens.r12),
                   ),
                   child: Icon(style.icon, size: 18, color: accent),
                 ),
-                const SizedBox(width: PT.s10),
+                SizedBox(width: AppTokens.s10),
                 Expanded(
                   child: Text(
                     style.badge(lang),
@@ -1075,17 +1075,17 @@ class _AiStyleMatchCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: PT.s8,
-                    vertical: PT.s6,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTokens.s8,
+                    vertical: AppTokens.s6,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(PT.rFull),
+                    borderRadius: BorderRadius.circular(AppTokens.rFull),
                     border: Border.all(color: accent.withOpacity(0.24)),
                   ),
                   child: Text(
-                    '$score% ${t.of('ai_match')}',
+                    '$score% ${l10n.get('ai_match')}',
                     style: TextStyle(
                       color: accent,
                       fontSize: 9,
@@ -1095,24 +1095,24 @@ class _AiStyleMatchCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: PT.s12),
+            SizedBox(height: AppTokens.s12),
             Text(
               style.name(lang),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: PT.t1,
+              style: TextStyle(
+                color: AppTokens.text,
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
               ),
             ),
-            const SizedBox(height: PT.s6),
+            SizedBox(height: AppTokens.s6),
             Text(
               style.tagline(lang),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: PT.t2,
+              style: TextStyle(
+                color: AppTokens.text2,
                 fontSize: 11,
                 height: 1.45,
               ),
@@ -1125,16 +1125,16 @@ class _AiStyleMatchCard extends StatelessWidget {
                     style.categoryLabel(lang),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: PT.t3,
+                    style: TextStyle(
+                      color: (AppTokens.text2.withOpacity(0.7)),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const SizedBox(width: PT.s8),
+                SizedBox(width: AppTokens.s8),
                 Text(
-                  t.of('instant_apply'),
+                  l10n.get('instant_apply'),
                   style: TextStyle(
                     color: accent,
                     fontSize: 10,
@@ -1162,10 +1162,10 @@ class _MetaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: PT.s10, vertical: PT.s7),
+      padding: EdgeInsets.symmetric(horizontal: AppTokens.s10, vertical: AppTokens.s7),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(PT.rFull),
+        borderRadius: BorderRadius.circular(AppTokens.rFull),
         border: Border.all(color: color.withOpacity(0.26)),
       ),
       child: Text(
@@ -1181,7 +1181,7 @@ class _MetaChip extends StatelessWidget {
 }
 
 class PresetsTab extends StatefulWidget {
-  final Lang lang;
+  final AppL10n l10n;
   final Map<AppPreset, PresetConfig> presets;
   final AppPreset selectedPreset;
   final ValueChanged<AppPreset> onPresetSelected;
@@ -1191,7 +1191,7 @@ class PresetsTab extends StatefulWidget {
 
   const PresetsTab({
     super.key,
-    required this.lang,
+    required this.l10n,
     required this.presets,
     required this.selectedPreset,
     required this.onPresetSelected,
@@ -1209,7 +1209,8 @@ class _PresetsTabState extends State<PresetsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final t = T(widget.lang);
+    final l10n = widget.l10n;
+    final lang = l10n.locale.languageCode == 'ar' ? Lang.ar : Lang.en;
     final featuredStyles =
         widget.styleLibrary.where((style) => style.featured).toList();
     final visibleStyles = _categoryId == 'all'
@@ -1218,8 +1219,8 @@ class _PresetsTabState extends State<PresetsTab> {
             .where((style) => style.categoryId == _categoryId)
             .toList();
     final categories = <_StyleCategoryFilter>[
-      _StyleCategoryFilter(id: 'all', label: t.of('all_styles')),
-      ..._buildCategoryFilters(widget.styleLibrary, widget.lang),
+      _StyleCategoryFilter(id: 'all', label: l10n.get('all_styles')),
+      ..._buildCategoryFilters(widget.styleLibrary, lang),
     ];
 
     return SingleChildScrollView(
@@ -1228,32 +1229,32 @@ class _PresetsTabState extends State<PresetsTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _PresetLibraryHero(
-            t: t,
+            l10n: l10n,
             totalStyles: widget.styleLibrary.length,
             totalPacks: widget.styleLibrary
                 .map((style) => style.categoryId)
                 .toSet()
                 .length,
           ),
-          const SizedBox(height: PT.s16),
+          SizedBox(height: AppTokens.s16),
           _SectionHeader(
-            title: t.of('featured_drops'),
-            subtitle: t.of('featured_drops_desc'),
+            title: l10n.get('featured_drops'),
+            subtitle: l10n.get('featured_drops_desc'),
           ),
-          const SizedBox(height: PT.s10),
+          SizedBox(height: AppTokens.s10),
           SizedBox(
             height: 164,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: featuredStyles.length,
-              separatorBuilder: (_, __) => const SizedBox(width: PT.s10),
+              separatorBuilder: (_, __) => SizedBox(width: AppTokens.s10),
               itemBuilder: (_, index) {
                 final style = featuredStyles[index];
                 return SizedBox(
                   width: Pro.val(context,
                       phone: 220.0, tablet: 248.0, desktop: 272.0),
                   child: _FeaturedStyleCard(
-                    lang: widget.lang,
+                    l10n: l10n,
                     style: style,
                     selected: style.id == widget.selectedStyleId,
                     onTap: () => widget.onStyleSelected(style),
@@ -1262,12 +1263,12 @@ class _PresetsTabState extends State<PresetsTab> {
               },
             ),
           ),
-          const SizedBox(height: PT.s16),
+          SizedBox(height: AppTokens.s16),
           _SectionHeader(
-            title: t.of('core_presets'),
-            subtitle: t.of('core_presets_desc'),
+            title: l10n.get('core_presets'),
+            subtitle: l10n.get('core_presets_desc'),
           ),
-          const SizedBox(height: PT.s10),
+          SizedBox(height: AppTokens.s10),
           SizedBox(
             height: 168,
             child: ListView.builder(
@@ -1280,6 +1281,7 @@ class _PresetsTabState extends State<PresetsTab> {
                 final isSelected = widget.selectedStyleId == null &&
                     preset == widget.selectedPreset;
                 return _CorePresetCard(
+                  l10n: l10n,
                   preset: preset,
                   config: config,
                   isSelected: isSelected,
@@ -1288,19 +1290,19 @@ class _PresetsTabState extends State<PresetsTab> {
               },
             ),
           ),
-          const SizedBox(height: PT.s16),
+          SizedBox(height: AppTokens.s16),
           _SectionHeader(
-            title: t.of('curated_packs'),
-            subtitle: t.of('curated_packs_desc'),
+            title: l10n.get('curated_packs'),
+            subtitle: l10n.get('curated_packs_desc'),
           ),
-          const SizedBox(height: PT.s10),
+          SizedBox(height: AppTokens.s10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: categories.map((category) {
                 final isSelected = category.id == _categoryId;
                 return Padding(
-                  padding: const EdgeInsets.only(right: PT.s8),
+                  padding: EdgeInsets.only(right: AppTokens.s8),
                   child: _CategoryChip(
                     label: category.label,
                     selected: isSelected,
@@ -1310,13 +1312,13 @@ class _PresetsTabState extends State<PresetsTab> {
               }).toList(),
             ),
           ),
-          const SizedBox(height: PT.s16),
+          SizedBox(height: AppTokens.s16),
           _SectionHeader(
-            title: t.of('signature_library'),
+            title: l10n.get('signature_library'),
             subtitle:
-                '${visibleStyles.length} ${t.of('signature_library_count')}',
+                '${visibleStyles.length} ${l10n.get('signature_library_count')}',
           ),
-          const SizedBox(height: PT.s10),
+          SizedBox(height: AppTokens.s10),
           LayoutBuilder(
             builder: (context, constraints) {
               final columns = constraints.maxWidth >= 900
@@ -1324,7 +1326,7 @@ class _PresetsTabState extends State<PresetsTab> {
                   : constraints.maxWidth >= 560
                       ? 2
                       : 1;
-              final spacing = PT.s12;
+              final spacing = AppTokens.s12;
               final itemWidth =
                   (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
 
@@ -1335,7 +1337,7 @@ class _PresetsTabState extends State<PresetsTab> {
                   return SizedBox(
                     width: itemWidth,
                     child: _StyleGridCard(
-                      lang: widget.lang,
+                      l10n: l10n,
                       style: style,
                       selected: style.id == widget.selectedStyleId,
                       onTap: () => widget.onStyleSelected(style),
@@ -1383,12 +1385,12 @@ class _StyleCategoryFilter {
 }
 
 class _PresetLibraryHero extends StatelessWidget {
-  final T t;
+  final AppL10n l10n;
   final int totalStyles;
   final int totalPacks;
 
   const _PresetLibraryHero({
-    required this.t,
+    required this.l10n,
     required this.totalStyles,
     required this.totalPacks,
   });
@@ -1397,60 +1399,60 @@ class _PresetLibraryHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(PT.s16),
+      padding: EdgeInsets.all(AppTokens.s16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            PT.cyan.withOpacity(0.16),
-            PT.card2.withOpacity(0.92),
-            PT.purple.withOpacity(0.12),
+            AppTokens.info.withOpacity(0.16),
+            AppTokens.card2.withOpacity(0.92),
+            AppTokens.accent.withOpacity(0.12),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(PT.r24),
+        borderRadius: BorderRadius.circular(AppTokens.r24),
         border: Border.all(color: Colors.white.withOpacity(0.08)),
-        boxShadow: PT.glow(PT.cyan, blur: 28),
+        boxShadow: AppTokens.primaryGlow(0.35),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            t.of('signature_library'),
-            style: const TextStyle(
-              color: PT.t1,
+            l10n.get('signature_library'),
+            style: TextStyle(
+              color: AppTokens.text,
               fontSize: 15,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: PT.s6),
+          SizedBox(height: AppTokens.s6),
           Text(
-            t.of('signature_library_desc'),
-            style: const TextStyle(
-              color: PT.t2,
+            l10n.get('signature_library_desc'),
+            style: TextStyle(
+              color: AppTokens.text2,
               fontSize: 12,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: PT.s14),
+          SizedBox(height: AppTokens.s14),
           Wrap(
-            spacing: PT.s10,
-            runSpacing: PT.s10,
+            spacing: AppTokens.s10,
+            runSpacing: AppTokens.s10,
             children: [
               _LibraryStatPill(
                 value: '$totalStyles',
-                label: t.of('looks_label'),
-                color: PT.cyan,
+                label: l10n.get('looks_label'),
+                color: AppTokens.info,
               ),
               _LibraryStatPill(
                 value: '$totalPacks',
-                label: t.of('packs_label'),
-                color: PT.gold,
+                label: l10n.get('packs_label'),
+                color: AppTokens.warning,
               ),
               _LibraryStatPill(
                 value: '1 Tap',
-                label: t.of('instant_apply'),
-                color: PT.mint,
+                label: l10n.get('instant_apply'),
+                color: AppTokens.primary,
               ),
             ],
           ),
@@ -1474,10 +1476,10 @@ class _LibraryStatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: PT.s12, vertical: PT.s10),
+      padding: EdgeInsets.symmetric(horizontal: AppTokens.s12, vertical: AppTokens.s10),
       decoration: BoxDecoration(
         color: color.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(PT.r16),
+        borderRadius: BorderRadius.circular(AppTokens.r16),
         border: Border.all(color: color.withOpacity(0.24)),
       ),
       child: Column(
@@ -1493,8 +1495,8 @@ class _LibraryStatPill extends StatelessWidget {
           ),
           Text(
             label,
-            style: const TextStyle(
-              color: PT.t2,
+            style: TextStyle(
+              color: AppTokens.text2,
               fontSize: 10,
               fontWeight: FontWeight.w700,
             ),
@@ -1521,17 +1523,17 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            color: PT.t1,
+          style: TextStyle(
+            color: AppTokens.text,
             fontSize: 13,
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: PT.s4),
+        SizedBox(height: AppTokens.s4),
         Text(
           subtitle,
-          style: const TextStyle(
-            color: PT.t3,
+          style: TextStyle(
+            color: (AppTokens.text2.withOpacity(0.7)),
             fontSize: 11,
             height: 1.4,
           ),
@@ -1560,13 +1562,13 @@ class _CategoryChip extends StatelessWidget {
         onTap();
       },
       child: AnimatedContainer(
-        duration: PT.fast,
+        duration: const Duration(milliseconds: 150),
         padding:
-            const EdgeInsets.symmetric(horizontal: PT.s12, vertical: PT.s8),
+            EdgeInsets.symmetric(horizontal: AppTokens.s12, vertical: AppTokens.s8),
         decoration: BoxDecoration(
-          gradient: selected ? PT.gradMint : null,
+          gradient: selected ? AppTokens.primaryGradient : null,
           color: selected ? null : Colors.white.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(PT.rFull),
+          borderRadius: BorderRadius.circular(AppTokens.rFull),
           border: Border.all(
             color:
                 selected ? Colors.transparent : Colors.white.withOpacity(0.08),
@@ -1575,7 +1577,7 @@ class _CategoryChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.black : PT.t2,
+            color: selected ? Colors.black : AppTokens.text2,
             fontSize: 11,
             fontWeight: FontWeight.w800,
           ),
@@ -1586,13 +1588,13 @@ class _CategoryChip extends StatelessWidget {
 }
 
 class _FeaturedStyleCard extends StatelessWidget {
-  final Lang lang;
+  final AppL10n l10n;
   final FilterStudioStylePreset style;
   final bool selected;
   final VoidCallback onTap;
 
   const _FeaturedStyleCard({
-    required this.lang,
+    required this.l10n,
     required this.style,
     required this.selected,
     required this.onTap,
@@ -1600,29 +1602,30 @@ class _FeaturedStyleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = l10n.locale.languageCode == 'ar' ? Lang.ar : Lang.en;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
       child: AnimatedContainer(
-        duration: PT.medium,
-        padding: const EdgeInsets.all(PT.s14),
+        duration: const Duration(milliseconds: 280),
+        padding: EdgeInsets.all(AppTokens.s14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
               style.accent.withOpacity(selected ? 0.22 : 0.16),
-              PT.card2.withOpacity(0.94),
+              AppTokens.card2.withOpacity(0.94),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(PT.r20),
+          borderRadius: BorderRadius.circular(AppTokens.r20),
           border: Border.all(
             color: selected ? style.accent : Colors.white.withOpacity(0.08),
             width: selected ? 1.6 : 1,
           ),
-          boxShadow: selected ? PT.glow(style.accent, blur: 22) : const [],
+          boxShadow: selected ? AppTokens.primaryGlow(0.35) : const [],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1630,13 +1633,13 @@ class _FeaturedStyleCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: PT.s8,
-                    vertical: PT.s4,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTokens.s8,
+                    vertical: AppTokens.s4,
                   ),
                   decoration: BoxDecoration(
                     color: style.accent.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(PT.rFull),
+                    borderRadius: BorderRadius.circular(AppTokens.rFull),
                   ),
                   child: Text(
                     style.badge(lang),
@@ -1656,19 +1659,19 @@ class _FeaturedStyleCard extends StatelessWidget {
               style.name(lang),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: PT.t1,
+              style: TextStyle(
+                color: AppTokens.text,
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
               ),
             ),
-            const SizedBox(height: PT.s6),
+            SizedBox(height: AppTokens.s6),
             Text(
               style.tagline(lang),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: PT.t2,
+              style: TextStyle(
+                color: AppTokens.text2,
                 fontSize: 11,
                 height: 1.45,
               ),
@@ -1681,12 +1684,14 @@ class _FeaturedStyleCard extends StatelessWidget {
 }
 
 class _CorePresetCard extends StatelessWidget {
+  final AppL10n l10n;
   final AppPreset preset;
   final PresetConfig config;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _CorePresetCard({
+    required this.l10n,
     required this.preset,
     required this.config,
     required this.isSelected,
@@ -1695,7 +1700,7 @@ class _CorePresetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = config.auraColor ?? config.colorOverlay ?? PT.mint;
+    final accent = config.auraColor ?? config.colorOverlay ?? AppTokens.primary;
 
     return GestureDetector(
       onTap: () {
@@ -1703,51 +1708,51 @@ class _CorePresetCard extends StatelessWidget {
         onTap();
       },
       child: AnimatedContainer(
-        duration: PT.medium,
+        duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         width: Pro.sp(context, isSelected ? 122 : 110),
         margin: EdgeInsets.symmetric(
           horizontal: Pro.sp(context, 5),
-          vertical: PT.s4,
+          vertical: AppTokens.s4,
         ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isSelected
                 ? [
                     accent.withOpacity(0.22),
-                    PT.card2.withOpacity(0.96),
+                    AppTokens.card2.withOpacity(0.96),
                   ]
                 : [
                     Colors.white.withOpacity(0.04),
-                    PT.card2.withOpacity(0.86),
+                    AppTokens.card2.withOpacity(0.86),
                   ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(PT.r16),
+          borderRadius: BorderRadius.circular(AppTokens.r16),
           border: Border.all(
             color: isSelected ? accent : Colors.white.withOpacity(0.08),
             width: isSelected ? 1.5 : 1,
           ),
-          boxShadow: isSelected ? PT.glow(accent, blur: 16) : const [],
+          boxShadow: isSelected ? AppTokens.primaryGlow(0.35) : const [],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: PT.s10, left: PT.s10),
+              padding: EdgeInsets.only(top: AppTokens.s10, left: AppTokens.s10),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: PT.s8,
-                  vertical: PT.s4,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTokens.s8,
+                  vertical: AppTokens.s4,
                 ),
                 decoration: BoxDecoration(
                   color: accent.withOpacity(0.16),
-                  borderRadius: BorderRadius.circular(PT.rFull),
+                  borderRadius: BorderRadius.circular(AppTokens.rFull),
                 ),
                 child: Text(
-                  _presetBadge(preset),
+                  _presetBadge(preset, l10n),
                   style: TextStyle(
                     color: accent,
                     fontSize: 9,
@@ -1759,7 +1764,7 @@ class _CorePresetCard extends StatelessWidget {
             ),
             const Spacer(),
             AnimatedContainer(
-              duration: PT.medium,
+              duration: const Duration(milliseconds: 280),
               width: 48,
               height: 48,
               decoration: BoxDecoration(
@@ -1771,12 +1776,12 @@ class _CorePresetCard extends StatelessWidget {
               child: Icon(
                 config.icon,
                 size: Pro.sp(context, 24),
-                color: isSelected ? accent : PT.t2,
+                color: isSelected ? accent : AppTokens.text2,
               ),
             ),
-            const SizedBox(height: PT.s8),
+            SizedBox(height: AppTokens.s8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: PT.s10),
+              padding: EdgeInsets.symmetric(horizontal: AppTokens.s10),
               child: Text(
                 config.name,
                 maxLines: 1,
@@ -1785,11 +1790,11 @@ class _CorePresetCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: Pro.sp(context, 11),
                   fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                  color: isSelected ? PT.t1 : PT.t2,
+                  color: isSelected ? AppTokens.text : AppTokens.text2,
                 ),
               ),
             ),
-            const SizedBox(height: PT.s10),
+            SizedBox(height: AppTokens.s10),
           ],
         ),
       ),
@@ -1798,13 +1803,13 @@ class _CorePresetCard extends StatelessWidget {
 }
 
 class _StyleGridCard extends StatelessWidget {
-  final Lang lang;
+  final AppL10n l10n;
   final FilterStudioStylePreset style;
   final bool selected;
   final VoidCallback onTap;
 
   const _StyleGridCard({
-    required this.lang,
+    required this.l10n,
     required this.style,
     required this.selected,
     required this.onTap,
@@ -1812,24 +1817,25 @@ class _StyleGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = l10n.locale.languageCode == 'ar' ? Lang.ar : Lang.en;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
       child: AnimatedContainer(
-        duration: PT.fast,
-        padding: const EdgeInsets.all(PT.s14),
+        duration: const Duration(milliseconds: 150),
+        padding: EdgeInsets.all(AppTokens.s14),
         decoration: BoxDecoration(
           color: selected
               ? style.accent.withOpacity(0.14)
               : Colors.white.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(PT.r20),
+          borderRadius: BorderRadius.circular(AppTokens.r20),
           border: Border.all(
             color: selected ? style.accent : Colors.white.withOpacity(0.08),
             width: selected ? 1.5 : 1,
           ),
-          boxShadow: selected ? PT.glow(style.accent, blur: 18) : const [],
+          boxShadow: selected ? AppTokens.primaryGlow(0.35) : const [],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1838,8 +1844,8 @@ class _StyleGridCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Wrap(
-                    spacing: PT.s6,
-                    runSpacing: PT.s6,
+                    spacing: AppTokens.s6,
+                    runSpacing: AppTokens.s6,
                     children: [
                       _MiniLabel(
                         label: style.badge(lang),
@@ -1847,7 +1853,7 @@ class _StyleGridCard extends StatelessWidget {
                       ),
                       _MiniLabel(
                         label: style.categoryLabel(lang),
-                        color: PT.t2,
+                        color: AppTokens.text2,
                       ),
                     ],
                   ),
@@ -1855,24 +1861,24 @@ class _StyleGridCard extends StatelessWidget {
                 Icon(style.icon, size: 18, color: style.accent),
               ],
             ),
-            const SizedBox(height: PT.s14),
+            SizedBox(height: AppTokens.s14),
             Text(
               style.name(lang),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: PT.t1,
+              style: TextStyle(
+                color: AppTokens.text,
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
               ),
             ),
-            const SizedBox(height: PT.s6),
+            SizedBox(height: AppTokens.s6),
             Text(
               style.tagline(lang),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: PT.t2,
+              style: TextStyle(
+                color: AppTokens.text2,
                 fontSize: 11,
                 height: 1.45,
               ),
@@ -1896,10 +1902,10 @@ class _MiniLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: PT.s8, vertical: PT.s4),
+      padding: EdgeInsets.symmetric(horizontal: AppTokens.s8, vertical: AppTokens.s4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(PT.rFull),
+        borderRadius: BorderRadius.circular(AppTokens.rFull),
         border: Border.all(color: color.withOpacity(0.16)),
       ),
       child: Text(
@@ -1914,7 +1920,7 @@ class _MiniLabel extends StatelessWidget {
   }
 }
 
-String _presetBadge(AppPreset preset) {
+String _presetBadge(AppPreset preset, AppL10n l10n) {
   switch (preset) {
     case AppPreset.editorial:
     case AppPreset.vaporwave:
@@ -1922,9 +1928,9 @@ String _presetBadge(AppPreset preset) {
     case AppPreset.halo:
     case AppPreset.monoPop:
     case AppPreset.street:
-      return 'NEW';
+      return l10n.get('tag_new');
     default:
-      return 'PRO';
+      return l10n.get('tag_pro');
   }
 }
 
@@ -1932,7 +1938,7 @@ String _presetBadge(AppPreset preset) {
 // ADJUST TAB
 // ─────────────────────────────────────────────────────────────────
 class AdjustTab extends StatelessWidget {
-  final Lang lang;
+  final AppL10n l10n;
   final double exposure,
       brightness,
       contrast,
@@ -1954,7 +1960,7 @@ class AdjustTab extends StatelessWidget {
 
   const AdjustTab({
     super.key,
-    required this.lang,
+    required this.l10n,
     required this.exposure,
     required this.brightness,
     required this.contrast,
@@ -1981,11 +1987,10 @@ class AdjustTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = T(lang);
     return Column(
       children: [
         _AdjustActions(
-          t: t,
+          l10n: l10n,
           canUndo: canUndo,
           canRedo: canRedo,
           onUndo: onUndo,
@@ -1996,98 +2001,98 @@ class AdjustTab extends StatelessWidget {
           replaceBackground: replaceBackground,
           onToggleBg: (v) => onParamChanged('replaceBackground', v),
         ),
-        const SizedBox(height: PT.s8),
+        SizedBox(height: AppTokens.s8),
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(children: [
               _SliderRow(
                   icon: Icons.wb_sunny_outlined,
-                  label: t.of('exposure'),
+                  label: l10n.get('exposure'),
                   value: exposure,
                   min: -1.0,
                   max: 1.0,
                   onChanged: (v) => onParamChanged('exposure', v)),
               _SliderRow(
                   icon: Icons.brightness_6_rounded,
-                  label: t.of('brightness'),
+                  label: l10n.get('brightness'),
                   value: brightness,
                   min: -0.5,
                   max: 0.5,
                   onChanged: (v) => onParamChanged('brightness', v)),
               _SliderRow(
                   icon: Icons.contrast_rounded,
-                  label: t.of('contrast'),
+                  label: l10n.get('contrast'),
                   value: contrast,
                   min: 0.5,
                   max: 1.5,
                   onChanged: (v) => onParamChanged('contrast', v)),
               _SliderRow(
                   icon: Icons.color_lens_outlined,
-                  label: t.of('saturation'),
+                  label: l10n.get('saturation'),
                   value: saturation,
                   min: 0.0,
                   max: 2.0,
                   onChanged: (v) => onParamChanged('saturation', v)),
               _SliderRow(
                   icon: Icons.thermostat_rounded,
-                  label: t.of('warmth'),
+                  label: l10n.get('warmth'),
                   value: warmth,
                   min: -1,
                   max: 1,
                   onChanged: (v) => onParamChanged('warmth', v)),
               _SliderRow(
                   icon: Icons.gradient_rounded,
-                  label: t.of('tint'),
+                  label: l10n.get('tint'),
                   value: tint,
                   min: -1,
                   max: 1,
                   onChanged: (v) => onParamChanged('tint', v)),
               _SliderRow(
                   icon: Icons.highlight_rounded,
-                  label: t.of('highlights'),
+                  label: l10n.get('highlights'),
                   value: highlights,
                   min: -1,
                   max: 1,
                   onChanged: (v) => onParamChanged('highlights', v)),
               _SliderRow(
                   icon: Icons.nights_stay_rounded,
-                  label: t.of('shadows'),
+                  label: l10n.get('shadows'),
                   value: shadows,
                   min: -1,
                   max: 1,
                   onChanged: (v) => onParamChanged('shadows', v)),
               _SliderRow(
                   icon: Icons.lens_blur_rounded,
-                  label: t.of('clarity'),
+                  label: l10n.get('clarity'),
                   value: clarity,
                   min: 0,
                   max: 1,
                   onChanged: (v) => onParamChanged('clarity', v)),
               _SliderRow(
                   icon: Icons.cloud_off_rounded,
-                  label: t.of('dehaze'),
+                  label: l10n.get('dehaze'),
                   value: dehaze,
                   min: 0,
                   max: 1,
                   onChanged: (v) => onParamChanged('dehaze', v)),
               _SliderRow(
                   icon: Icons.auto_fix_high_rounded,
-                  label: t.of('sharpen'),
+                  label: l10n.get('sharpen'),
                   value: sharpen,
                   min: 0,
                   max: 1,
                   onChanged: (v) => onParamChanged('sharpen', v)),
               _SliderRow(
                   icon: Icons.vignette_rounded,
-                  label: t.of('vignette'),
+                  label: l10n.get('vignette'),
                   value: vignette,
                   min: 0,
                   max: 1,
                   onChanged: (v) => onParamChanged('vignette', v)),
               _SliderRow(
                   icon: Icons.crop_free_rounded,
-                  label: t.of('vignette_size'),
+                  label: l10n.get('vignette_size'),
                   value: vignetteSize,
                   min: 0.2,
                   max: 0.9,
@@ -2101,14 +2106,14 @@ class AdjustTab extends StatelessWidget {
 }
 
 class _AdjustActions extends StatelessWidget {
-  final T t;
+  final AppL10n l10n;
   final bool canUndo, canRedo, replaceBackground;
   final VoidCallback onUndo, onRedo, onReset;
   final VoidCallback onCompareStart, onCompareEnd;
   final ValueChanged<bool> onToggleBg;
 
   const _AdjustActions({
-    required this.t,
+    required this.l10n,
     required this.canUndo,
     required this.canRedo,
     required this.onUndo,
@@ -2123,24 +2128,24 @@ class _AdjustActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: PT.s8,
-      runSpacing: PT.s8,
+      spacing: AppTokens.s8,
+      runSpacing: AppTokens.s8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         _MicroBtn(
             icon: Icons.undo_rounded,
-            label: t.of('undo'),
-            color: canUndo ? PT.mint : PT.t3,
+            label: l10n.get('undo'),
+            color: canUndo ? AppTokens.primary : (AppTokens.text2.withOpacity(0.7)),
             onTap: canUndo ? onUndo : null),
         _MicroBtn(
             icon: Icons.redo_rounded,
-            label: t.of('redo'),
-            color: canRedo ? PT.mint : PT.t3,
+            label: l10n.get('redo'),
+            color: canRedo ? AppTokens.primary : (AppTokens.text2.withOpacity(0.7)),
             onTap: canRedo ? onRedo : null),
         _MicroBtn(
             icon: Icons.restore_rounded,
-            label: t.of('reset'),
-            color: PT.gold,
+            label: l10n.get('reset'),
+            color: AppTokens.warning,
             onTap: onReset),
         GestureDetector(
           onTapDown: (_) => onCompareStart(),
@@ -2148,28 +2153,28 @@ class _AdjustActions extends StatelessWidget {
           onTapCancel: onCompareEnd,
           child: Container(
             padding:
-                const EdgeInsets.symmetric(horizontal: PT.s12, vertical: PT.s8),
+                EdgeInsets.symmetric(horizontal: AppTokens.s12, vertical: AppTokens.s8),
             decoration: BoxDecoration(
-              color: PT.mint.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(PT.r12),
-              border: Border.all(color: PT.mint.withOpacity(0.3)),
+              color: AppTokens.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTokens.r12),
+              border: Border.all(color: AppTokens.primary.withOpacity(0.3)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.compare_arrows_rounded,
-                  color: PT.mint, size: 14),
-              const SizedBox(width: PT.s4),
-              Text(t.of('compare'),
-                  style: const TextStyle(
-                      color: PT.mint,
+              Icon(Icons.compare_arrows_rounded,
+                  color: AppTokens.primary, size: 14),
+              SizedBox(width: AppTokens.s4),
+              Text(l10n.get('compare'),
+                  style: TextStyle(
+                      color: AppTokens.primary,
                       fontSize: 11,
                       fontWeight: FontWeight.w800)),
             ]),
           ),
         ),
         _ToggleChip(
-          label: t.of('remove_bg'),
+          label: l10n.get('remove_bg'),
           active: replaceBackground,
-          activeColor: PT.coral,
+          activeColor: AppTokens.danger,
           onTap: () => onToggleBg(!replaceBackground),
         ),
       ],
@@ -2181,7 +2186,7 @@ class _AdjustActions extends StatelessWidget {
 // EFFECTS TAB
 // ─────────────────────────────────────────────────────────────────
 class EffectsTab extends StatelessWidget {
-  final Lang lang;
+  final AppL10n l10n;
   final double blur, aura, grain, scanlines, glitch;
   final Color auraColor;
   final bool ghost, colorPop;
@@ -2189,7 +2194,7 @@ class EffectsTab extends StatelessWidget {
 
   const EffectsTab({
     super.key,
-    required this.lang,
+    required this.l10n,
     required this.blur,
     required this.aura,
     required this.auraColor,
@@ -2203,70 +2208,69 @@ class EffectsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = T(lang);
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _SliderRow(
             icon: Icons.blur_on_rounded,
-            label: t.of('blur'),
+            label: l10n.get('blur'),
             value: blur,
             min: 0,
             max: 20,
             onChanged: (v) => onParamChanged('blur', v)),
         _SliderRow(
             icon: Icons.flare_rounded,
-            label: t.of('aura'),
+            label: l10n.get('aura'),
             value: aura,
             min: 0,
             max: 1,
             onChanged: (v) => onParamChanged('aura', v)),
         _SliderRow(
             icon: Icons.grain_rounded,
-            label: t.of('grain'),
+            label: l10n.get('grain'),
             value: grain,
             min: 0,
             max: 0.5,
             onChanged: (v) => onParamChanged('grain', v)),
         _SliderRow(
             icon: Icons.horizontal_rule_rounded,
-            label: t.of('scanlines'),
+            label: l10n.get('scanlines'),
             value: scanlines,
             min: 0,
             max: 0.8,
             onChanged: (v) => onParamChanged('scanlines', v)),
         _SliderRow(
             icon: Icons.electrical_services,
-            label: t.of('glitch'),
+            label: l10n.get('glitch'),
             value: glitch,
             min: 0,
             max: 5,
             onChanged: (v) => onParamChanged('glitch', v)),
         if (aura > 0.05) ...[
-          const SizedBox(height: PT.s8),
-          Text(t.of('aura_color'),
-              style: const TextStyle(
-                  color: PT.t2, fontSize: 11, fontWeight: FontWeight.w700)),
-          const SizedBox(height: PT.s8),
+          SizedBox(height: AppTokens.s8),
+          Text(l10n.get('aura_color'),
+              style: TextStyle(
+                  color: AppTokens.text2, fontSize: 11, fontWeight: FontWeight.w700)),
+          SizedBox(height: AppTokens.s8),
           _AuraColorPicker(
               selected: auraColor,
               onPick: (c) => onParamChanged('auraColor', c)),
         ],
-        const SizedBox(height: PT.s12),
+        SizedBox(height: AppTokens.s12),
         Row(children: [
           Expanded(
               child: _ToggleBtn(
                   icon: Icons.person_rounded,
-                  label: t.of('ghost'),
+                  label: l10n.get('ghost'),
                   active: ghost,
                   onTap: () => onParamChanged('ghost', !ghost))),
-          const SizedBox(width: PT.s10),
+          SizedBox(width: AppTokens.s10),
           Expanded(
               child: _ToggleBtn(
                   icon: Icons.color_lens_rounded,
-                  label: t.of('color_pop'),
+                  label: l10n.get('color_pop'),
                   active: colorPop,
-                  activeColor: PT.purple,
+                  activeColor: AppTokens.accent,
                   onTap: () => onParamChanged('colorPop', !colorPop))),
         ]),
       ]),
@@ -2278,7 +2282,7 @@ class EffectsTab extends StatelessWidget {
 // OVERLAYS TAB
 // ─────────────────────────────────────────────────────────────────
 class OverlaysTab extends StatelessWidget {
-  final Lang lang;
+  final AppL10n l10n;
   final bool showDateStamp, cinemaMode, polaroidFrame;
   final double vignette, prismOverlay, dustOverlay;
   final int lightLeakIndex;
@@ -2286,7 +2290,7 @@ class OverlaysTab extends StatelessWidget {
 
   const OverlaysTab({
     super.key,
-    required this.lang,
+    required this.l10n,
     required this.showDateStamp,
     required this.cinemaMode,
     required this.polaroidFrame,
@@ -2299,87 +2303,86 @@ class OverlaysTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = T(lang);
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Expanded(
               child: _SwitchRow(
-                  label: t.of('date_stamp'),
+                  label: l10n.get('date_stamp'),
                   value: showDateStamp,
                   onChanged: (v) => onParamChanged('showDateStamp', v))),
-          const SizedBox(width: PT.s8),
+          SizedBox(width: AppTokens.s8),
           Expanded(
               child: _SwitchRow(
-                  label: t.of('cinema_bar'),
+                  label: l10n.get('cinema_bar'),
                   value: cinemaMode,
                   onChanged: (v) => onParamChanged('cinemaMode', v))),
         ]),
-        const SizedBox(height: PT.s8),
+        SizedBox(height: AppTokens.s8),
         Row(children: [
           Expanded(
               child: _SwitchRow(
-                  label: t.of('polaroid'),
+                  label: l10n.get('polaroid'),
                   value: polaroidFrame,
                   onChanged: (v) => onParamChanged('polaroidFrame', v))),
           const Expanded(child: SizedBox()),
         ]),
-        const SizedBox(height: PT.s8),
+        SizedBox(height: AppTokens.s8),
         _SliderRow(
             icon: Icons.vignette_rounded,
-            label: t.of('vignette'),
+            label: l10n.get('vignette'),
             value: vignette,
             min: 0,
             max: 0.8,
             onChanged: (v) => onParamChanged('vignette', v)),
-        const SizedBox(height: PT.s12),
-        Text(t.of('overlay_finish_title'),
-            style: const TextStyle(
-                color: PT.t2, fontSize: 11, fontWeight: FontWeight.w700)),
-        const SizedBox(height: PT.s4),
-        Text(t.of('overlay_finish_desc'),
-            style: const TextStyle(color: PT.t3, fontSize: 11, height: 1.4)),
-        const SizedBox(height: PT.s8),
+        SizedBox(height: AppTokens.s12),
+        Text(l10n.get('overlay_finish_title'),
+            style: TextStyle(
+                color: AppTokens.text2, fontSize: 11, fontWeight: FontWeight.w700)),
+        SizedBox(height: AppTokens.s4),
+        Text(l10n.get('overlay_finish_desc'),
+            style: TextStyle(color: (AppTokens.text2.withOpacity(0.7)), fontSize: 11, height: 1.4)),
+        SizedBox(height: AppTokens.s8),
         _SliderRow(
             icon: Icons.auto_awesome_rounded,
-            label: t.of('prism_overlay'),
+            label: l10n.get('prism_overlay'),
             value: prismOverlay,
             min: 0,
             max: 0.6,
             onChanged: (v) => onParamChanged('prismOverlay', v)),
         _SliderRow(
             icon: Icons.grain_rounded,
-            label: t.of('dust_overlay'),
+            label: l10n.get('dust_overlay'),
             value: dustOverlay,
             min: 0,
             max: 0.4,
             onChanged: (v) => onParamChanged('dustOverlay', v)),
-        const SizedBox(height: PT.s12),
-        Text(t.of('light_leaks'),
-            style: const TextStyle(
-                color: PT.t2, fontSize: 11, fontWeight: FontWeight.w700)),
-        const SizedBox(height: PT.s8),
+        SizedBox(height: AppTokens.s12),
+        Text(l10n.get('light_leaks'),
+            style: TextStyle(
+                color: AppTokens.text2, fontSize: 11, fontWeight: FontWeight.w700)),
+        SizedBox(height: AppTokens.s8),
         Row(children: [
           _LeakBtn(
-              label: t.of('none'),
+              label: l10n.get('none'),
               index: 0,
               selected: lightLeakIndex,
-              color: PT.t2,
+              color: AppTokens.text2,
               onTap: (i) => onParamChanged('lightLeakIndex', i)),
-          const SizedBox(width: PT.s8),
+          SizedBox(width: AppTokens.s8),
           _LeakBtn(
-              label: t.of('warm'),
+              label: l10n.get('warm'),
               index: 1,
               selected: lightLeakIndex,
-              color: PT.gold,
+              color: AppTokens.warning,
               onTap: (i) => onParamChanged('lightLeakIndex', i)),
-          const SizedBox(width: PT.s8),
+          SizedBox(width: AppTokens.s8),
           _LeakBtn(
-              label: t.of('cool'),
+              label: l10n.get('cool'),
               index: 2,
               selected: lightLeakIndex,
-              color: PT.cyan,
+              color: AppTokens.info,
               onTap: (i) => onParamChanged('lightLeakIndex', i)),
         ]),
       ]),
@@ -2410,25 +2413,25 @@ class _SliderRow extends StatelessWidget {
     final pct = max == min ? 0 : ((value - min) / (max - min) * 100).round();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: EdgeInsets.symmetric(vertical: 2),
       child: Row(children: [
-        Icon(icon, size: Pro.sp(context, 14), color: PT.t3),
-        const SizedBox(width: PT.s8),
+        Icon(icon, size: Pro.sp(context, 14), color: (AppTokens.text2.withOpacity(0.7))),
+        SizedBox(width: AppTokens.s8),
         SizedBox(
           width: Pro.sp(context, 80),
           child: Text(label,
               style: TextStyle(
-                  color: PT.t2,
+                  color: AppTokens.text2,
                   fontSize: Pro.sp(context, 11),
                   fontWeight: FontWeight.w600)),
         ),
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: PT.mint.withOpacity(0.85),
+              activeTrackColor: AppTokens.primary.withOpacity(0.85),
               inactiveTrackColor: Colors.white.withOpacity(0.08),
-              thumbColor: PT.mint,
-              overlayColor: PT.mint.withOpacity(0.1),
+              thumbColor: AppTokens.primary,
+              overlayColor: AppTokens.primary.withOpacity(0.1),
               trackHeight: 1.5,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
@@ -2446,7 +2449,7 @@ class _SliderRow extends StatelessWidget {
           child: Text('$pct',
               textAlign: TextAlign.right,
               style: TextStyle(
-                  color: PT.t3,
+                  color: (AppTokens.text2.withOpacity(0.7)),
                   fontSize: Pro.sp(context, 10),
                   fontWeight: FontWeight.w700)),
         ),
@@ -2472,29 +2475,29 @@ class _ToggleBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = activeColor ?? PT.mint;
+    final c = activeColor ?? AppTokens.primary;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
       child: AnimatedContainer(
-        duration: PT.fast,
-        padding: const EdgeInsets.symmetric(vertical: PT.s12),
+        duration: const Duration(milliseconds: 150),
+        padding: EdgeInsets.symmetric(vertical: AppTokens.s12),
         decoration: BoxDecoration(
           color: active ? c.withOpacity(0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(PT.r12),
+          borderRadius: BorderRadius.circular(AppTokens.r12),
           border:
               Border.all(color: active ? c : Colors.white.withOpacity(0.08)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 15, color: active ? c : PT.t2),
-            const SizedBox(width: PT.s6),
+            Icon(icon, size: 15, color: active ? c : AppTokens.text2),
+            SizedBox(width: AppTokens.s6),
             Text(label,
                 style: TextStyle(
-                    color: active ? c : PT.t2,
+                    color: active ? c : AppTokens.text2,
                     fontSize: Pro.sp(context, 12),
                     fontWeight: FontWeight.w800)),
           ],
@@ -2519,24 +2522,24 @@ class _ToggleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = activeColor ?? PT.mint;
+    final c = activeColor ?? AppTokens.primary;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
       child: AnimatedContainer(
-        duration: PT.fast,
+        duration: const Duration(milliseconds: 150),
         padding:
-            const EdgeInsets.symmetric(horizontal: PT.s10, vertical: PT.s6),
+            EdgeInsets.symmetric(horizontal: AppTokens.s10, vertical: AppTokens.s6),
         decoration: BoxDecoration(
           color: active ? c.withOpacity(0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(PT.rFull),
+          borderRadius: BorderRadius.circular(AppTokens.rFull),
           border: Border.all(color: active ? c : Colors.white.withOpacity(0.1)),
         ),
         child: Text(label,
             style: TextStyle(
-                color: active ? c : PT.t2,
+                color: active ? c : AppTokens.text2,
                 fontSize: Pro.sp(context, 11),
                 fontWeight: FontWeight.w800)),
       ),
@@ -2560,40 +2563,40 @@ class _SwitchRow extends StatelessWidget {
         onChanged(!value);
       },
       child: AnimatedContainer(
-        duration: PT.fast,
+        duration: const Duration(milliseconds: 150),
         padding:
-            const EdgeInsets.symmetric(horizontal: PT.s12, vertical: PT.s10),
+            EdgeInsets.symmetric(horizontal: AppTokens.s12, vertical: AppTokens.s10),
         decoration: BoxDecoration(
-          color: value ? PT.gold.withOpacity(0.08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(PT.r12),
+          color: value ? AppTokens.warning.withOpacity(0.08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTokens.r12),
           border: Border.all(
               color: value
-                  ? PT.gold.withOpacity(0.4)
+                  ? AppTokens.warning.withOpacity(0.4)
                   : Colors.white.withOpacity(0.08)),
         ),
         child: Row(children: [
           Expanded(
               child: Text(label,
                   style: TextStyle(
-                      color: value ? PT.t1 : PT.t2,
+                      color: value ? AppTokens.text : AppTokens.text2,
                       fontSize: Pro.sp(context, 11),
                       fontWeight: FontWeight.w700))),
           AnimatedContainer(
-            duration: PT.fast,
+            duration: const Duration(milliseconds: 150),
             width: 28,
             height: 16,
             decoration: BoxDecoration(
               color: value
-                  ? PT.gold.withOpacity(0.7)
+                  ? AppTokens.warning.withOpacity(0.7)
                   : Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(PT.rFull),
+              borderRadius: BorderRadius.circular(AppTokens.rFull),
             ),
             child: Align(
               alignment: value ? Alignment.centerRight : Alignment.centerLeft,
               child: Container(
                 width: 12,
                 height: 12,
-                margin: const EdgeInsets.all(2),
+                margin: EdgeInsets.all(2),
                 decoration: const BoxDecoration(
                     color: Colors.white, shape: BoxShape.circle),
               ),
@@ -2630,15 +2633,15 @@ class _MicroBtn extends StatelessWidget {
           : null,
       child: Container(
         padding:
-            const EdgeInsets.symmetric(horizontal: PT.s10, vertical: PT.s6),
+            EdgeInsets.symmetric(horizontal: AppTokens.s10, vertical: AppTokens.s6),
         decoration: BoxDecoration(
           color: color.withOpacity(enabled ? 0.08 : 0.03),
-          borderRadius: BorderRadius.circular(PT.r12),
+          borderRadius: BorderRadius.circular(AppTokens.r12),
           border: Border.all(color: color.withOpacity(enabled ? 0.25 : 0.08)),
         ),
         child: Row(children: [
           Icon(icon, size: 14, color: color.withOpacity(enabled ? 1 : 0.3)),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text(label,
               style: TextStyle(
                   color: color.withOpacity(enabled ? 0.9 : 0.3),
@@ -2674,18 +2677,18 @@ class _LeakBtn extends StatelessWidget {
           onTap(index);
         },
         child: AnimatedContainer(
-          duration: PT.fast,
-          padding: const EdgeInsets.symmetric(vertical: PT.s10),
+          duration: const Duration(milliseconds: 150),
+          padding: EdgeInsets.symmetric(vertical: AppTokens.s10),
           decoration: BoxDecoration(
             color: isSel ? color.withOpacity(0.12) : Colors.transparent,
-            borderRadius: BorderRadius.circular(PT.r12),
+            borderRadius: BorderRadius.circular(AppTokens.r12),
             border: Border.all(
                 color: isSel ? color : Colors.white.withOpacity(0.08)),
           ),
           child: Text(label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: isSel ? color : PT.t2,
+                  color: isSel ? color : AppTokens.text2,
                   fontSize: Pro.sp(context, 12),
                   fontWeight: FontWeight.w800)),
         ),
@@ -2703,8 +2706,8 @@ class _AuraColorPicker extends StatelessWidget {
   static const _colors = <Color>[
     Colors.purpleAccent,
     Colors.blueAccent,
-    PT.mint,
-    PT.cyan,
+    AppTokens.primary,
+    AppTokens.info,
     Colors.pinkAccent,
     Colors.redAccent,
     Colors.white,
@@ -2720,17 +2723,17 @@ class _AuraColorPicker extends StatelessWidget {
           return GestureDetector(
             onTap: () => onPick(c),
             child: AnimatedContainer(
-              duration: PT.fast,
+              duration: const Duration(milliseconds: 150),
               width: 26,
               height: 26,
-              margin: const EdgeInsets.only(right: PT.s8),
+              margin: EdgeInsets.only(right: AppTokens.s8),
               decoration: BoxDecoration(
                 color: c,
                 shape: BoxShape.circle,
                 border: Border.all(
                     color: isSel ? Colors.white : Colors.transparent,
                     width: isSel ? 2.5 : 1),
-                boxShadow: isSel ? PT.glow(c, blur: 12) : [],
+                boxShadow: isSel ? AppTokens.primaryGlow(0.35) : [],
               ),
             ),
           );

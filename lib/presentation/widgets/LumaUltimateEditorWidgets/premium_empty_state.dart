@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lama/core/i18n/t.dart';
+import 'package:lama/core/ui/AppL10n.dart';
 
 class PremiumEmptyState extends StatelessWidget {
   final Color primaryColor;
   final Color surfaceColor;
   final Color textColor;
   final Color text2Color;
-  final T t;
+  final AppL10n l10n;
   final VoidCallback onPick;
 
   const PremiumEmptyState({
@@ -15,7 +15,7 @@ class PremiumEmptyState extends StatelessWidget {
     required this.surfaceColor,
     required this.textColor,
     required this.text2Color,
-    required this.t,
+    required this.l10n,
     required this.onPick,
   });
 
@@ -41,7 +41,7 @@ class PremiumEmptyState extends StatelessWidget {
             ),
             Container(
               width: 320,
-              padding: const EdgeInsets.all(28),
+              padding: EdgeInsets.all(28),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -68,7 +68,7 @@ class PremiumEmptyState extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -89,7 +89,7 @@ class PremiumEmptyState extends StatelessWidget {
                       color: primaryColor,
                     ),
                   ),
-                  const SizedBox(height: 22),
+                  SizedBox(height: 22),
                   Wrap(
                     alignment: WrapAlignment.center,
                     spacing: 8,
@@ -104,9 +104,9 @@ class PremiumEmptyState extends StatelessWidget {
                           color: text2Color.withValues(alpha: 0.85)),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   Text(
-                    t.of('tap_to_open'),
+                    l10n.get('tap_to_open'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: textColor,
@@ -114,9 +114,9 @@ class PremiumEmptyState extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(
-                    t.of('welcome_sub'),
+                    l10n.get('welcome_sub'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: text2Color,
@@ -124,9 +124,9 @@ class PremiumEmptyState extends StatelessWidget {
                       height: 1.55,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   Container(
-                    padding: const EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
@@ -144,9 +144,9 @@ class PremiumEmptyState extends StatelessWidget {
                           size: 18,
                           color: primaryColor,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
-                          t.of('pick_hint'),
+                          l10n.get('pick_hint'),
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 12,
@@ -178,7 +178,7 @@ class _MiniBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),

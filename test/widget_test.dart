@@ -8,10 +8,10 @@ import 'package:lama/core/i18n/t.dart';
 void main() {
   testWidgets('shows the premium dashboard entry points', (tester) async {
     await tester.pumpWidget(
-      const App(
-        config: AppConfig(baseUrl: 'https://example.invalid'),
+      App(
+        config: const AppConfig(baseUrl: 'https://example.invalid'),
         flags: FeatureFlags.dev,
-        lang: Lang.en,
+        localeController: LocaleController(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 250));

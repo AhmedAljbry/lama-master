@@ -6,6 +6,8 @@ import '../../domain/inpainting_failure.dart';
 import '../../domain/inpainting_status.dart';
 import 'inpainting_event.dart';
 import 'inpainting_state.dart';
+import 'package:lama/core/services/task_persistence_service.dart';
+import 'package:lama/core/services/notification_service.dart';
 
 class InpaintingBloc extends Bloc<InpaintingEvent, InpaintingState> {
   final InpaintingRepository repo;
@@ -22,6 +24,10 @@ class InpaintingBloc extends Bloc<InpaintingEvent, InpaintingState> {
   Future<void> _onReset(
       InpaintingReset e, Emitter<InpaintingState> emit) async {
     _cancelled = false;
+    final jid = state.jobId;
+    if (jid != null) {
+      TaskPersistenceService().completeTask(jid);
+    }
     emit(InpaintingState.idle());
   }
 
@@ -34,6 +40,7 @@ class InpaintingBloc extends Bloc<InpaintingEvent, InpaintingState> {
     if (jid != null) {
       // Fire-and-forget — cancelJob never throws
       repo.cancelJob(jid);
+      TaskPersistenceService().completeTask(jid);
     }
 
     emit(state.copyWith(
@@ -76,6 +83,11 @@ class InpaintingBloc extends Bloc<InpaintingEvent, InpaintingState> {
         lastUpdatedAt: DateTime.now(),
         clearFailure: true,
       ));
+      
+      TaskPersistenceService().registerRunningTask(
+        submit.jobId,
+        'Magic Eraser processing',
+      );
 
       // 3) Poll until completed
       await _poll(emit, submit.jobId);
@@ -97,6 +109,13 @@ class InpaintingBloc extends Bloc<InpaintingEvent, InpaintingState> {
       );
       if (_cancelled) return;
 
+      TaskPersistenceService().completeTask(submit.jobId);
+      NotificationService().showNotification(
+        id: submit.jobId.hashCode,
+        title: 'Magic Eraser Complete',
+        body: 'Your processing has finished successfully.',
+      );
+
       emit(state.copyWith(
         status: InpaintingStatus.success,
         result: bytes,
@@ -106,6 +125,7 @@ class InpaintingBloc extends Bloc<InpaintingEvent, InpaintingState> {
       ));
     } on InpaintingFailure catch (f) {
       if (_cancelled) return;
+      if (state.jobId != null) TaskPersistenceService().completeTask(state.jobId!);
       emit(state.copyWith(
         status: f.code == 'timeout'
             ? InpaintingStatus.timeout
@@ -115,6 +135,7 @@ class InpaintingBloc extends Bloc<InpaintingEvent, InpaintingState> {
       ));
     } catch (_) {
       if (_cancelled) return;
+      if (state.jobId != null) TaskPersistenceService().completeTask(state.jobId!);
       emit(state.copyWith(
         status: InpaintingStatus.failed,
         failure: const InpaintingFailure(code: 'unknown', messageKey: 'failed'),

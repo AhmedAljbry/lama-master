@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/i18n/t.dart';
+import '../../../../core/ui/AppL10n.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../application/image_pick_cubit.dart';
 import '../widgets/inpainting_studio_chrome.dart';
@@ -31,7 +31,7 @@ class _HomePickPageState extends State<HomePickPage>
 
   @override
   Widget build(BuildContext context) {
-    final t = context.read<T>();
+    final l10n = AppL10n.of(context);
 
     return Scaffold(
       backgroundColor: InpaintingStudioTheme.background,
@@ -70,8 +70,8 @@ class _HomePickPageState extends State<HomePickPage>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildTopBar(context, t),
-                                const SizedBox(height: 24),
+                                _buildTopBar(context, l10n),
+                                SizedBox(height: 24),
                                 isWide
                                     ? Row(
                                         crossAxisAlignment:
@@ -81,14 +81,14 @@ class _HomePickPageState extends State<HomePickPage>
                                             flex: 6,
                                             child: _buildHeroCard(
                                               context,
-                                              t,
+                                              l10n,
                                               isLoading,
                                             ),
                                           ),
-                                          const SizedBox(width: 20),
+                                          SizedBox(width: 20),
                                           Expanded(
                                             flex: 4,
-                                            child: _buildHeroVisual(t),
+                                            child: _buildHeroVisual(l10n),
                                           ),
                                         ],
                                       )
@@ -96,16 +96,16 @@ class _HomePickPageState extends State<HomePickPage>
                                         children: [
                                           _buildHeroCard(
                                             context,
-                                            t,
+                                            l10n,
                                             isLoading,
                                           ),
-                                          const SizedBox(height: 18),
-                                          _buildHeroVisual(t),
+                                          SizedBox(height: 18),
+                                          _buildHeroVisual(l10n),
                                         ],
                                       ),
-                                const SizedBox(height: 22),
-                                _buildWorkflowStrip(t),
-                                const SizedBox(height: 22),
+                                SizedBox(height: 22),
+                                _buildWorkflowStrip(l10n),
+                                SizedBox(height: 22),
                                 Wrap(
                                   spacing: 14,
                                   runSpacing: 14,
@@ -114,20 +114,20 @@ class _HomePickPageState extends State<HomePickPage>
                                       icon: Icons.gesture_rounded,
                                       accent: InpaintingStudioTheme.mint,
                                       title:
-                                          t.of('magic_pick_feature_precision'),
-                                      body: t.of('editor_tip_precision'),
+                                          l10n.get('magic_pick_feature_precision'),
+                                      body: l10n.get('editor_tip_precision'),
                                     ),
                                     _buildFeatureCard(
                                       icon: Icons.flash_on_rounded,
                                       accent: InpaintingStudioTheme.cyan,
-                                      title: t.of('magic_pick_feature_speed'),
-                                      body: t.of('magic_pick_feature_quality'),
+                                      title: l10n.get('magic_pick_feature_speed'),
+                                      body: l10n.get('magic_pick_feature_quality'),
                                     ),
                                     _buildFeatureCard(
                                       icon: Icons.shield_outlined,
                                       accent: InpaintingStudioTheme.amber,
-                                      title: t.of('studio_quality'),
-                                      body: t.of('magic_desc'),
+                                      title: l10n.get('studio_quality'),
+                                      body: l10n.get('magic_desc'),
                                     ),
                                   ],
                                 ),
@@ -148,10 +148,10 @@ class _HomePickPageState extends State<HomePickPage>
     );
   }
 
-  Widget _buildTopBar(BuildContext context, T t) {
+  Widget _buildTopBar(BuildContext context, AppL10n l10n) {
     return StudioGlassPanel(
       radius: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       fillColor: InpaintingStudioTheme.surfaceSoft,
       child: Row(
         children: [
@@ -165,23 +165,23 @@ class _HomePickPageState extends State<HomePickPage>
               }
             },
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  t.of('magic_title'),
-                  style: const TextStyle(
+                  l10n.get('magic_title'),
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
-                  t.of('magic_desc'),
-                  style: const TextStyle(
+                  l10n.get('magic_desc'),
+                  style: TextStyle(
                     color: InpaintingStudioTheme.textSecondary,
                     fontSize: 12.5,
                   ),
@@ -191,7 +191,7 @@ class _HomePickPageState extends State<HomePickPage>
           ),
           StudioPill(
             icon: Icons.auto_fix_high_rounded,
-            label: t.of('control_center'),
+            label: l10n.get('control_center'),
             accent: InpaintingStudioTheme.violet,
           ),
         ],
@@ -199,12 +199,12 @@ class _HomePickPageState extends State<HomePickPage>
     );
   }
 
-  Widget _buildHeroCard(BuildContext context, T t, bool isLoading) {
+  Widget _buildHeroCard(BuildContext context, AppL10n l10n, bool isLoading) {
     final picker = context.read<ImagePickCubit>();
 
     return StudioGlassPanel(
       radius: 34,
-      padding: const EdgeInsets.all(28),
+      padding: EdgeInsets.all(28),
       gradient: InpaintingStudioTheme.heroGradient,
       borderColor: InpaintingStudioTheme.violet.withValues(alpha: 0.2),
       child: Column(
@@ -216,74 +216,74 @@ class _HomePickPageState extends State<HomePickPage>
             children: [
               StudioPill(
                 icon: Icons.auto_awesome_rounded,
-                label: t.of('magic_pick_feature_quality'),
+                label: l10n.get('magic_pick_feature_quality'),
                 accent: InpaintingStudioTheme.mint,
                 filled: true,
               ),
               StudioPill(
                 icon: Icons.tune_rounded,
-                label: t.of('magic_pick_feature_precision'),
+                label: l10n.get('magic_pick_feature_precision'),
                 accent: InpaintingStudioTheme.cyan,
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: 22),
           Text(
-            t.of('magic_pick_headline'),
-            style: const TextStyle(
+            l10n.get('magic_pick_headline'),
+            style: TextStyle(
               color: InpaintingStudioTheme.textPrimary,
               fontSize: 34,
               height: 1.08,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           Text(
-            t.of('magic_pick_body'),
-            style: const TextStyle(
+            l10n.get('magic_pick_body'),
+            style: TextStyle(
               color: InpaintingStudioTheme.textSecondary,
               fontSize: 15,
               height: 1.55,
             ),
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: 22),
           Wrap(
             spacing: 12,
             runSpacing: 12,
             children: [
-              const StudioStatTile(
-                label: 'Mask',
-                value: 'Pixel-accurate',
+              StudioStatTile(
+                label: l10n.get('stat_mask'),
+                value: l10n.get('stat_mask_value'),
                 accent: InpaintingStudioTheme.cyan,
               ),
-              const StudioStatTile(
-                label: 'Output',
-                value: 'Clean export',
+              StudioStatTile(
+                label: l10n.get('stat_output'),
+                value: l10n.get('stat_output_value'),
                 accent: InpaintingStudioTheme.mint,
               ),
               StudioStatTile(
-                label: t.of('processing'),
-                value: t.of('magic_pick_feature_speed'),
+                label: l10n.get('processing'),
+                value: l10n.get('magic_pick_feature_speed'),
                 accent: InpaintingStudioTheme.amber,
               ),
             ],
           ),
-          const SizedBox(height: 26),
+          SizedBox(height: 26),
           Row(
             children: [
               Expanded(
                 child: StudioPrimaryButton(
                   onPressed: isLoading ? null : picker.pickFromGallery,
                   icon: Icons.photo_library_rounded,
-                  label: t.of('pick_gallery'),
+                  label: l10n.get('pick_gallery'),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: StudioSecondaryButton(
                   onPressed: isLoading ? null : picker.pickFromCamera,
                   icon: Icons.camera_alt_rounded,
-                  label: t.of('pick_camera'),
+                  label: l10n.get('pick_camera'),
                   accent: InpaintingStudioTheme.textPrimary,
                 ),
               ),
@@ -294,25 +294,25 @@ class _HomePickPageState extends State<HomePickPage>
     );
   }
 
-  Widget _buildHeroVisual(T t) {
+  Widget _buildHeroVisual(AppL10n l10n) {
     return StudioGlassPanel(
       radius: 34,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       fillColor: InpaintingStudioTheme.surfaceSoft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.layers_rounded,
                 color: InpaintingStudioTheme.mint,
                 size: 20,
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Text(
-                t.of('compare_live'),
-                style: const TextStyle(
+                l10n.get('compare_live'),
+                style: TextStyle(
                   color: InpaintingStudioTheme.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -320,7 +320,7 @@ class _HomePickPageState extends State<HomePickPage>
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           AspectRatio(
             aspectRatio: 1,
             child: Container(
@@ -358,7 +358,7 @@ class _HomePickPageState extends State<HomePickPage>
                     start: 22,
                     child: _buildPreviewBadge(
                       icon: Icons.photo_rounded,
-                      label: t.of('workflow_upload'),
+                      label: l10n.get('workflow_upload'),
                     ),
                   ),
                   PositionedDirectional(
@@ -366,7 +366,7 @@ class _HomePickPageState extends State<HomePickPage>
                     end: 22,
                     child: _buildPreviewBadge(
                       icon: Icons.brush_rounded,
-                      label: t.of('workflow_mask'),
+                      label: l10n.get('workflow_mask'),
                     ),
                   ),
                   PositionedDirectional(
@@ -374,10 +374,10 @@ class _HomePickPageState extends State<HomePickPage>
                     start: 22,
                     child: _buildPreviewBadge(
                       icon: Icons.auto_fix_high_rounded,
-                      label: t.of('workflow_render'),
+                      label: l10n.get('workflow_render'),
                     ),
                   ),
-                  const Positioned.fill(
+                  Positioned.fill(
                     child: Center(
                       child: _PreviewFrame(),
                     ),
@@ -396,7 +396,7 @@ class _HomePickPageState extends State<HomePickPage>
     required String label,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(18),
@@ -406,10 +406,10 @@ class _HomePickPageState extends State<HomePickPage>
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 15, color: InpaintingStudioTheme.textPrimary),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: InpaintingStudioTheme.textPrimary,
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -420,24 +420,24 @@ class _HomePickPageState extends State<HomePickPage>
     );
   }
 
-  Widget _buildWorkflowStrip(T t) {
+  Widget _buildWorkflowStrip(AppL10n l10n) {
     final items = [
       (
         step: '01',
-        title: t.of('workflow_upload'),
-        body: t.of('pick_hint'),
+        title: l10n.get('workflow_upload'),
+        body: l10n.get('pick_hint'),
         accent: InpaintingStudioTheme.cyan,
       ),
       (
         step: '02',
-        title: t.of('workflow_mask'),
-        body: t.of('editor_tip_precision'),
+        title: l10n.get('workflow_mask'),
+        body: l10n.get('editor_tip_precision'),
         accent: InpaintingStudioTheme.violet,
       ),
       (
         step: '03',
-        title: t.of('workflow_render'),
-        body: t.of('magic_pick_feature_quality'),
+        title: l10n.get('workflow_render'),
+        body: l10n.get('magic_pick_feature_quality'),
         accent: InpaintingStudioTheme.mint,
       ),
     ];
@@ -451,7 +451,7 @@ class _HomePickPageState extends State<HomePickPage>
               width: 260,
               child: StudioGlassPanel(
                 radius: 26,
-                padding: const EdgeInsets.all(18),
+                padding: EdgeInsets.all(18),
                 fillColor: InpaintingStudioTheme.surfaceSoft,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,19 +465,19 @@ class _HomePickPageState extends State<HomePickPage>
                         letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Text(
                       item.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: InpaintingStudioTheme.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       item.body,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: InpaintingStudioTheme.textSecondary,
                         fontSize: 13,
                         height: 1.45,
@@ -502,7 +502,7 @@ class _HomePickPageState extends State<HomePickPage>
       width: 320,
       child: StudioGlassPanel(
         radius: 26,
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(18),
         fillColor: InpaintingStudioTheme.surfaceSoft,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,23 +516,23 @@ class _HomePickPageState extends State<HomePickPage>
               ),
               child: Icon(icon, color: accent),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: InpaintingStudioTheme.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     body,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: InpaintingStudioTheme.textSecondary,
                       fontSize: 12.5,
                       height: 1.45,
@@ -556,7 +556,7 @@ class _HomePickPageState extends State<HomePickPage>
             decoration: BoxDecoration(
               color: InpaintingStudioTheme.background.withValues(alpha: 0.48),
             ),
-            child: const Center(
+            child: Center(
               child: StudioGlassPanel(
                 radius: 999,
                 padding: EdgeInsets.all(26),
@@ -583,7 +583,7 @@ class _HomePickPageState extends State<HomePickPage>
       SnackBar(
         content: Text(
           msg,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w700,
           ),
@@ -591,7 +591,7 @@ class _HomePickPageState extends State<HomePickPage>
         backgroundColor: InpaintingStudioTheme.danger.withValues(alpha: 0.95),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        margin: const EdgeInsets.all(20),
+        margin: EdgeInsets.all(20),
       ),
     );
   }

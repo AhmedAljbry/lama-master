@@ -37,8 +37,8 @@ class AiCreativePanel extends StatelessWidget {
             .toList();
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(6, 6, 6, 4),
-      padding: const EdgeInsets.all(18),
+      margin: EdgeInsets.fromLTRB(6, 6, 6, 4),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -81,31 +81,31 @@ class AiCreativePanel extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.auto_awesome_rounded,
                         color: Colors.black,
                         size: 22,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             t.of('ai_assistant'),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppTokens.text,
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             insight?.headline ?? t.of('ai_idle'),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppTokens.text2,
                               fontSize: 12,
                               height: 1.45,
@@ -122,11 +122,11 @@ class AiCreativePanel extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 if (insight != null) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(AppTokens.r20),
@@ -153,10 +153,10 @@ class AiCreativePanel extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Text(
                           insight!.summary,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppTokens.text2,
                             fontSize: 12,
                             height: 1.6,
@@ -165,7 +165,7 @@ class AiCreativePanel extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
@@ -175,7 +175,7 @@ class AiCreativePanel extends StatelessWidget {
                           color: AppTokens.primary,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Expanded(
                         child: _InsightStat(
                           label: t.of('contrast'),
@@ -183,7 +183,7 @@ class AiCreativePanel extends StatelessWidget {
                           color: AppTokens.info,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Expanded(
                         child: _InsightStat(
                           label: t.of('warmth'),
@@ -193,13 +193,13 @@ class AiCreativePanel extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                 ],
                 Row(
                   children: [
                     Text(
                       t.of('ai_recommendations'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppTokens.text,
                         fontSize: 12,
                         fontWeight: FontWeight.w900,
@@ -208,7 +208,7 @@ class AiCreativePanel extends StatelessWidget {
                     const Spacer(),
                     TextButton.icon(
                       onPressed: onCreateStyle,
-                      icon: const Icon(Icons.bookmark_add_outlined, size: 16),
+                      icon: Icon(Icons.bookmark_add_outlined, size: 16),
                       label: Text(t.of('save_style')),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTokens.warning,
@@ -216,11 +216,11 @@ class AiCreativePanel extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 if (recommendedFilters.isEmpty)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.04),
                       borderRadius: BorderRadius.circular(AppTokens.r20),
@@ -228,7 +228,7 @@ class AiCreativePanel extends StatelessWidget {
                     ),
                     child: Text(
                       t.of('no_ai_recommendations'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppTokens.text2,
                         fontSize: 12,
                         height: 1.55,
@@ -250,17 +250,17 @@ class AiCreativePanel extends StatelessWidget {
                         )
                         .toList(),
                   ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: insight == null ? null : onApplyInsight,
-                    icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
+                    icon: Icon(Icons.auto_fix_high_rounded, size: 18),
                     label: Text(t.of('ai_apply')),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTokens.primary,
                       foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTokens.r16),
                       ),
@@ -290,7 +290,7 @@ class _LoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(AppTokens.r20),
@@ -298,7 +298,7 @@ class _LoadingState extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const SizedBox(
+          SizedBox(
             width: 24,
             height: 24,
             child: CircularProgressIndicator(
@@ -306,11 +306,11 @@ class _LoadingState extends StatelessWidget {
               color: AppTokens.primary,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               t.of('ai_loading'),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTokens.text2,
                 fontSize: 12,
                 height: 1.55,
@@ -335,7 +335,7 @@ class _StateBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
@@ -367,7 +367,7 @@ class _InsightStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppTokens.r16),
@@ -378,13 +378,13 @@ class _InsightStat extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppTokens.text2,
               fontSize: 10,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
@@ -411,7 +411,7 @@ class _MetaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
@@ -449,7 +449,7 @@ class _RecommendationChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(999),
       child: AnimatedContainer(
         duration: AppTokens.fast,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.18)
@@ -470,7 +470,7 @@ class _RecommendationChip extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(

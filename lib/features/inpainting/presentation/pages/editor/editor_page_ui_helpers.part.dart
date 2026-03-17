@@ -3,7 +3,7 @@ part of 'editor_page.dart';
 Widget _qaLine(String tag, String text) {
   return Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(10),
+    padding: EdgeInsets.all(10),
     decoration: BoxDecoration(
       color: Colors.white.withValues(alpha: 0.05),
       borderRadius: BorderRadius.circular(12),
@@ -11,7 +11,7 @@ Widget _qaLine(String tag, String text) {
     ),
     child: Text(
       '[$tag] $text',
-      style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.3),
+      style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.3),
     ),
   );
 }
@@ -19,12 +19,12 @@ Widget _qaLine(String tag, String text) {
 void _toast(BuildContext context, String msg, {bool isError = false}) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(msg, style: const TextStyle(fontWeight: FontWeight.bold)),
+      content: Text(msg, style: TextStyle(fontWeight: FontWeight.bold)),
       backgroundColor:
           isError ? InpaintingStudioTheme.danger : InpaintingStudioTheme.mint,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.only(bottom: 100, left: 16, right: 16),
+      margin: EdgeInsets.only(bottom: 100, left: 16, right: 16),
     ),
   );
 }
@@ -33,13 +33,13 @@ extension _EditorPageUIHelpers on _EditorPageState {
   Future<void> _runMagicPipeline(
     BuildContext context,
     ui.Image image,
-    T t,
+    AppL10n l10n,
   ) async {
     final inpaintingBloc = context.read<InpaintingBloc>();
     final router = GoRouter.of(context);
     final drawingState = context.read<DrawingCubit>().state;
     if (drawingState.strokes.isEmpty) {
-      _toast(context, t.of('draw_first'), isError: true);
+      _toast(context, l10n.get('draw_first'), isError: true);
       return;
     }
 
@@ -109,7 +109,7 @@ extension _EditorPageUIHelpers on _EditorPageState {
   }
 
   Widget _buildGestureHint({
-    required T t,
+    required AppL10n l10n,
     bool compact = false,
   }) {
     return ClipRRect(
@@ -131,14 +131,14 @@ extension _EditorPageUIHelpers on _EditorPageState {
             children: [
               _HudLine(
                 icon: Icons.draw_rounded,
-                label: t.of('brush'),
+                label: l10n.get('brush'),
                 color: InpaintingStudioTheme.mint,
                 compact: compact,
               ),
               SizedBox(height: compact ? 6 : 8),
               _HudLine(
                 icon: Icons.pinch_rounded,
-                label: t.of('compare_hold'),
+                label: l10n.get('compare_hold'),
                 color: InpaintingStudioTheme.violet,
                 compact: compact,
               ),
@@ -193,7 +193,7 @@ extension _EditorPageUIHelpers on _EditorPageState {
   }
 
   Widget _buildEditorStatusCard({
-    required T t,
+    required AppL10n l10n,
     required DrawingState drawingState,
     required int imageWidth,
     required int imageHeight,
@@ -242,8 +242,8 @@ extension _EditorPageUIHelpers on _EditorPageState {
                   Expanded(
                     child: Text(
                       hasMask
-                          ? t.of('editor_mask_ready')
-                          : t.of('editor_mask_pending'),
+                          ? l10n.get('editor_mask_ready')
+                          : l10n.get('editor_mask_pending'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -261,15 +261,15 @@ extension _EditorPageUIHelpers on _EditorPageState {
                 runSpacing: 8,
                 children: [
                   _MiniMetric(
-                    label: t.of('workflow_mask'),
+                    label: l10n.get('workflow_mask'),
                     value: '${drawingState.strokes.length}',
                   ),
                   _MiniMetric(
-                    label: t.of('brush'),
+                    label: l10n.get('brush'),
                     value: '${drawingState.brushSize.toInt()} px',
                   ),
                   _MiniMetric(
-                    label: t.of('resolution'),
+                    label: l10n.get('resolution'),
                     value: '$imageWidth x $imageHeight',
                   ),
                 ],
@@ -284,7 +284,7 @@ extension _EditorPageUIHelpers on _EditorPageState {
   Widget _buildErrorState(
     Color bgColor,
     Color textColor,
-    T t,
+    AppL10n l10n,
     Color primaryColor,
   ) {
     return Scaffold(
@@ -298,22 +298,22 @@ extension _EditorPageUIHelpers on _EditorPageState {
               size: 64,
               color: textColor.withValues(alpha: 0.2),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
-              t.of('pick_hint'),
+              l10n.get('pick_hint'),
               style: TextStyle(
                 color: textColor.withValues(alpha: 0.6),
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.black),
+              icon: Icon(Icons.arrow_back_rounded, color: Colors.black),
               label: Text(
-                t.of('cancel'),
-                style: const TextStyle(
+                l10n.get('cancel'),
+                style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
@@ -413,7 +413,7 @@ class _MiniMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
@@ -425,16 +425,16 @@ class _MiniMetric extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: InpaintingStudioTheme.textMuted,
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: InpaintingStudioTheme.textPrimary,
               fontSize: 11.5,
               fontWeight: FontWeight.w800,

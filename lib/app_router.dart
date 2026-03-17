@@ -11,6 +11,9 @@ import 'package:lama/presentation/pages/PremiumDashboardPage.dart';
 import 'package:lama/presentation/pages/ai_studio_page.dart';
 import 'package:lama/presentation/pages/luma_ultimate_editor_page.dart';
 import 'package:lama/presentation/pages/pro_filter_studio_page.dart';
+import 'package:lama/presentation/pages/splash_page.dart';
+import 'package:lama/presentation/pages/onboarding_page.dart';
+import 'package:lama/presentation/pages/forced_update_page.dart';
 
 CustomTransitionPage<void> _fade(Widget child) => CustomTransitionPage<void>(
       child: child,
@@ -32,8 +35,17 @@ CustomTransitionPage<void> _fade(Widget child) => CustomTransitionPage<void>(
     );
 
 final router = GoRouter(
-  initialLocation: AppRoutes.home,
+  initialLocation: AppRoutes.splash,
   routes: [
+    GoRoute(
+        path: AppRoutes.splash,
+        pageBuilder: (_, __) => _fade(const SplashPage())),
+    GoRoute(
+        path: AppRoutes.onboarding,
+        pageBuilder: (_, __) => _fade(const OnboardingPage())),
+    GoRoute(
+        path: AppRoutes.forcedUpdate,
+        pageBuilder: (_, __) => _fade(const ForcedUpdatePage())),
     GoRoute(
         path: AppRoutes.home,
         pageBuilder: (_, __) => _fade(const PremiumDashboardPage())),
