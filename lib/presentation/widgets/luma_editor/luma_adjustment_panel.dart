@@ -56,9 +56,7 @@ class _LumaAdjustmentPanelState extends State<LumaAdjustmentPanel> {
     final l10n = widget.l10n;
     final bloc = context.read<EditorBloc>();
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Quick Adjust ──────────────────────────────────────────────
@@ -179,11 +177,9 @@ class _LumaAdjustmentPanelState extends State<LumaAdjustmentPanel> {
               ]),
             ),
           ),
-
           const SizedBox(height: 4),
         ],
-      ),
-    );
+      );
   }
 }
 

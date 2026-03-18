@@ -465,27 +465,37 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
                       // ── Side / bottom panel ───────────────────────────
                       final panel = _buildPanel(s, filters, accent, selected);
 
-                      return Column(children: [
-                        appBar,
-                        const SizedBox(height: 10),
-                        if (wide)
+                      if (wide) {
+                        return Column(children: [
+                          appBar,
+                          const SizedBox(height: 10),
                           Expanded(
                               child: Row(children: [
                             Expanded(flex: 12, child: preview),
                             const SizedBox(width: 16),
-                            SizedBox(width: 420, child: panel),
-                          ]))
-                        else ...[
-                          Expanded(child: preview),
-                          const SizedBox(height: 12),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxHeight: c.maxHeight * 0.44,
+                            SizedBox(
+                                width: 420,
+                                child: SingleChildScrollView(child: panel)),
+                          ])),
+                        ]);
+                      }
+
+                      return CustomScrollView(
+                        slivers: [
+                          SliverToBoxAdapter(child: appBar),
+                          const SliverToBoxAdapter(
+                              child: SizedBox(height: 10)),
+                          SliverToBoxAdapter(
+                            child: AspectRatio(
+                              aspectRatio: 0.92, // balanced preview size
+                              child: preview,
                             ),
-                            child: panel,
                           ),
+                          const SliverToBoxAdapter(
+                              child: SizedBox(height: 12)),
+                          SliverToBoxAdapter(child: panel),
                         ],
-                      ]);
+                      );
                     },
                   ),
                 ),
@@ -691,46 +701,46 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
               ])),
           const SizedBox(height: 8),
           // Filter grid
-          Expanded(
-              child: filters.isEmpty
-                  ? Center(
-                      child: Text(_l10n.get('no_styles'),
-                          style: const TextStyle(
-                              color: AppTokens.text2)))
-                  : GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 10,
-                              crossAxisSpacing: 10,
-                              childAspectRatio: .86),
-                      itemCount: filters.length,
-                      itemBuilder: (_, i) => LumaFilterTile(
-                          filter: filters[i],
-                          bytes: s.imageBytes!,
-                          l10n: _l10n,
-                          active:
-                              filters[i].id == s.snapshot.selectedId,
-                          onTap: () => context
-                              .read<EditorBloc>()
-                              .add(SelectFilter(filters[i].id)),
-                          onStar: () => context
-                              .read<EditorBloc>()
-                              .add(ToggleFavorite(filters[i])),
-                          onRename: filters[i].isCustom
-                              ? () => _renameCustomStyle(filters[i])
-                              : null,
-                          onDelete: filters[i].isCustom
-                              ? () => _deleteCustomStyle(filters[i])
-                              : null),
-                    )),
+          filters.isEmpty
+              ? Center(
+                  child: Text(_l10n.get('no_styles'),
+                      style: const TextStyle(
+                          color: AppTokens.text2)))
+              : GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: .86),
+                  itemCount: filters.length,
+                  itemBuilder: (_, i) => LumaFilterTile(
+                      filter: filters[i],
+                      bytes: s.imageBytes!,
+                      l10n: _l10n,
+                      active:
+                          filters[i].id == s.snapshot.selectedId,
+                      onTap: () => context
+                          .read<EditorBloc>()
+                          .add(SelectFilter(filters[i].id)),
+                      onStar: () => context
+                          .read<EditorBloc>()
+                          .add(ToggleFavorite(filters[i])),
+                      onRename: filters[i].isCustom
+                          ? () => _renameCustomStyle(filters[i])
+                          : null,
+                      onDelete: filters[i].isCustom
+                          ? () => _deleteCustomStyle(filters[i])
+                          : null),
+          ),
         ]),
 
       // ── Tools ────────────────────────────────────────────────────────
-      LumaPanelTab.tools => SingleChildScrollView(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+      LumaPanelTab.tools => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           // Undo / Redo / Clipboard stats
           Row(children: [
             Expanded(
@@ -864,13 +874,12 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
               onTap: _saving ? null : () => _saveResult(s),
             ),
           ]),
-        ])),
+        ]),
 
       // ── AI panel ─────────────────────────────────────────────────────
-      LumaPanelTab.ai => SingleChildScrollView(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+      LumaPanelTab.ai => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
                   AiCreativePanel(
                     insight: _insight,
                     isLoading: _aiLoading,
@@ -920,7 +929,7 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
                       textColor: AppTokens.text,
                       onTap: item.$4)),
           ]),
-        ])),
+        ]),
     };
 
     return Container(
@@ -939,23 +948,21 @@ class _LumaWorkspaceState extends State<_LumaWorkspace>
         const SizedBox(height: 10),
         tabBar,
         const SizedBox(height: 10),
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: AppTokens.normal,
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.03, 0),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              ),
+        AnimatedSwitcher(
+          duration: AppTokens.normal,
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.03, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
             ),
-            child: KeyedSubtree(key: ValueKey(_tab), child: body),
           ),
+          child: KeyedSubtree(key: ValueKey(_tab), child: body),
         ),
       ]),
     );
